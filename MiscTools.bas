@@ -1,0 +1,381 @@
+Attribute VB_Name = "MiscTools"
+'
+' Module MiscTools
+'
+' Miscellaneous tools that may be useful for many Excel apps
+'
+' See change log at bottom of file
+'
+' setCellFormat(cellName, format)
+' SwapCellsXY(row1, col1, row2, col2, optional wsName)
+' SwapCells(cellName1, cellName2)
+' SetColumnWidth(colString As String, width As Double, Optional ws As Variant = "")
+
+
+Const CHF_FORMAT = "#,###,##0"" CHF"";- #,###,##0"" CHF"";"""""
+Const EUR_FORMAT = "#,###,##0"" _"";- #,###,##0"" _"";"""""
+Const USD_FORMAT = "#,###,##0"" $"";- #,###,##0"" $"";"""""
+
+Public Sub freezeDisplay()
+    ' Freeze the Excel display so that macros run faster
+    Application.EnableEvents = False
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayStatusBar = False
+End Sub
+
+Public Sub unfreezeDisplay()
+    ' Unfreeze the Excel display (to be used after executing macros, or when intermediate display is needed)
+    Application.EnableEvents = True
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    Application.DisplayStatusBar = True
+End Sub
+
+Public Function sheetExists(sheetToFind As String) As Boolean
+    sheetExists = False
+    For Each Sheet In Worksheets
+        If sheetToFind = Sheet.name Then
+            sheetExists = True
+            Exit Function
+        End If
+    Next Sheet
+End Function
+
+Public Function getNamedVariableValue(varName As String)
+    getNamedVariableValue = Names(varName).RefersToRange.Value
+End Function
+Public Sub FreezeCell(r As String, Optional wsName As String = "")
+    ' Replaces a cell that may contain a formula by the result of this formula
+    ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
+    Dim ws As Worksheet
+
+    If (wsName = "") Then
+        Set ws = ActiveSheet
+    Else
+        Set ws = Worksheets(wsName)
+    End If
+        If (IsError(ws.Range(r).Value)) Then
+            ws.Range(r).Value = 0
+        Else
+            ws.Range(r).Formula = Range(r).Value
+        End If
+End Sub
+
+'------------------------------------------------------
+Public Sub SwapCells(cell1 As String, cell2 As String)
+    Dim Temp As Variant
+    Temp = Range(cell1).Value
+    Range(cell1).Value = Range(cell2).Value
+    Range(cell2).Value = Temp
+End Sub
+
+'------------------------------------------------------
+Public Sub SwapCellsXY(ByVal Row1 As Integer, ByVal Col1 As Integer, ByVal Row2 As Integer, ByVal Col2 As Integer, Optional wsName As String = "")
+    Dim ws As Worksheet
+    Dim Temp As Variant
+    If (wsName = "") Then
+        Set ws = ActiveSheet
+    Else
+        Set ws = Sheets(wsName)
+    End If
+    Temp = ws.Cells(Row1, Col1).Value
+    ws.Cells(Row1, Col1).Value = ws.Cells(Row2, Col2).Value
+    ws.Cells(Row2, Col2).Value = Temp
+End Sub
+
+Public Sub FreezeCellXY(row As Integer, col As Integer, Optional wsName As String = "")
+    Call FreezeCell(Cells(row, col).Address(False, False), wsName)
+End Sub
+
+Public Sub FreezeRegion(r As String, Optional wsName As String = "")
+    ' Replaces a cell that may contain a formula by the result of this formula
+    ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
+    Dim ws As Worksheet
+    If (wsName = "") Then
+        Set ws = ActiveSheet
+    Else
+        Set ws = Sheets(wsName)
+    End If
+    ws.Range(r).Copy
+    ws.Range(r).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+End Sub
+
+Public Sub FreezeRegionXY(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, Optional wsName As String = "")
+    Dim r As String
+    r = Cells(x1, y1).Address(False, False) + ":" + Cells(x2, y2).Address(False, False)
+    Call FreezeRegion(r, wsName)
+End Sub
+
+Sub reformatAmount(colObject As ListColumn)
+    With colObject.DataBodyRange
+        .Style = "Normal"
+        .NumberFormat = CHF_FORMAT
+    End With
+End Sub
+
+'------------------------------------------------
+Sub setCellFormat(cellName, format)
+    Range(cellName).NumberFormat = format
+End Sub
+
+Public Function IsInArray(str As String, arr As Variant) As Boolean
+  IsInArray = (UBound(Filter(arr, str)) > -1)
+End Function
+
+'
+' Enforces a data validation rule on zones of an excel sheet
+'
+Sub SetColumnValidationRule(colObject As ListColumn, validationList As String)
+' On a column of an Excel table
+    With colObject.DataBodyRange.Validation
+        .Delete
+        .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
+        .IgnoreBlank = True
+        .InCellDropdown = True
+        .ShowInput = True
+    End With
+End Sub
+
+'-------------------------------------------------
+Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Variant = "")
+    If (ws = "") Then
+        Columns(colString + ":" + colString).ColumnWidth = width
+    Else
+        Sheets(ws).Columns(colString + ":" + colString).ColumnWidth = width
+    End If
+End Sub
+'-------------------------------------------------
+Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Variant = "")
+    If (ws = "") Then
+        Rows(rowString + ":" + rowString).RowHeight = height
+    Else
+        Sheets(ws).Rows(rowString + ":" + rowString).RowHeight = height
+    End If
+End Sub
+'-------------------------------------------------
+Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Variant = "")
+    If (ws = "") Then
+        Rows(rowString + ":" + rowString).Font.size = size
+    Else
+        Sheets(ws).Rows(rowString + ":" + rowString).Font.size = size
+    End If
+End Sub
+
+'-------------------------------------------------
+Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Variant = "")
+    If (ws = "") Then
+        Range(rangeString).Style = aStyle
+    Else
+        Sheets(ws).Range(rangeString).Style = aStyle
+    End If
+End Sub
+'-------------------------------------------------
+Sub SetRangeValidationRule(aRange As Range, validationList As String)
+' On an arbitrary range like Range("A4") (one cell) or Range("B7:K20") (a complete region)
+    With aRange.Validation
+        .Delete
+        .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
+        .IgnoreBlank = True
+        .InCellDropdown = True
+        .ShowInput = True
+    End With
+End Sub
+'-------------------------------------------------
+Private Sub ListAllItemObjects()
+    For Each pvt In ActiveSheet.PivotTables
+    For Each fld In pvt.PivotFields
+    For Each itm In fld.PivotItems
+    MsgBox itm
+    Next itm
+    Next fld
+    Next pvt
+End Sub
+
+
+'==============================================================================
+'
+'  Shape Management Tools
+'
+'==============================================================================
+
+'------------------------------------------------------------------------------
+' Places a shape (a button for instance) exactly above a cell
+'------------------------------------------------------------------------------
+Public Sub ShapePlacementOnCell(oShape, oCell)
+    Call ShapePlacementOnCells(oShape, oCell, oCell)
+End Sub
+'------------------------------------------------------------------------------
+' Places a shape (a button for instance) exactly above a range of cells
+' defined by its top left and bottom right cells
+'------------------------------------------------------------------------------
+Public Sub ShapePlacementOnCells(oShape, oCell1, oCell2)
+With oShape
+    .Top = oCell1.Top
+    .Left = oCell1.Left
+    .width = oCell2.Left - oCell1.Left + oCell2.width
+    .height = oCell2.Top - oCell1.Top + oCell2.height
+End With
+End Sub
+'------------------------------------------------------------------------------
+' Places a shape (a button for instance) on given X, Y coordinates
+'------------------------------------------------------------------------------
+Public Sub ShapePlacementXY(oShape, x1, y1, x2, y2)
+With oShape
+    .Left = x1
+    .Top = y1
+    .width = x2 - x1
+    .height = y2 - y1
+End With
+End Sub
+
+'==============================================================================
+'
+'  Misc Tools
+'
+'==============================================================================
+
+'------------------------------------------------------------------------------
+' Records a file with enforcement of the file format and filename
+'------------------------------------------------------------------------------
+
+Sub SaveAsNewFile(filename, fileformat)
+
+    Dim fileSaveName As Variant
+    
+    If (fileformat = "xlsm") Then
+        fmt = xlOpenXMLWorkbookMacroEnabled
+        myFilter = "Excel Macro-Enabled workbook (*.xlsm), *.xlsm"
+    ElseIf (fileformat = "xltm") Then
+        fmt = xlOpenXMLTemplateMacroEnabled
+        myFilter = "Excel Macro-Enabled template (*.xltm), *.xltm"
+    ElseIf (fileformat = "xlsx") Then
+        fmt = xlOpenXMLWorkbook
+        myFilter = "Excel workbook (*.xlsx), *.xlsx"
+    ElseIf (fileformat = "xltx") Then
+        fmt = xlOpenXMLTemplate
+        myFilter = "Excel template (*.xltx), *.xltx"
+    End If
+    'NewFileName = "CalcSheet " & [CustomerName] & " " & [ProjectName] & " vXXX" & ".xlsm" 'wb.Sheets("Sheet1").Range("B18").Value & ".xlsm"
+    fileSaveName = Application.GetSaveAsFilename _
+            (InitialFileName:=filename, filefilter:=myFilter, Title:="Select folder")
+    If Not fileSaveName = False Then
+        ActiveWorkbook.SaveAs filename:=fileSaveName, fileformat:=fmt
+    Else
+        MsgBox "File NOT Saved."
+    End If
+End Sub
+
+'------------------------------------------------------------------------------
+' Records a file with enforcement of the file format and filename
+'------------------------------------------------------------------------------
+Public Sub DeleteAllButSheetOne()
+    Application.DisplayAlerts = False
+    While ActiveWorkbook.Sheets.Count > 1
+       ActiveWorkbook.Sheets(2).Delete
+    Wend
+    Application.DisplayAlerts = True
+End Sub
+
+Public Function URLEncode( _
+   StringVal As String, _
+   Optional SpaceAsPlus As Boolean = False _
+) As String
+
+  Dim StringLen As Long: StringLen = Len(StringVal)
+
+  If StringLen > 0 Then
+    ReDim Result(StringLen) As String
+    Dim i As Long, CharCode As Integer
+    Dim Char As String, Space As String
+
+    If SpaceAsPlus Then Space = "+" Else Space = "%20"
+
+    For i = 1 To StringLen
+      Char = Mid$(StringVal, i, 1)
+      CharCode = Asc(Char)
+      Select Case CharCode
+        Case 97 To 122, 65 To 90, 48 To 57, 45, 46, 95, 126
+          Result(i) = Char
+        Case 32
+          Result(i) = Space
+        Case 0 To 15
+          Result(i) = "%0" & Hex(CharCode)
+        Case Else
+          Result(i) = "%" & Hex(CharCode)
+      End Select
+    Next i
+    URLEncode = Join(Result, "")
+  End If
+End Function
+
+'
+'
+'
+'
+Private Sub AdoptPivotSourceFormatting()
+'Mike Alexander
+'www.datapigtechnologies'
+'Be sure you start with your cursor inside a pivot table.
+Dim oPivotTable As PivotTable
+Dim oPivotFields As PivotField
+Dim oSourceRange As Range
+Dim strLabel As String
+Dim strFormat As String
+Dim i As Integer
+
+On Error GoTo MyErr
+
+'Identify PivotTable and capture source Range
+    'ActiveCell.PivotTable.Name
+    Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.name)
+    Set oSourceRange = Range(Application.ConvertFormula(oPivotTable.SourceData, xlR1C1, xlA1))
+
+'Refresh PivotTable to synch with latest data
+    oPivotTable.PivotCache.Refresh
+
+'Start looping through the columns in source range
+    For i = 1 To oSourceRange.Columns.Count
+    
+    'Trap the column name and number format for first row of the column
+        strLabel = oSourceRange.Cells(1, i).Value
+        strFormat = oSourceRange.Cells(2, i).NumberFormat
+    
+        'Now loop through the fields PivotTable data area
+        For Each oPivotFields In oPivotTable.DataFields
+   
+        'Check for match on SourceName then appply number format if there is a match
+        'If oPivotFields.SourceName = strLabel Then
+        'oPivotFields.NumberFormat = strFormat
+            
+        'Bonus: Change the name of field to Source Column Name
+        'oPivotFields.Caption = strLabel & " "
+        'End If
+        
+        Next oPivotFields
+    Next i
+
+        For Each oPivotFields In oPivotTable.DataFields
+            oPivotFields.NumberFormat = strFormat
+        Next oPivotFields
+
+Exit Sub
+'Error stuff
+MyErr:
+If Err.Number = 1004 Then
+MsgBox "You must place your cursor inside of a pivot table."
+Else
+MsgBox Err.Number & vbCrLf & Err.Description
+End If
+End Sub
+
+
+
+
+' Change log
+'
+' Version | Date       | Author        | Changes
+' 1.0     | 2012-11-21 | O. Korach     | First version
+' 1.1     | 2013-02-12 | O. Korach     | Added table manipulation methods
+
+
