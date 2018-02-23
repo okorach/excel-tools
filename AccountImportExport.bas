@@ -20,24 +20,28 @@ End Function
 '
 '------------------------------------------------------------------------------
 Sub ImportAny()
-    Dim bank As String
-    bank = Cells(3, 2).Value
-    If (bank = "ING Direct") Then
-        Call ImportING
-    ElseIf (bank = "LCL") Then
-        Call ImportLCL
-    ElseIf (bank = "UBS") Then
-        Call ImportUBS
+
+    fileToOpen = Application.GetOpenFilename()
+    If fileToOpen <> False Then
+        Dim bank As String
+        bank = Cells(3, 2).Value
+        If (bank = "ING Direct") Then
+            Call ImportING(fileToOpen)
+        ElseIf (bank = "LCL") Then
+            Call ImportLCL(fileToOpen)
+        ElseIf (bank = "UBS") Then
+            Call ImportUBS(fileToOpen)
+        Else
+            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
+        End If
     Else
-        MsgBox ("Formpat d'import (banque) non identifiable, opération annulée")
+        MsgBox ("Import annulé")
     End If
 End Sub
 
-Sub ImportING()
+Sub ImportING(fileToOpen As Variant)
 
-Dim MyFile As String
-MyFile = Application.GetOpenFilename()
-Workbooks.Open filename:=MyFile, ReadOnly:=True
+Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
@@ -77,14 +81,119 @@ Range("A" + CStr(totalRows)).Select
 
 End Sub
 
+
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
-Sub ImportGeneric()
+Sub ImportLCL(fileToOpen As Variant)
 
-Dim MyFile As String
-MyFile = Application.GetOpenFilename()
-Workbooks.Open filename:=MyFile, ReadOnly:=True, local:=True
+Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+Dim iRow As Integer
+Dim tDates() As Variant
+Dim tDesc() As String
+Dim tValues()
+
+ReDim tDates(1 To 30000)
+ReDim tDesc(1 To 30000)
+ReDim tValues(1 To 30000)
+iRow = 1
+Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+    iRow = iRow + 1
+Loop
+nbRows = iRow - 2 ' Last row is a total, don't import it
+iRow = 1
+Do While Cells(iRow, 1).Value <> ""
+    tDates(iRow) = DateValue(Cells(iRow, 1).Value)
+    tValues(iRow) = toAmount(Cells(iRow, 2).Value)
+    If (Cells(iRow, 3).Value = "Chèque") Then
+        tDesc(iRow) = "Chèque " + CStr(Cells(iRow, 4).Value)
+    ElseIf (Cells(iRow, 3).Value = "Virement") Then
+        tDesc(iRow) = "Virement" + " " + Cells(iRow, 5).Value
+    Else
+        tDesc(iRow) = Cells(iRow, 3).Value + " " + Cells(iRow, 5).Value + " " + Cells(iRow, 6).Value
+    End If
+    iRow = iRow + 1
+Loop
+ActiveWorkbook.Close
+
+With Sheets("LCL CC").ListObjects(1)
+    totalRows = .ListRows.Count
+    For iRow = 1 To nbRows
+        .ListRows.Add
+        totalRows = totalRows + 1
+        .ListColumns(1).DataBodyRange.Rows(totalRows).Value = tDates(iRow)
+        .ListColumns(2).DataBodyRange.Rows(totalRows).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(totalRows).Value = tDesc(iRow)
+    Next iRow
+End With
+
+Call sortAccount(Sheets("LCL CC").ListObjects(1))
+Range("A" + CStr(totalRows)).Select
+
+End Sub
+
+'------------------------------------------------------------------------------
+'
+'------------------------------------------------------------------------------
+Sub ImportUBS(fileToOpen As Variant)
+
+Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+Dim iRow As Integer
+Dim tDates() As Variant
+Dim tDesc() As String
+Dim tValues()
+
+ReDim tDates(1 To 30000)
+ReDim tDesc(1 To 30000)
+ReDim tValues(1 To 30000)
+iRow = 1
+nbOps = 0
+Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+    iRow = iRow + 1
+    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+        nbOps = nbOps + 1
+    End If
+Loop
+nbRows = iRow - 1
+iRow = 2
+nbOps = 0
+Do While Cells(iRow, 1).Value <> ""
+    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+        nbOps = nbOps + 1
+        If (Cells(iRow, 19).Value <> "") Then
+            tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        Else
+            tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        End If
+        tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(nbOps) = Cells(iRow, 13).Value + " " + Cells(iRow, 14).Value + " " + Cells(iRow, 15).Value
+    End If
+    iRow = iRow + 1
+Loop
+ActiveWorkbook.Close
+
+With Sheets("UBS").ListObjects(1)
+    n = .ListRows.Count
+    For iRow = 1 To nbOps
+        .ListRows.Add
+        n = n + 1
+        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
+        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
+    Next iRow
+End With
+
+Call sortAccount(Sheets("UBS").ListObjects(1))
+Range("A" + CStr(n)).Select
+
+End Sub
+
+'------------------------------------------------------------------------------
+'
+'------------------------------------------------------------------------------
+Sub ImportGeneric(fileToOpen As Variant)
+
+Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
 'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
 Dim iRow As Integer
 Dim tDates() As Variant
@@ -251,115 +360,6 @@ Sub ExportING()
 End Sub
 
 
-'------------------------------------------------------------------------------
-'
-'------------------------------------------------------------------------------
-Sub ImportLCL()
-
-Dim MyFile As String
-MyFile = Application.GetOpenFilename()
-Workbooks.Open filename:=MyFile, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues()
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
-    iRow = iRow + 1
-Loop
-nbRows = iRow - 2 ' Last row is a total, don't import it
-iRow = 1
-Do While Cells(iRow, 1).Value <> ""
-    tDates(iRow) = DateValue(Cells(iRow, 1).Value)
-    tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Chèque") Then
-        tDesc(iRow) = "Chèque " + CStr(Cells(iRow, 4).Value)
-    ElseIf (Cells(iRow, 3).Value = "Virement") Then
-        tDesc(iRow) = "Virement" + " " + Cells(iRow, 5).Value
-    Else
-        tDesc(iRow) = Cells(iRow, 3).Value + " " + Cells(iRow, 5).Value + " " + Cells(iRow, 6).Value
-    End If
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-With Sheets("LCL CC").ListObjects(1)
-    totalRows = .ListRows.Count
-    For iRow = 1 To nbRows
-        .ListRows.Add
-        totalRows = totalRows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalRows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalRows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalRows).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(Sheets("LCL CC").ListObjects(1))
-Range("A" + CStr(totalRows)).Select
-
-End Sub
-
-'------------------------------------------------------------------------------
-'
-'------------------------------------------------------------------------------
-Sub ImportUBS()
-
-Dim MyFile As String
-MyFile = Application.GetOpenFilename()
-Workbooks.Open filename:=MyFile, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues()
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-nbOps = 0
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
-    iRow = iRow + 1
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
-        nbOps = nbOps + 1
-    End If
-Loop
-nbRows = iRow - 1
-iRow = 2
-iOps = 0
-Do While Cells(iRow, 1).Value <> ""
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
-        iOps = iOps + 1
-        If (Cells(iRow, 19).Value <> "") Then
-            tValues(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        Else
-            tValues(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
-        End If
-        tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iOps) = Cells(iRow, 13).Value + " " + Cells(iRow, 14).Value + " " + Cells(iRow, 15).Value
-    End If
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-With Sheets("UBS").ListObjects(1)
-    n = .ListRows.Count
-    For iRow = 1 To nbOps
-        .ListRows.Add
-        n = n + 1
-        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
-        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(Sheets("UBS").ListObjects(1))
-Range("A" + CStr(n)).Select
-
-End Sub
 
 Sub getFolder()
 Dim sFolder As String
