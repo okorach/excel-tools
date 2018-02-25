@@ -549,7 +549,7 @@ Public Sub formatAccountSheets()
 
    For Each ws In Worksheets
        ' Make sure the sheet is not anything else than an account
-       If (isAnAccountSheet(ws)) Then
+       If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
             Dim name As String
             Dim acctype As String
             Dim acurrency As String
@@ -608,7 +608,7 @@ Public Sub formatAccountSheets()
             For Each Shape In ws.Shapes
                 If (Shape.Type = msoFormControl) Then
                     ' This is a button, move it to right place
-                    Call ShapePlacementXY(Shape, 300, 5 + i * 20, 400, 25 + i * 20)
+                    Call ShapePlacementXY(Shape, 300, 5 + i * 22, 400, 25 + i * 22)
                     i = i + 1
                 End If
             Next Shape
