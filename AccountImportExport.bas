@@ -392,7 +392,27 @@ Sub CreateAccount()
     Sheets(1).Range("B5").Formula = "=VLOOKUP(B$1,TblAccounts,5,FALSE)"
 End Sub
 
-
+Public Sub refreshOpenAccountsList()
+    Call freezeDisplay
+    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
+    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
+        For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
+            If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
+                .ListRows.Add ' Add 1 row at the end, then extend
+                .ListRows(.ListRows.Count).Range.Cells(1, 1).Value = Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 1).Value
+            End If
+        Next i
+        nbrAccounts = .ListRows.Count + 1
+    End With
+    ActiveSheet.Shapes("Drop Down 2").Select
+    With Selection
+        .ListFillRange = "Paramètres!$L$2:$L$" + CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .LinkedCell = "$H$72"
+        .DropDownLines = 8
+        .Display3DShading = True
+    End With
+    Call unfreezeDisplay
+End Sub
 
 Public Sub sortCurrentAccount()
     Call sortAccount(ActiveSheet.ListObjects(1))
@@ -447,6 +467,16 @@ Public Function accountStatus(accountName As String) As String
     Else
         accountStatus = ""
     End If
+End Function
+'-------------------------------------------------
+Public Function isOpen(accountName As String) As Boolean
+    isOpen = False
+    If (accountStatus(accountName) = "Open") Then
+        isOpen = True
+    End If
+End Function
+Public Function isClosed(accountName As String) As Boolean
+    isClosed = Not isOpen(accountName)
 End Function
 '-------------------------------------------------
 Public Function accountAvailability(accountName As String) As String
@@ -585,6 +615,10 @@ Public Sub formatAccountSheets()
           End If
        End If
    Next ws
-    Call hideClosedAccounts
-    Call hideTemplateAccounts
+   Call hideClosedAccounts
+   Call hideTemplateAccounts
 End Sub
+
+
+
+
