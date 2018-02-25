@@ -272,17 +272,17 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     exportFrom = ActiveWorkbook.name
     
     Sheets(ws).Select
-    Range("A1:B5").Select
+    Range("A1:B8").Select
     Selection.Copy
     exportVersion = 1
 
-    ' Create blank workbook and data on that workbook
+    ' Create blank workbook and copy data on that workbook
     Workbooks.Add
     exportTo = ActiveWorkbook.name
     Range("A1").Select
     ActiveSheet.Paste
     Range("A6").Value = "Korach Exporter version"
-    Range("B6").Value = 1
+    Range("B6").Value = 1.1
     
     Workbooks(exportFrom).Activate
     Sheets(ws).ListObjects(1).DataBodyRange.Select
@@ -350,4 +350,3 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
