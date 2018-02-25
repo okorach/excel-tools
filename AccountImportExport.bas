@@ -24,10 +24,10 @@ Sub ImportAny()
         ElseIf (bank = "UBS") Then
             Call ImportUBS(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
+            MsgBox ("Format d'import (banque) non identifiable, opÃ©ration annulÃ©e")
         End If
     Else
-        MsgBox ("Import annulé")
+        MsgBox ("Import annulÃ©")
     End If
 End Sub
 
@@ -97,8 +97,8 @@ iRow = 1
 Do While Cells(iRow, 1).Value <> ""
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Chèque") Then
-        tDesc(iRow) = "Chèque " + CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value = "ChÃ¨que") Then
+        tDesc(iRow) = "ChÃ¨que " + CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
         tDesc(iRow) = "Virement" + " " + Cells(iRow, 5).Value
     Else
@@ -214,7 +214,7 @@ Do While Cells(iRow, 1).Value <> "" And iRow < 30000
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
         accountStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilité" Then
+    ElseIf Cells(iRow, 1) = "DisponibilitÃ©" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -350,7 +350,3 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
-
-
-
