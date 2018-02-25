@@ -146,3 +146,16 @@ Public Sub refreshAllAccounts2()
     Call genBudget
     Call unfreezeDisplay
 End Sub
+
+Public Sub GoToAccount()
+    selectedNbr = Range("H72").Value
+    Dim accountName As String
+    accountName = Sheets("Paramètres").Range("L" + CStr(selectedNbr + 1))
+    If accountExists(accountName) Then
+        Sheets(accountName).Activate
+    End If
+End Sub
+Public Sub GoToSolde()
+    Sheets("Solde").Activate
+End Sub
+
