@@ -18,7 +18,7 @@ Sub mergeAccounts()
     
     Call freezeDisplay
 
-    For Each col In Array("Date", "Nom Compte", "Montant", "Description", "Sous-CatÈgorie", "In Budget")
+    For Each col In Array("Date", "Nom Compte", "Montant", "Description", "Sous-Catégorie", "In Budget")
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
@@ -28,6 +28,8 @@ Sub mergeAccounts()
                 ' Loop on all accounts of the sheet
                 If (col = "Nom Compte") Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
+                ElseIf (isAccountInBudget(ws.name)) Then
+                    arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
                     arr1d = getTableColumn(ws.ListObjects(1), col, False)
                 End If
@@ -79,7 +81,7 @@ Public Sub genBudget()
         accountCol = getTableColumn(.ListObjects(1), "Nom Compte", False)
         amountCol = getTableColumn(.ListObjects(1), "Montant", False)
         descCol = getTableColumn(.ListObjects(1), "Description", False)
-        categCol = getTableColumn(.ListObjects(1), "Sous-CatÈgorie", False)
+        categCol = getTableColumn(.ListObjects(1), "Sous-Catégorie", False)
         spreadCol = getTableColumn(.ListObjects(1), "In Budget", False)
     End With
     
@@ -132,7 +134,7 @@ Public Sub genBudget()
         Call setTableColumn(.ListObjects(1), "Nom Compte", accountCol, False)
         Call setTableColumn(.ListObjects(1), "Montant", amountCol, False)
         Call setTableColumn(.ListObjects(1), "Description", descCol, False)
-        Call setTableColumn(.ListObjects(1), "Sous-CatÈgorie", categCol, False)
+        Call setTableColumn(.ListObjects(1), "Sous-Catégorie", categCol, False)
         Call setTableColumn(.ListObjects(1), "Spread Amount", spreadCol, False)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
@@ -140,7 +142,7 @@ Public Sub genBudget()
 
 End Sub
 
-Public Sub refreshAllAccounts2()
+Public Sub refreshAllAccounts()
     Call freezeDisplay
     Call mergeAccounts
     Call genBudget
@@ -150,7 +152,7 @@ End Sub
 Public Sub GoToAccount()
     selectedNbr = Range("H72").Value
     Dim accountName As String
-    accountName = Sheets("ParamËtres").Range("L" + CStr(selectedNbr + 1))
+    accountName = Sheets("Paramètres").Range("L" + CStr(selectedNbr + 1))
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If
