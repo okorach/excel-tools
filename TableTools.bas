@@ -64,10 +64,10 @@ End Function
 Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Variant
     Dim nbrRows As Integer
     Dim nbrCols As Integer
-    
+
     nbrCols = oTable.ListColumns.Count
     nbrRows = oTable.ListRows.Count
-    Dim cList()
+    Dim cList() As Variant
     cList = getColList(oTable, colList)
     Dim arr() As Variant
     ReDim arr(1 To nbrCols, 1 To nbrRows)
@@ -122,7 +122,7 @@ End Function
 
 Public Sub setTableColumn(oTable, colNbrOrName As Variant, tValues As Variant, Optional twoD As Boolean = True, Optional withResize As Boolean = True)
 
-    Dim arr()
+    Dim arr() As Variant
     If (Not twoD) Then
         arr = OneDtoTwoD(tValues)
     Else
@@ -176,8 +176,8 @@ Public Sub appendTableToTableFast(oSrcTable, oTgtTable, Optional colList As Vari
     Call resizeTable(oTgtTable, sizeOffset + oSrcTable.ListRows.Count)
     cList = getColList(oSrcTable, colList)
     For Each col In cList
-        Dim srcArr()
-        Dim tgtArr()
+        Dim srcArr() As Variant
+        Dim tgtArr() As Variant
         tgtArr = getTableColumn(oTgtTable, col)
         srcArr = getTableColumn(oSrcTable, col)
         sizeOffset = UBound(tgtArr)
@@ -209,7 +209,7 @@ End Function
 '------------------------------------------------------------------------------
 Public Sub clearTableColumn(oTable, colNbr)
     tableSize = oTable.ListRows.Count
-    Dim emptyArr()
+    Dim emptyArr() As String
     ReDim emptyArr(1 To tableSize)
     For i = 1 To tableSize
         emptyArr(i) = ""
@@ -254,7 +254,7 @@ Public Function OneDtoTwoD(arr As Variant) As Variant
     Dim ub As Integer
     lb = LBound(arr)
     ub = UBound(arr)
-    Dim arr2d()
+    Dim arr2d() As Variant
     ReDim arr2d(lb To ub, 1 To 1)
     For i = lb To ub
         arr2d(i, 1) = arr(i)
@@ -267,7 +267,7 @@ Public Function TwoDtoOneD(arr2d As Variant) As Variant
     Dim ub As Integer
     lb = LBound(arr2d, 1)
     ub = UBound(arr2d, 1)
-    Dim arr1d()
+    Dim arr1d() As Variant
     ReDim arr1d(lb To ub)
     For i = lb To ub
         arr1d(i) = arr2d(i, 1)

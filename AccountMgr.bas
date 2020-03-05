@@ -157,8 +157,8 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
-    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
+    Call truncateTable(Sheets("ParamÔøΩtres").ListObjects("tblOpenAccounts"))
+    With Sheets("ParamÔøΩtres").ListObjects("tblOpenAccounts")
         For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
             If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -169,7 +169,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Paramètres!$L$2:$L$" + CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "ParamÔøΩtres!$L$2:$L$" & CStr(Sheets("ParamÔøΩtres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -183,9 +183,9 @@ End Sub
 Public Sub sortAccount(oTable)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
-    oTable.Sort.SortFields.Add Key:=Range(oTable.name + "[Date]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add Key:=Range(oTable.name & "[Date]"), SortOn:=xlSortOnValues, Order:= _
         xlAscending, DataOption:=xlSortNormal
-    oTable.Sort.SortFields.Add Key:=Range(oTable.name + "[Montant]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add Key:=Range(oTable.name & "[Montant]"), SortOn:=xlSortOnValues, Order:= _
         xlDescending, DataOption:=xlSortNormal
     With oTable.Sort
         .Header = xlYes
@@ -250,19 +250,13 @@ Public Function accountCurrency(accountName As String) As String
 End Function
 '-------------------------------------------------
 Public Function isAccountInBudget(accountName As String) As Boolean
-    If (accountExists(accountName) And Sheets(accountName).Range("B8").Value = "Yes") Then
-        accountInBudget = True
-    Else
-        accountInBudget = False
-    End If
+    accountInBudget = (accountExists(accountName) And Sheets(accountName).Range("B8").Value = "Yes")
 End Function
 '-------------------------------------------------
 Public Function isOpen(accountName As String) As Boolean
-    isOpen = False
-    If (accountStatus(accountName) = "Open") Then
-        isOpen = True
-    End If
+    isOpen = (accountStatus(accountName) = "Open")
 End Function
+
 Public Function isClosed(accountName As String) As Boolean
     isClosed = Not isOpen(accountName)
 End Function
@@ -270,19 +264,11 @@ End Function
 
 '-------------------------------------------------
 Public Function accountExists(accountName As String) As Boolean
-    If (sheetExists(accountName) And Sheets(accountName).Range("A1") = "Nom Compte") Then
-        accountExists = True
-    Else
-        accountExists = False
-    End If
+    accountExists = (sheetExists(accountName) And Sheets(accountName).Range("A1") = "Nom Compte")
 End Function
 '-------------------------------------------------
 Public Function isAnAccountSheet(ByVal ws As Worksheet) As Boolean
-    If (ws.Cells(1, 1).Value = getNamedVariableValue("accountIdentifier") And Not isTemplate(ws)) Then
-        isAnAccountSheet = True
-    Else
-        isAnAccountSheet = False
-    End If
+    isAnAccountSheet (ws.Cells(1, 1).Value = getNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
 End Function
 
 '-------------------------------------------------

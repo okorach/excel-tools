@@ -58,7 +58,7 @@ Public Sub FreezeCell(r As String, Optional wsName As String = "")
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
 
-    If (wsName = "") Then
+    If LenB(wsName) = 0 Then
         Set ws = ActiveSheet
     Else
         Set ws = Worksheets(wsName)
@@ -82,7 +82,7 @@ End Sub
 Public Sub SwapCellsXY(ByVal Row1 As Integer, ByVal Col1 As Integer, ByVal Row2 As Integer, ByVal Col2 As Integer, Optional wsName As String = "")
     Dim ws As Worksheet
     Dim Temp As Variant
-    If (wsName = "") Then
+    If LenB(wsName) = 0 Then
         Set ws = ActiveSheet
     Else
         Set ws = Sheets(wsName)
@@ -100,7 +100,7 @@ Public Sub FreezeRegion(r As String, Optional wsName As String = "")
     ' Replaces a cell that may contain a formula by the result of this formula
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
-    If (wsName = "") Then
+    If LenB(wsName) = 0 Then
         Set ws = ActiveSheet
     Else
         Set ws = Sheets(wsName)
@@ -111,7 +111,7 @@ End Sub
 
 Public Sub FreezeRegionXY(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, Optional wsName As String = "")
     Dim r As String
-    r = Cells(x1, y1).Address(False, False) + ":" + Cells(x2, y2).Address(False, False)
+    r = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
     Call FreezeRegion(r, wsName)
 End Sub
 
@@ -147,32 +147,32 @@ End Sub
 
 '-------------------------------------------------
 Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Variant = "")
-    If (ws = "") Then
-        Columns(colString + ":" + colString).ColumnWidth = width
+    If LenB(ws) = 0 Then
+        Columns(colString & ":" & colString).ColumnWidth = width
     Else
-        Sheets(ws).Columns(colString + ":" + colString).ColumnWidth = width
+        Sheets(ws).Columns(colString & ":" & colString).ColumnWidth = width
     End If
 End Sub
 '-------------------------------------------------
 Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Variant = "")
-    If (ws = "") Then
-        Rows(rowString + ":" + rowString).RowHeight = height
+    If LenB(ws) = 0 Then
+        Rows(rowString & ":" & rowString).RowHeight = height
     Else
-        Sheets(ws).Rows(rowString + ":" + rowString).RowHeight = height
+        Sheets(ws).Rows(rowString & ":" & rowString).RowHeight = height
     End If
 End Sub
 '-------------------------------------------------
 Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Variant = "")
-    If (ws = "") Then
-        Rows(rowString + ":" + rowString).Font.size = size
+    If LenB(ws) = 0 Then
+        Rows(rowString & ":" & rowString).Font.size = size
     Else
-        Sheets(ws).Rows(rowString + ":" + rowString).Font.size = size
+        Sheets(ws).Rows(rowString & ":" & rowString).Font.size = size
     End If
 End Sub
 
 '-------------------------------------------------
 Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Variant = "")
-    If (ws = "") Then
+    If LenB(ws) = 0 Then
         Range(rangeString).Style = aStyle
     Else
         Sheets(ws).Range(rangeString).Style = aStyle
@@ -250,7 +250,7 @@ End Sub
 Sub SaveAsNewFile(filename, fileformat)
 
     Dim fileSaveName As Variant
-    
+
     If (fileformat = "xlsm") Then
         fmt = xlOpenXMLWorkbookMacroEnabled
         myFilter = "Excel Macro-Enabled workbook (*.xlsm), *.xlsm"
@@ -308,9 +308,9 @@ Public Function URLEncode( _
         Case 32
           Result(i) = Space
         Case 0 To 15
-          Result(i) = "%0" & Hex(CharCode)
+          Result(i) = "%0" & Hex$(CharCode)
         Case Else
-          Result(i) = "%" & Hex(CharCode)
+          Result(i) = "%" & Hex$(CharCode)
       End Select
     Next i
     URLEncode = Join(Result, "")
@@ -344,22 +344,22 @@ On Error GoTo MyErr
 
 'Start looping through the columns in source range
     For i = 1 To oSourceRange.Columns.Count
-    
+
     'Trap the column name and number format for first row of the column
         strLabel = oSourceRange.Cells(1, i).Value
         strFormat = oSourceRange.Cells(2, i).NumberFormat
-    
+
         'Now loop through the fields PivotTable data area
         For Each oPivotFields In oPivotTable.DataFields
-   
+
         'Check for match on SourceName then appply number format if there is a match
         'If oPivotFields.SourceName = strLabel Then
         'oPivotFields.NumberFormat = strFormat
-            
+
         'Bonus: Change the name of field to Source Column Name
         'oPivotFields.Caption = strLabel & " "
         'End If
-        
+
         Next oPivotFields
     Next i
 

@@ -4,5 +4,10 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"sonarlint.connectedMode.project": {
+			"connectionId": "SQ LATEST",
+			"projectKey": "excel-tools"
+		}
+	}
 }
