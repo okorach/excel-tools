@@ -3,11 +3,51 @@ Attribute VB_Name = "AccountImportExport"
 
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
-        toAmount = CDbl(Replace(Replace(str, ",", "."), "'", ""))
+        str = Replace(Replace(str, ",", "."), "'", "")
+        toAmount = CDbl(str)
     Else
         toAmount = str
     End If
 End Function
+
+Private Function toMonth(str) As Integer
+    s = LCase(Trim(str))
+    If s Like "jan*" Then
+        toMonth = 1
+    ElseIf s Like "fe*" Or s Like "fé*" Then
+        toMonth = 2
+    ElseIf s Like "mar*" Then
+        toMonth = 3
+    ElseIf s Like "a*" Then
+        toMonth = 4
+    ElseIf s Like "mai*" Or s Like "may*" Then
+        toMonth = 5
+    ElseIf s Like "juin*" Or s Like "jun*" Then
+        toMonth = 6
+    ElseIf s Like "juil*" Or s Like "jul*" Then
+        toMonth = 7
+    ElseIf s Like "ao*" Or s Like "aug*" Then
+        toMonth = 8
+    ElseIf s Like "sep*" Then
+        toMonth = 9
+    ElseIf s Like "oct*" Then
+        toMonth = 10
+    ElseIf s Like "nov*" Then
+        toMonth = 11
+    ElseIf s Like "dec*" Then
+        toMonth = 12
+    ElseIf s Like "déc*" Then
+        toMonth = 12
+    Else
+        toMonth = 0
+    End If
+    
+End Function
+Private Function toDate(str) As Date
+    a = Split(str, " ", -1, vbTextCompare)
+    toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
+End Function
+
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
@@ -23,14 +63,15 @@ Sub ImportAny()
             Call ImportLCL(fileToOpen)
         ElseIf (bank = "UBS") Then
             Call ImportUBS(fileToOpen)
+        ElseIf (bank = "Revolut") Then
+            Call ImportRevolut(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, op√©ration annul√©e")
+            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
         End If
     Else
-        MsgBox ("Import annul√©")
+        MsgBox ("Import annulé")
     End If
 End Sub
-
 Sub ImportING(fileToOpen As Variant)
 
 Workbooks.Open filename:=fileToOpen, ReadOnly:=True
@@ -56,20 +97,102 @@ Do While Cells(iRow, 1).Value <> ""
 Loop
 ActiveWorkbook.Close
 
-With Sheets("ING CC").ListObjects(1)
-    totalRows = .ListRows.Count
+With ActiveSheet.ListObjects(1)
+    totalrows = .ListRows.Count
     For iRow = 1 To nbRows
         .ListRows.Add
-        totalRows = totalRows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalRows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalRows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalRows).Value = tDesc(iRow)
+        totalrows = totalrows + 1
+        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
     Next iRow
 End With
 
-Call sortAccount(Sheets("ING CC").ListObjects(1))
+Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalRows)).Select
+Range("A" + CStr(totalrows)).Select
+
+End Sub
+
+Sub ImportRevolut(fileToOpen As Variant)
+
+Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+Dim iRow As Integer
+Dim tDates() As Variant
+Dim tDesc() As String
+Dim tValues()
+
+ReDim tDates(1 To 30000)
+ReDim tDesc(1 To 30000)
+ReDim tValues(1 To 30000)
+iRow = 2
+Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+    iRow = iRow + 1
+Loop
+nbRows = iRow - 2
+iRow = 2
+Do While Cells(iRow, 1).Value <> ""
+    tDates(iRow - 1) = toDate(Trim(Cells(iRow, 1).Value))
+    tDesc(iRow - 1) = ""
+    If (Trim(Cells(iRow, 3).Value) = "") Then
+        tValues(iRow - 1) = toAmount(Trim(Cells(iRow, 4).Value))
+        If (Trim(Cells(iRow, 6).Value) <> "") Then
+            tDesc(iRow - 1) = Trim(Cells(iRow, 6).Value) + " : "
+        End If
+    Else
+        tValues(iRow - 1) = -toAmount(Trim(Cells(iRow, 3).Value))
+        If (Trim(Cells(iRow, 5).Value) <> "") Then
+            tDesc(iRow - 1) = Trim(Cells(iRow, 5).Value) + " : "
+        End If
+    End If
+    tDesc(iRow - 1) = tDesc(iRow - 1) + Trim(Cells(iRow, 2).Value)
+    iRow = iRow + 1
+Loop
+ActiveWorkbook.Close
+
+With ActiveSheet.ListObjects(1)
+    totalrows = .ListRows.Count
+    For iRow = 1 To nbRows
+        .ListRows.Add
+        totalrows = totalrows + 1
+        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+    Next iRow
+End With
+
+Call sortAccount(ActiveSheet.ListObjects(1))
+
+Range("A" + CStr(totalrows)).Select
+
+End Sub
+Sub ImportRevolutCSV(fileToOpen As Variant)
+
+Open fileToOpen For Input As #1
+
+Line Input #1, textline
+
+With ActiveSheet.ListObjects(1)
+totalrows = .ListRows.Count
+Do Until EOF(1)
+    Line Input #1, textline
+    a = Split(textline, ";", -1, vbTextCompare)
+    .ListRows.Add
+    totalrows = totalrows + 1
+    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim(a(0)))
+    If (Trim(a(2)) = "") Then
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim(a(3)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim(a(1)) + " --> " + Trim(a(5))
+    Else
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim(a(2)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim(a(1)) + " --> " + Trim(a(4))
+    End If
+Loop
+End With
+Close #1
+Call sortAccount(ActiveSheet.ListObjects(1))
+
+Range("A" + CStr(totalrows)).Select
 
 End Sub
 
@@ -78,6 +201,7 @@ End Sub
 '
 '------------------------------------------------------------------------------
 Sub ImportLCL(fileToOpen As Variant)
+
 
 Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
@@ -97,8 +221,8 @@ iRow = 1
 Do While Cells(iRow, 1).Value <> ""
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Ch√®que") Then
-        tDesc(iRow) = "Ch√®que " + CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value = "Chèque") Then
+        tDesc(iRow) = "Chèque " + CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
         tDesc(iRow) = "Virement" + " " + Cells(iRow, 5).Value
     Else
@@ -108,19 +232,19 @@ Do While Cells(iRow, 1).Value <> ""
 Loop
 ActiveWorkbook.Close
 
-With Sheets("LCL CC").ListObjects(1)
-    totalRows = .ListRows.Count
+With ActiveSheet.ListObjects(1)
+    totalrows = .ListRows.Count
     For iRow = 1 To nbRows
         .ListRows.Add
-        totalRows = totalRows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalRows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalRows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalRows).Value = tDesc(iRow)
+        totalrows = totalrows + 1
+        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
     Next iRow
 End With
 
-Call sortAccount(Sheets("LCL CC").ListObjects(1))
-Range("A" + CStr(totalRows)).Select
+Call sortAccount(ActiveSheet.ListObjects(1))
+Range("A" + CStr(totalrows)).Select
 
 End Sub
 
@@ -164,7 +288,7 @@ Do While Cells(iRow, 1).Value <> ""
 Loop
 ActiveWorkbook.Close
 
-With Sheets("UBS").ListObjects(1)
+With ActiveSheet.ListObjects(1)
     n = .ListRows.Count
     For iRow = 1 To nbOps
         .ListRows.Add
@@ -175,7 +299,72 @@ With Sheets("UBS").ListObjects(1)
     Next iRow
 End With
 
-Call sortAccount(Sheets("UBS").ListObjects(1))
+Call sortAccount(ActiveSheet.ListObjects(1))
+Range("A" + CStr(n)).Select
+
+End Sub
+
+'------------------------------------------------------------------------------
+'
+'------------------------------------------------------------------------------
+Sub ImportUBScsv(fileToOpen As Variant)
+
+Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
+    :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
+    xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=True, _
+    Comma:=False, Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), _
+    Array(2, 1), Array(3, 1), Array(4, 1), Array(5, 1), Array(6, 1), Array(7, 1), Array(8, 1), _
+    Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
+    , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
+    TrailingMinusNumbers:=True
+    'ReadOnly:=True
+    
+Dim iRow As Integer
+Dim tDates() As Variant
+Dim tDesc() As String
+Dim tValues()
+
+ReDim tDates(1 To 30000)
+ReDim tDesc(1 To 30000)
+ReDim tValues(1 To 30000)
+iRow = 1
+nbOps = 0
+Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+    iRow = iRow + 1
+    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+        nbOps = nbOps + 1
+    End If
+Loop
+nbRows = iRow - 1
+iRow = 2
+nbOps = 0
+Do While Cells(iRow, 1).Value <> ""
+    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+        nbOps = nbOps + 1
+        If (Cells(iRow, 19).Value <> "") Then
+            tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        Else
+            tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        End If
+        tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(nbOps) = Cells(iRow, 13).Value + " " + Cells(iRow, 14).Value + " " + Cells(iRow, 15).Value
+    End If
+    iRow = iRow + 1
+Loop
+ActiveWorkbook.Close
+
+With ActiveSheet.ListObjects(1)
+    n = .ListRows.Count
+    For iRow = 1 To nbOps
+        .ListRows.Add
+        n = n + 1
+        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
+        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
+    Next iRow
+End With
+
+Call sortAccount(ActiveSheet.ListObjects(1))
 Range("A" + CStr(n)).Select
 
 End Sub
@@ -213,8 +402,8 @@ Do While Cells(iRow, 1).Value <> "" And iRow < 30000
     ElseIf Cells(iRow, 1) = "Banque" Then
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
-        accountStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilit√©" Then
+        accStatus = Cells(iRow, 2).Value
+    ElseIf Cells(iRow, 1) = "Disponibilité" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -244,25 +433,25 @@ ActiveWorkbook.Close
 ActiveSheet.Cells(1, 2).Value = accountName
 ActiveSheet.Cells(2, 2).Value = accountNbr
 ActiveSheet.Cells(3, 2).Value = bank
-ActiveSheet.Cells(4, 2).Value = accountStatus
+ActiveSheet.Cells(4, 2).Value = accStatus
 ActiveSheet.Cells(5, 2).Value = availability
 
 With ActiveSheet.ListObjects(1)
-    totalRows = .ListRows.Count
+    totalrows = .ListRows.Count
     For iRow = 1 To nbRows
         .ListRows.Add
-        totalRows = totalRows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalRows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalRows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalRows).Value = tDesc(iRow)
-        .ListColumns(5).DataBodyRange.Rows(totalRows).Value = tSubCateg(iRow)
-        .ListColumns(7).DataBodyRange.Rows(totalRows).Value = tBudgetSpread(iRow)
+        totalrows = totalrows + 1
+        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+        .ListColumns(5).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
+        .ListColumns(7).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
     Next iRow
 End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalRows)).Select
+Range("A" + CStr(totalrows)).Select
 
 End Sub
 
@@ -281,16 +470,16 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     exportTo = ActiveWorkbook.name
     Range("A1").Select
     ActiveSheet.Paste
-    Range("A6").Value = "Korach Exporter version"
-    Range("B6").Value = 1.1
+    Range("A9").Value = "Exporter version"
+    Range("B9").Value = 1.2
     
     Workbooks(exportFrom).Activate
     Sheets(ws).ListObjects(1).DataBodyRange.Select
     Selection.Copy
     Workbooks(exportTo).Activate
-    Range("A8").Select
+    Range("A10").Select
     ActiveSheet.Paste
-    Range("C:C").NumberFormat = "General"
+    Range("B:C").NumberFormat = "General"
     'Range("A:A").NumberFormat = Workbooks(exportFrom).Names("date_format").RefersToRange.Value
     Range("A:A").NumberFormat = "YYYY-mm-dd"
     
@@ -350,3 +539,7 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
+
+
+
+
