@@ -56,44 +56,35 @@ Public Sub formatAccountSheets()
             name = ws.name
             acctype = accountType(name)
             acurrency = accountCurrency(name)
+            Call SetColumnWidth("A", 15, name)
+            ws.ListObjects(1).ListColumns(1).DataBodyRange.NumberFormat = "m/d/yyyy"
+            Call SetColumnWidth("B", 20, name)
+            Call SetColumnWidth("C", 20, name)
             If (acctype = "Standard") Then
                 If (acurrency = "EUR") Then
-                   Call SetColumnWidth("A", 15, name)
-                   Call SetColumnWidth("B", 20, name)
-                   Call SetColumnWidth("C", 20, name)
-                   Call SetColumnWidth("D", 70, name)
-                   Call SetColumnWidth("E", 15, name)
-                   Call SetColumnWidth("F", 15, name)
-                   Call SetColumnWidth("G", 5, name)
-                   Call SetColumnWidth("H", 5, name)
-                   Call SetColumnWidth("I", 15, name)
-                Else
-                   Call SetColumnWidth("A", 15, name)
-                   Call SetColumnWidth("B", 20, name)
-                   Call SetColumnWidth("C", 20, name)
-                   Call SetColumnWidth("D", 70, name)
-                   Call SetColumnWidth("E", 15, name)
-                   Call SetColumnWidth("F", 15, name)
-                   Call SetColumnWidth("G", 5, name)
-                   Call SetColumnWidth("H", 5, name)
-                   Call SetColumnWidth("I", 15, name)
+                    Call SetColumnWidth("D", 70, name)
+                    Call SetColumnWidth("E", 15, name)
+                    Call SetColumnWidth("F", 15, name)
+                    Call SetColumnWidth("G", 5, name)
+                    Call SetColumnWidth("H", 5, name)
+                    Call SetColumnWidth("I", 15, name)
+                Else:
+                    Call SetColumnWidth("D", 20, name)
+                    Call SetColumnWidth("E", 70, name)
+                    Call SetColumnWidth("F", 15, name)
+                    Call SetColumnWidth("G", 15, name)
+                    Call SetColumnWidth("H", 5, name)
+                    Call SetColumnWidth("I", 5, name)
+                    Call SetColumnWidth("J", 15, name)
                 End If
             Else ' Shares accounts formatting
+                Call SetColumnWidth("D", 70, name)
+                Call SetColumnWidth("E", 20, name)
                 If (acurrency = "EUR") Then
-                   Call SetColumnWidth("A", 12, name)
-                   Call SetColumnWidth("B", 20, name)
-                   Call SetColumnWidth("C", 20, name)
-                   Call SetColumnWidth("D", 70, name)
-                   Call SetColumnWidth("E", 20, name)
                    Call SetColumnWidth("F", 5, name)
                    Call SetColumnWidth("G", 20, name)
                    Call SetColumnWidth("H", 20, name)
                 Else
-                   Call SetColumnWidth("A", 12, name)
-                   Call SetColumnWidth("B", 20, name)
-                   Call SetColumnWidth("C", 20, name)
-                   Call SetColumnWidth("D", 70, name)
-                   Call SetColumnWidth("E", 20, name)
                    Call SetColumnWidth("F", 15, name)
                    Call SetColumnWidth("G", 5, name)
                    Call SetColumnWidth("H", 15, name)
@@ -108,7 +99,9 @@ Public Sub formatAccountSheets()
             For Each Shape In ws.Shapes
                 If (Shape.Type = msoFormControl) Then
                     ' This is a button, move it to right place
-                    Call ShapePlacementXY(Shape, 300, 5 + i * 22, 400, 25 + i * 22)
+                    row = i Mod 4
+                    col = i \ 4
+                    Call ShapePlacementXY(Shape, 300 + col * 100, 5 + row * 22, 400 + col * 100, 25 + row * 22)
                     i = i + 1
                 End If
             Next Shape
@@ -164,8 +157,8 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets("ParamËtres").ListObjects("tblOpenAccounts"))
-    With Sheets("ParamËtres").ListObjects("tblOpenAccounts")
+    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
+    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
         For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
             If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -176,7 +169,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "ParamËtres!$L$2:$L$" + CStr(Sheets("ParamËtres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "Paramètres!$L$2:$L$" + CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -256,14 +249,6 @@ Public Function accountCurrency(accountName As String) As String
     End If
 End Function
 '-------------------------------------------------
-Public Function accountType(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountType = Sheets(accountName).Range("B7").Value
-    Else
-        accountType = ""
-    End If
-End Function
-'-------------------------------------------------
 Public Function isAccountInBudget(accountName As String) As Boolean
     If (accountExists(accountName) And Sheets(accountName).Range("B8").Value = "Yes") Then
         accountInBudget = True
@@ -280,14 +265,6 @@ Public Function isOpen(accountName As String) As Boolean
 End Function
 Public Function isClosed(accountName As String) As Boolean
     isClosed = Not isOpen(accountName)
-End Function
-'-------------------------------------------------
-Public Function accountAvailability(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountAvailability = Sheets(accountName).Range("B5").Value
-    Else
-        accountAvailability = ""
-    End If
 End Function
 
 

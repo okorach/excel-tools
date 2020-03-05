@@ -9,8 +9,7 @@ Attribute VB_Name = "TableTools"
 ' truncateTable(oTable)
 
 ' fillTableColumn(oTable, col As Variant, ByRef tValues)
-' function getTableAsArray(oTable) As Variant
-' Function getTableAsArray2(oTable, Optional colList As Variant = 0) As Variant
+' Function getTableAsArray(oTable, Optional colList As Variant = 0) As Variant
 ' setTableArray(oTable, ByRef tValues)
 ' Function getTableColumn(oTable, colNbr, Optional twoD As Boolean = True) As Variant
 ' setTableColumn(oTable, arr, colNbr, Optional twoD As Boolean = True)
@@ -47,7 +46,9 @@ End Sub
 
 Private Function getColList(oTable, currentColList) As Variant
     If (IsNumeric(currentColList)) Then
-        Dim localColList(nbrCols)
+        nbrCols = oTable.ListColumns.Count
+        Dim localColList() As Variant
+        ReDim localColList(1 To nbrCols)
         For c = 1 To nbrCols
             localColList(c) = c
         Next c
@@ -68,14 +69,15 @@ Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Vari
     nbrRows = oTable.ListRows.Count
     Dim cList()
     cList = getColList(oTable, colList)
-    Dim arr(1 To nbrCols, 1 To nbrRows)
+    Dim arr() As Variant
+    ReDim arr(1 To nbrCols, 1 To nbrRows)
     i = 0
     For Each c In cList
         i = i + 1
         For j = 1 To nbrRows
             arr(i, j) = oSrcTable.ListColumns(c).DataBodyRange.Rows(j).Value
         Next j
-    Next col
+    Next c
     getTableAsArray = arr
 End Function
 
@@ -176,16 +178,13 @@ Public Sub appendTableToTableFast(oSrcTable, oTgtTable, Optional colList As Vari
     For Each col In cList
         Dim srcArr()
         Dim tgtArr()
-        For col = 1 To oSrcTable.ListRows.Count
-            tgtArr = getTableColumn(oTgtTable, j)
-            srcArr = getTableColumn(oSrcTable, j)
-            sizeOffset = UBound(tgtArr)
-            ReDim Arr1(UBound(srcArr) + sizeOffset)
-            For i = 1 To UBound(srcArr)
-                tgtArr(sizeOffset + i) = srcArr(i)
-            Next i
-            Call setTableColumn(oTgtTable, col, tgtArr)
-        Next j
+        tgtArr = getTableColumn(oTgtTable, col)
+        srcArr = getTableColumn(oSrcTable, col)
+        sizeOffset = UBound(tgtArr)
+        ReDim Arr1(UBound(srcArr) + sizeOffset)
+        For i = 1 To UBound(srcArr)
+            tgtArr(sizeOffset + i) = srcArr(i)
+        Next i
     Next col
 End Sub
 
@@ -193,15 +192,16 @@ Public Function appendTableColToArray(oTable, colNbrOrName, oArray) As Variant
     oldSize = UBound(oArray)
     addSize = oTable.ListRows.Count
     newSize = oldSize + addSize
-    Dim appendTableColToArray(1 To newSize)
+    Dim arr() As Variant
+    ReDim arr(1 To newSize)
     For i = 1 To oldSize
-        appendTableColToArray(i) = oArray(i)
+        arr(i) = oArray(i)
     Next i
-    aArray = getTableColmun(oTable, colNbrOrName)
+    aArray = getTableColumn(oTable, colNbrOrName)
     For i = 1 To addSize
-        appendTableColToArray(i + oldSize) = aArray(i)
+        arr(i + oldSize) = aArray(i)
     Next i
-    ' appendTableColToArray = tArray
+    appendTableColToArray = arr
 End Function
 
 '------------------------------------------------------------------------------
@@ -209,7 +209,8 @@ End Function
 '------------------------------------------------------------------------------
 Public Sub clearTableColumn(oTable, colNbr)
     tableSize = oTable.ListRows.Count
-    Dim emptyArr(1 To tableSize)
+    Dim emptyArr()
+    ReDim emptyArr(1 To tableSize)
     For i = 1 To tableSize
         emptyArr(i) = ""
     Next i
@@ -223,6 +224,7 @@ Public Sub clearTableRow(oTable, rowNbr)
 End Sub
 '------------------------------------------------------------------------------
 Public Sub clearTable(oTable)
+    Dim tableSize As Integer
     tableSize = oTable.ListRows.Count
     Call truncateTable(oTable)
     Call resizeTable(oTable, tableSize)
