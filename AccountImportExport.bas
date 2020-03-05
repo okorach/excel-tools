@@ -11,10 +11,10 @@ Private Function toAmount(str) As Double
 End Function
 
 Private Function toMonth(str) As Integer
-    s = LCase(Trim(str))
+    s = LCase$(Trim$(str))
     If s Like "jan*" Then
         toMonth = 1
-    ElseIf s Like "fe*" Or s Like "fé*" Then
+    ElseIf s Like "fe*" Or s Like "fÔøΩ*" Then
         toMonth = 2
     ElseIf s Like "mar*" Then
         toMonth = 3
@@ -36,13 +36,13 @@ Private Function toMonth(str) As Integer
         toMonth = 11
     ElseIf s Like "dec*" Then
         toMonth = 12
-    ElseIf s Like "déc*" Then
+    ElseIf s Like "dÔøΩc*" Then
         toMonth = 12
     Else
         toMonth = 0
     End If
-    
 End Function
+
 Private Function toDate(str) As Date
     a = Split(str, " ", -1, vbTextCompare)
     toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
@@ -54,7 +54,7 @@ End Function
 Sub ImportAny()
 
     fileToOpen = Application.GetOpenFilename()
-    If fileToOpen <> False Then
+    If fileToOpen Then
         Dim bank As String
         bank = Cells(3, 2).Value
         If (bank = "ING Direct") Then
@@ -66,10 +66,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
+            MsgBox ("Format d'import (banque) non identifiable, opÔøΩration annulÔøΩe")
         End If
     Else
-        MsgBox ("Import annulé")
+        MsgBox ("Import annulÔøΩ")
     End If
 End Sub
 Sub ImportING(fileToOpen As Variant)
@@ -78,18 +78,18 @@ Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
 ReDim tValues(1 To 30000)
 iRow = 1
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
 Loop
 nbRows = iRow - 1
 iRow = 1
-Do While Cells(iRow, 1).Value <> ""
+Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = Cells(iRow, 1).Value
     tDesc(iRow) = Cells(iRow, 2).Value
     tValues(iRow) = toAmount(Cells(iRow, 4).Value)
@@ -110,7 +110,7 @@ End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalrows)).Select
+Range("A" & CStr(totalrows)).Select
 
 End Sub
 
@@ -120,32 +120,32 @@ Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
 ReDim tValues(1 To 30000)
 iRow = 2
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
 Loop
 nbRows = iRow - 2
 iRow = 2
-Do While Cells(iRow, 1).Value <> ""
-    tDates(iRow - 1) = toDate(Trim(Cells(iRow, 1).Value))
+Do While LenB(Cells(iRow, 1).Value) > 0
+    tDates(iRow - 1) = toDate(Trim$(Cells(iRow, 1).Value))
     tDesc(iRow - 1) = ""
-    If (Trim(Cells(iRow, 3).Value) = "") Then
-        tValues(iRow - 1) = toAmount(Trim(Cells(iRow, 4).Value))
-        If (Trim(Cells(iRow, 6).Value) <> "") Then
-            tDesc(iRow - 1) = Trim(Cells(iRow, 6).Value) + " : "
+    If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
+        tValues(iRow - 1) = toAmount(Trim$(Cells(iRow, 4).Value))
+        If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
+            tDesc(iRow - 1) = Trim$(Cells(iRow, 6).Value) & " : "
         End If
     Else
-        tValues(iRow - 1) = -toAmount(Trim(Cells(iRow, 3).Value))
-        If (Trim(Cells(iRow, 5).Value) <> "") Then
-            tDesc(iRow - 1) = Trim(Cells(iRow, 5).Value) + " : "
+        tValues(iRow - 1) = -toAmount(Trim$(Cells(iRow, 3).Value))
+        If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
+            tDesc(iRow - 1) = Trim$(Cells(iRow, 5).Value) & " : "
         End If
     End If
-    tDesc(iRow - 1) = tDesc(iRow - 1) + Trim(Cells(iRow, 2).Value)
+    tDesc(iRow - 1) = tDesc(iRow - 1) & Trim$(Cells(iRow, 2).Value)
     iRow = iRow + 1
 Loop
 ActiveWorkbook.Close
@@ -163,7 +163,7 @@ End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalrows)).Select
+Range("A" & CStr(totalrows)).Select
 
 End Sub
 Sub ImportRevolutCSV(fileToOpen As Variant)
@@ -179,20 +179,20 @@ Do Until EOF(1)
     a = Split(textline, ";", -1, vbTextCompare)
     .ListRows.Add
     totalrows = totalrows + 1
-    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim(a(0)))
-    If (Trim(a(2)) = "") Then
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim(a(3)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim(a(1)) + " --> " + Trim(a(5))
+    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(a(0)))
+    If LenB(Trim$(a(2))) = 0 Then
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(a(3)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(5))
     Else
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim(a(2)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim(a(1)) + " --> " + Trim(a(4))
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(a(2)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(4))
     End If
 Loop
 End With
 Close #1
 Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalrows)).Select
+Range("A" & CStr(totalrows)).Select
 
 End Sub
 
@@ -207,26 +207,26 @@ Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
 ReDim tValues(1 To 30000)
 iRow = 1
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
 Loop
 nbRows = iRow - 2 ' Last row is a total, don't import it
 iRow = 1
-Do While Cells(iRow, 1).Value <> ""
+Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Chèque") Then
-        tDesc(iRow) = "Chèque " + CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value = "ChÔøΩque") Then
+        tDesc(iRow) = "ChÔøΩque " & CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
-        tDesc(iRow) = "Virement" + " " + Cells(iRow, 5).Value
+        tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
     Else
-        tDesc(iRow) = Cells(iRow, 3).Value + " " + Cells(iRow, 5).Value + " " + Cells(iRow, 6).Value
+        tDesc(iRow) = Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value
     End If
     iRow = iRow + 1
 Loop
@@ -244,7 +244,7 @@ With ActiveSheet.ListObjects(1)
 End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
-Range("A" + CStr(totalrows)).Select
+Range("A" & CStr(totalrows)).Select
 
 End Sub
 
@@ -257,32 +257,32 @@ Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
 ReDim tValues(1 To 30000)
 iRow = 1
 nbOps = 0
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+    If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
         nbOps = nbOps + 1
     End If
 Loop
 nbRows = iRow - 1
 iRow = 2
 nbOps = 0
-Do While Cells(iRow, 1).Value <> ""
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+Do While LenB(Cells(iRow, 1).Value) > 0
+    If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
         nbOps = nbOps + 1
-        If (Cells(iRow, 19).Value <> "") Then
+        If (LenB(Cells(iRow, 19).Value) > 0) Then
             tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
         Else
             tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
         End If
         tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(nbOps) = Cells(iRow, 13).Value + " " + Cells(iRow, 14).Value + " " + Cells(iRow, 15).Value
+        tDesc(nbOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     End If
     iRow = iRow + 1
 Loop
@@ -300,7 +300,7 @@ With ActiveSheet.ListObjects(1)
 End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
-Range("A" + CStr(n)).Select
+Range("A" & CStr(n)).Select
 
 End Sub
 
@@ -318,36 +318,36 @@ Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
     , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
     TrailingMinusNumbers:=True
     'ReadOnly:=True
-    
+
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
 ReDim tValues(1 To 30000)
 iRow = 1
 nbOps = 0
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+    If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value > 0) Then
         nbOps = nbOps + 1
     End If
 Loop
 nbRows = iRow - 1
 iRow = 2
 nbOps = 0
-Do While Cells(iRow, 1).Value <> ""
-    If (Cells(iRow, 20).Value <> "" Or Cells(iRow, 19).Value <> "") Then
+Do While LenB(Cells(iRow, 1).Value) > 0
+    If LenB(Cells(iRow, 20).Value ) > 0 Or LenB(Cells(iRow, 19).Value) > 0 Then
         nbOps = nbOps + 1
-        If (Cells(iRow, 19).Value <> "") Then
+        If LenB(Cells(iRow, 19).Value) > 0 Then
             tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
         Else
             tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
         End If
         tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(nbOps) = Cells(iRow, 13).Value + " " + Cells(iRow, 14).Value + " " + Cells(iRow, 15).Value
+        tDesc(nbOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     End If
     iRow = iRow + 1
 Loop
@@ -365,7 +365,7 @@ With ActiveSheet.ListObjects(1)
 End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
-Range("A" + CStr(n)).Select
+Range("A" & CStr(n)).Select
 
 End Sub
 
@@ -381,7 +381,7 @@ Dim tDates() As Variant
 Dim tDesc() As String
 Dim tSubCateg() As String
 Dim tBudgetSpread() As Variant
-Dim tValues()
+Dim tValues() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
@@ -391,7 +391,7 @@ ReDim tValues(1 To 30000)
 iRow = 1
 
 ' Read Header part
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
     If Cells(iRow, 1) = "Korach Exporter version" Then
         exporterVersion = Cells(iRow, 2).Value
@@ -403,7 +403,7 @@ Do While Cells(iRow, 1).Value <> "" And iRow < 30000
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
         accStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilité" Then
+    ElseIf Cells(iRow, 1) = "DisponibilitÔøΩ" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -413,13 +413,13 @@ Loop
 iRow = iRow + 1
 transactionStart = iRow
 ' Count nbr of transaction
-Do While Cells(iRow, 1).Value <> "" And iRow < 30000
+Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
 Loop
 ' Read transaction part
 nbRows = iRow - transactionStart
 iRow = transactionStart
-Do While Cells(iRow, 1).Value <> ""
+Do While LenB(Cells(iRow, 1).Value) > 0
     i = iRow - transactionStart + 1
     tDates(i) = Cells(iRow, 1).Value
     tDesc(i) = Cells(iRow, 4).Value
@@ -451,7 +451,7 @@ End With
 
 Call sortAccount(ActiveSheet.ListObjects(1))
 
-Range("A" + CStr(totalrows)).Select
+Range("A" & CStr(totalrows)).Select
 
 End Sub
 
@@ -459,7 +459,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
 
     Dim sFolder As String
     exportFrom = ActiveWorkbook.name
-    
+
     Sheets(ws).Select
     Range("A1:B8").Select
     Selection.Copy
@@ -472,7 +472,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     ActiveSheet.Paste
     Range("A9").Value = "Exporter version"
     Range("B9").Value = 1.2
-    
+
     Workbooks(exportFrom).Activate
     Sheets(ws).ListObjects(1).DataBodyRange.Select
     Selection.Copy
@@ -482,33 +482,33 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     Range("B:C").NumberFormat = "General"
     'Range("A:A").NumberFormat = Workbooks(exportFrom).Names("date_format").RefersToRange.Value
     Range("A:A").NumberFormat = "YYYY-mm-dd"
-    
+
     ' Silently delete sheets in excess
     Call DeleteAllButSheetOne
 
     ' Get filename to save
-    If (csvFile = "") Then
+    If LenB(csvFile) = 0 Then
         file = Application.GetSaveAsFilename
-        If file <> False Then
-           csvFile = file + "csv"
+        If file Then
+           csvFile = file & "csv"
         End If
     End If
-    
+
     ' Save CSV file
-    If csvFile <> "" Then
+    If LenB(csvFile) > 0 Then
         ActiveWorkbook.SaveAs filename:=csvFile, fileformat:=xlCSV, CreateBackup:=False, local:=True
         If (Not silent) Then
             MsgBox "File " & csvFile & " saved"
         End If
     Else
-        If (Not silent) Then
+        If Not silent Then
             MsgBox "Export aborted"
         End If
     End If
     Application.DisplayAlerts = False
     ActiveWorkbook.Close
     Application.DisplayAlerts = True
-    
+
 End Sub
 Sub ExportAll()
     Dim sFolder As String
@@ -519,12 +519,12 @@ Sub ExportAll()
             sFolder = .SelectedItems(1)
         End If
     End With
-    
-    If sFolder <> "" Then ' if a file was chosen
+
+    If LenB(sFolder) > 0 Then ' if a file was chosen
         Call freezeDisplay
         For Each ws In Worksheets
             If ws.Cells(1, 1).Value = "Nom Compte" Then
-                filename = sFolder + "\" + ws.name + ".csv"
+                filename = sFolder & "\" & ws.name & ".csv"
                 Call ExportGeneric(ws.name, filename, True)
             End If
         Next ws

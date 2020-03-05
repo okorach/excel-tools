@@ -15,10 +15,10 @@ Application.Calculation = xlAutomatic
 End Sub
 
 Sub mergeAccounts()
-    
+
     Call freezeDisplay
 
-    For Each col In Array("Date", "Nom Compte", "Montant", "Description", "Sous-Catégorie", "In Budget")
+    For Each col In Array("Date", "Nom Compte", "Montant", "Description", "Sous-CatÔøΩgorie", "In Budget")
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
@@ -57,7 +57,7 @@ Sub mergeAccounts()
         .Apply
     End With
     Sheets("Comptes Merge").PivotTables(1).PivotCache.Refresh
-    
+
 End Sub
 
 Public Sub genBudget()
@@ -67,7 +67,7 @@ Public Sub genBudget()
     nbRows = Sheets("Comptes Merge").ListObjects(1).ListRows.Count
     newSize = nbRows
     nbCols = Sheets("Comptes Merge").ListObjects(1).ListColumns.Count
-    
+
     Dim oTable As Variant
     Dim dateCol() As Variant
     Dim accountCol() As Variant
@@ -75,16 +75,16 @@ Public Sub genBudget()
     Dim descCol() As Variant
     Dim categCol() As Variant
     Dim spreadCol() As Variant
-    
+
     With Sheets("Comptes Merge")
         dateCol = getTableColumn(.ListObjects(1), "Date", False)
         accountCol = getTableColumn(.ListObjects(1), "Nom Compte", False)
         amountCol = getTableColumn(.ListObjects(1), "Montant", False)
         descCol = getTableColumn(.ListObjects(1), "Description", False)
-        categCol = getTableColumn(.ListObjects(1), "Sous-Catégorie", False)
+        categCol = getTableColumn(.ListObjects(1), "Sous-CatÔøΩgorie", False)
         spreadCol = getTableColumn(.ListObjects(1), "In Budget", False)
     End With
-    
+
     Dim moreRows As Integer
     moreRows = 0
     For i = 1 To nbRows
@@ -99,10 +99,10 @@ Public Sub genBudget()
     ReDim Preserve descCol(1 To nbRows + moreRows)
     ReDim Preserve categCol(1 To nbRows + moreRows)
     ReDim Preserve spreadCol(1 To nbRows + moreRows)
-        
+
     For i = 1 To nbRows
         divider = spreadCol(i)
-        If (divider = "") Then
+        If LenB(divider) = 0 Then
             spreadCol(i) = -amountCol(i)
         End If
         If (IsNumeric(divider) And Int(divider) = divider And divider <> 1 And divider <> 0) Then
@@ -134,7 +134,7 @@ Public Sub genBudget()
         Call setTableColumn(.ListObjects(1), "Nom Compte", accountCol, False)
         Call setTableColumn(.ListObjects(1), "Montant", amountCol, False)
         Call setTableColumn(.ListObjects(1), "Description", descCol, False)
-        Call setTableColumn(.ListObjects(1), "Sous-Catégorie", categCol, False)
+        Call setTableColumn(.ListObjects(1), "Sous-CatÔøΩgorie", categCol, False)
         Call setTableColumn(.ListObjects(1), "Spread Amount", spreadCol, False)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
@@ -152,7 +152,7 @@ End Sub
 Public Sub GoToAccount()
     selectedNbr = Range("H72").Value
     Dim accountName As String
-    accountName = Sheets("Paramètres").Range("L" + CStr(selectedNbr + 1))
+    accountName = Sheets("ParamÔøΩtres").Range("L" & CStr(selectedNbr + 1))
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If
