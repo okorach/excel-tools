@@ -32,6 +32,14 @@ Public Sub unfreezeDisplay()
     Application.DisplayStatusBar = True
 End Sub
 
+Public Sub scrollToBottom()
+    ActiveWindow.ScrollRow = ActiveSheet.ListObjects(1).ListRows.Count - 10
+End Sub
+
+Public Sub scrollToTop()
+    ActiveWindow.ScrollRow = 10
+End Sub
+
 Public Function sheetExists(sheetToFind As String) As Boolean
     sheetExists = False
     For Each Sheet In Worksheets
