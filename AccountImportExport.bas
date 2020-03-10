@@ -51,8 +51,9 @@ End Function
 '------------------------------------------------------------------------------
 Sub ImportAny()
 
+    Dim FileToOpen as Variant
     fileToOpen = Application.GetOpenFilename()
-    If fileToOpen Then
+    If fileToOpen <> False Then
         Dim bank As String
         bank = Cells(3, 2).Value
         If (bank = "ING Direct") Then
