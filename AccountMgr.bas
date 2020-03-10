@@ -114,11 +114,7 @@ End Sub
 
 '-------------------------------------------------
 Public Function isTemplate(ByVal ws As Worksheet) As Boolean
-    If (ws.Cells(1, 2).Value = "TEMPLATE") Then
-        isTemplate = True
-    Else
-        isTemplate = False
-    End If
+    isTemplate = (ws.Cells(1, 2).Value = "TEMPLATE")
 End Function
 
 '-------------------------------------------------
@@ -268,7 +264,7 @@ Public Function accountExists(accountName As String) As Boolean
 End Function
 '-------------------------------------------------
 Public Function isAnAccountSheet(ByVal ws As Worksheet) As Boolean
-    isAnAccountSheet (ws.Cells(1, 1).Value = getNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
+    isAnAccountSheet = (ws.Cells(1, 1).Value = getNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
 End Function
 
 '-------------------------------------------------
