@@ -14,7 +14,7 @@ Private Function toMonth(str) As Integer
     s = LCase$(Trim$(str))
     If s Like "jan*" Then
         toMonth = 1
-    ElseIf s Like "fe*" Or s Like "f�*" Then
+    ElseIf s Like "fe*" Or s Like "fé*" Then
         toMonth = 2
     ElseIf s Like "mar*" Then
         toMonth = 3
@@ -34,9 +34,7 @@ Private Function toMonth(str) As Integer
         toMonth = 10
     ElseIf s Like "nov*" Then
         toMonth = 11
-    ElseIf s Like "dec*" Then
-        toMonth = 12
-    ElseIf s Like "d�c*" Then
+    ElseIf s Like "dec*" or s Like "déc*" Then
         toMonth = 12
     Else
         toMonth = 0
@@ -66,10 +64,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, op�ration annul�e")
+            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
         End If
     Else
-        MsgBox ("Import annul�")
+        MsgBox ("Import annulé")
     End If
 End Sub
 Sub ImportING(fileToOpen As Variant)
