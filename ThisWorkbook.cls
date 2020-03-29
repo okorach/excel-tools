@@ -7,6 +7,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
+
 Private Sub auto_open()
 Application.Calculation = xlAutomatic
 End Sub
@@ -160,4 +161,3 @@ End Sub
 Public Sub GoToSolde()
     Sheets("Solde").Activate
 End Sub
-

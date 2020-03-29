@@ -26,7 +26,6 @@ End Sub
 
 
 Public Sub doForAllAccounts()
-Attribute doForAllAccounts.VB_ProcData.VB_Invoke_Func = " \n14"
 '
 ' Applies a given macro to all account sheets
 '
@@ -114,7 +113,11 @@ End Sub
 
 '-------------------------------------------------
 Public Function isTemplate(ByVal ws As Worksheet) As Boolean
-    isTemplate = (ws.Cells(1, 2).Value = "TEMPLATE")
+    If (ws.Cells(1, 2).Value = "TEMPLATE") Then
+        isTemplate = True
+    Else
+        isTemplate = False
+    End If
 End Function
 
 '-------------------------------------------------
@@ -153,8 +156,8 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets("Param�tres").ListObjects("tblOpenAccounts"))
-    With Sheets("Param�tres").ListObjects("tblOpenAccounts")
+    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
+    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
         For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
             If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -165,7 +168,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Param�tres!$L$2:$L$" & CStr(Sheets("Param�tres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "Paramètres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -273,5 +276,3 @@ Public Sub showAllSheets()
         ws.Visible = True
     Next ws
 End Sub
-
-

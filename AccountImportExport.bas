@@ -1,6 +1,4 @@
 Attribute VB_Name = "AccountImportExport"
-
-
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
         str = Replace(Replace(str, ",", "."), "'", "")
@@ -34,7 +32,7 @@ Private Function toMonth(str) As Integer
         toMonth = 10
     ElseIf s Like "nov*" Then
         toMonth = 11
-    ElseIf s Like "dec*" or s Like "déc*" Then
+    ElseIf s Like "dec*" Or s Like "déc*" Then
         toMonth = 12
     Else
         toMonth = 0
@@ -51,7 +49,7 @@ End Function
 '------------------------------------------------------------------------------
 Sub ImportAny()
 
-    Dim FileToOpen as Variant
+    Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
         Dim bank As String
@@ -220,8 +218,8 @@ iRow = 1
 Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Ch�que") Then
-        tDesc(iRow) = "Ch�que " & CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value = "Chèque") Then
+        tDesc(iRow) = "Chèque " & CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
         tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
     Else
@@ -338,7 +336,7 @@ nbRows = iRow - 1
 iRow = 2
 nbOps = 0
 Do While LenB(Cells(iRow, 1).Value) > 0
-    If LenB(Cells(iRow, 20).Value ) > 0 Or LenB(Cells(iRow, 19).Value) > 0 Then
+    If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0 Then
         nbOps = nbOps + 1
         If LenB(Cells(iRow, 19).Value) > 0 Then
             tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
@@ -402,7 +400,7 @@ Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
         accStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilit�" Then
+    ElseIf Cells(iRow, 1) = "Disponibilité" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -538,7 +536,3 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
-
-
-
