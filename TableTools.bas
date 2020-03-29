@@ -35,7 +35,10 @@ Public Sub resizeTable(oTable, targetSize As Integer)
         oTable.ListRows.Add ' Add 1 row at the end, then extend
         oTable.ListRows(nbRows + 1).Range.Resize(targetSize - nbRows - 1).Insert Shift:=xlDown
     ElseIf nbRows > targetSize Then
-        oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete Shift:=xlUp
+        ' oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete Shift:=xlUp
+        For i = targetSize + 1 To nbRows
+            oTable.ListRows(targetSize + 1).Delete
+        Next i
     End If
 
 End Sub
@@ -311,3 +314,4 @@ Public Function NumberOfDimensions(arr As Variant) As Integer
 
     NumberOfDimensions = Ndx - 1
 End Function
+
