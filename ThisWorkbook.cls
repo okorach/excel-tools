@@ -29,7 +29,7 @@ Sub mergeAccounts()
                 ' Loop on all accounts of the sheet
                 If (col = "Nom Compte") Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
-                ElseIf (isAccountInBudget(ws.name)) Then
+                ElseIf (col = "In Budget" And Not isAccountInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
                     arr1d = getTableColumn(ws.ListObjects(1), col, False)
