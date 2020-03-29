@@ -8,6 +8,22 @@ Const FOREIGN_SHARES_ACCOUNT = 4
 Const ACCOUNT_CLOSED = 0
 Const ACCOUNT_OPEN = 1
 
+Const ACCOUNT_NAME_LABEL = "A1"
+Const ACCOUNT_NAME_VALUE = "B1"
+Const ACCOUNT_NBR_LABEL = "A2"
+Const ACCOUNT_NBR_VALUE = "B2"
+Const ACCOUNT_BANK_LABEL = "A3"
+Const ACCOUNT_BANK_VALUE = "B3"
+Const ACCOUNT_STATUS_LABEL = "A4"
+Const ACCOUNT_STATUS_VALUE = "B4"
+Const ACCOUNT_AVAIL_LABEL = "A5"
+Const ACCOUNT_AVAIL_VALUE = "B5"
+Const ACCOUNT_CURRENCY_LABEL = "A6"
+Const ACCOUNT_CURRENCY_VALUE = "B6"
+Const ACCOUNT_TYPE_LABEL = "A7"
+Const ACCOUNT_TYPE_VALUE = "B7"
+Const IN_BUDGET_LABEL = "A8"
+Const IN_BUDGET_VALUE = "B8"
 
 Sub CreateAccount()
     accountNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
@@ -17,11 +33,11 @@ Sub CreateAccount()
     Sheets("Account Template").Visible = False
     Sheets(1).name = accountName
     ' Sheets(1).Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
-    Sheets(1).Range("B1").Value = accountName
-    Sheets(1).Range("B2").Formula = "=VLOOKUP(B$1,TblAccounts,2,FALSE)"
-    Sheets(1).Range("B3").Formula = "=VLOOKUP(B$1,TblAccounts,4,FALSE)"
-    Sheets(1).Range("B4").Formula = "=VLOOKUP(B$1,TblAccounts,6,FALSE)"
-    Sheets(1).Range("B5").Formula = "=VLOOKUP(B$1,TblAccounts,5,FALSE)"
+    Sheets(1).Range(ACCOUNT_NAME_VALUE).Value = accountName
+    Sheets(1).Range(ACCOUNT_NBR_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,2,FALSE)"
+    Sheets(1).Range(ACCOUNT_BANK_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,4,FALSE)"
+    Sheets(1).Range(ACCOUNT_STATUS_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,6,FALSE)"
+    Sheets(1).Range(ACCOUNT_AVAIL_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,5,FALSE)"
 End Sub
 
 
@@ -168,7 +184,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Paramètres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "Param?tres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -209,7 +225,7 @@ End Function
 '-------------------------------------------------
 Public Function accountNumber(accountName As String) As String
     If (accountExists(accountName)) Then
-        accountNumber = Sheets(accountName).Range("B2").Value
+        accountNumber = Sheets(accountName).Range(ACCOUNT_NBR_VALUE).Value
     Else
         accountNumber = ""
     End If
@@ -217,7 +233,7 @@ End Function
 '-------------------------------------------------
 Public Function accountBank(accountName As String) As String
     If (accountExists(accountName)) Then
-        accountBank = Sheets(accountName).Range("B3").Value
+        accountBank = Sheets(accountName).Range(ACCOUNT_BANK_VALUE).Value
     Else
         accountBank = ""
     End If
@@ -226,7 +242,7 @@ End Function
 '-------------------------------------------------
 Public Function accountStatus(accountName As String) As String
     If (accountExists(accountName)) Then
-        accountStatus = Sheets(accountName).Range("B4").Value
+        accountStatus = Sheets(accountName).Range(ACCOUNT_STATUS_VALUE).Value
     Else
         accountStatus = ""
     End If
@@ -234,7 +250,7 @@ End Function
 '-------------------------------------------------
 Public Function accountAvailability(accountName As String) As String
     If (accountExists(accountName)) Then
-        accountAvailability = Sheets(accountName).Range("B5").Value
+        accountAvailability = Sheets(accountName).Range(ACCOUNT_AVAIL_VALUE).Value
     Else
         accountAvailability = ""
     End If
@@ -242,14 +258,14 @@ End Function
 '-------------------------------------------------
 Public Function accountCurrency(accountName As String) As String
     If (accountExists(accountName)) Then
-        accountCurrency = Sheets(accountName).Range("B6").Value
+        accountCurrency = Sheets(accountName).Range(ACCOUNT_CURRENCY_VALUE).Value
     Else
         accountCurrency = ""
     End If
 End Function
 '-------------------------------------------------
 Public Function isAccountInBudget(accountName As String) As Boolean
-    accountInBudget = (accountExists(accountName) And Sheets(accountName).Range("B8").Value = "Yes")
+    isAccountInBudget = (accountExists(accountName) And Sheets(accountName).Range(IN_BUDGET_VALUE).Value = "Yes")
 End Function
 '-------------------------------------------------
 Public Function isOpen(accountName As String) As Boolean
@@ -263,7 +279,7 @@ End Function
 
 '-------------------------------------------------
 Public Function accountExists(accountName As String) As Boolean
-    accountExists = (sheetExists(accountName) And Sheets(accountName).Range("A1") = "Nom Compte")
+    accountExists = (sheetExists(accountName) And Sheets(accountName).Range(ACCOUNT_NAME_LABEL) = "Nom Compte")
 End Function
 '-------------------------------------------------
 Public Function isAnAccountSheet(ByVal ws As Worksheet) As Boolean
