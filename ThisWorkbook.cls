@@ -15,11 +15,37 @@ Private Sub Workbook_Open()
 Application.Calculation = xlAutomatic
 End Sub
 
+Public Function GetLabel(key)
+    lang = getNamedVariableValue("Language")
+    If lang = "English" Then
+        col = 3
+    Else
+        col = 2
+    End If
+    GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
+    If IsError(GetLabel) Then
+        GetLabel = key & " not found"
+    End If
+End Function
+
+Public Function GetColName(key)
+    GetColName = GetLabel(key)
+End Function
+
+Public Sub ErrorInfo(key1 As String, Optional key2 As String = "")
+    msg = GetLabel(key1)
+    If key2 <> "" Then
+        ms = msg & ", " & GetLabel(key2)
+    End If
+    MsgBox (msg)
+End Sub
+
 Sub mergeAccounts()
 
     Call freezeDisplay
 
-    For Each col In Array("Date", "Nom Compte", "Montant", "Description", "Sous-Catégorie", "In Budget")
+    For Each colKey In Array("k.date", "k.accountName", "k.amount", "k.description", "k.subcategory", "k.inBudget")
+        col = GetColName(colKey)
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
@@ -27,9 +53,9 @@ Sub mergeAccounts()
            If (isAnAccountSheet(ws)) Then
                 'MsgBox (ws + " " + colNbr)
                 ' Loop on all accounts of the sheet
-                If (col = "Nom Compte") Then
+                If (colKey = "k.accountName") Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
-                ElseIf (col = "In Budget" And Not isAccountInBudget(ws.name)) Then
+                ElseIf (colKey = "k.inBudget" And Not isAccountInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
                     arr1d = getTableColumn(ws.ListObjects(1), col, False)
@@ -44,10 +70,10 @@ Sub mergeAccounts()
         Next ws
         Call setTableColumn(Sheets("Comptes Merge").ListObjects(1), col, totalColumn, False)
         Erase totalColumn
-    Next col
+    Next colKey
     ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge").Sort.SortFields.Clear
     ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge").Sort. _
-        SortFields.Add Key:=Range("AccountsMerge[[#Headers],[#Data],[Date]]"), SortOn _
+        SortFields.Add key:=Range("AccountsMerge[[#Headers],[#Data],[Date]]"), SortOn _
         :=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
     With ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge"). _
         Sort
@@ -78,12 +104,12 @@ Public Sub genBudget()
     Dim spreadCol() As Variant
 
     With Sheets("Comptes Merge")
-        dateCol = getTableColumn(.ListObjects(1), "Date", False)
-        accountCol = getTableColumn(.ListObjects(1), "Nom Compte", False)
-        amountCol = getTableColumn(.ListObjects(1), "Montant", False)
-        descCol = getTableColumn(.ListObjects(1), "Description", False)
-        categCol = getTableColumn(.ListObjects(1), "Sous-Catégorie", False)
-        spreadCol = getTableColumn(.ListObjects(1), "In Budget", False)
+        dateCol = getTableColumn(.ListObjects(1), GetColName("k.date"), False)
+        accountCol = getTableColumn(.ListObjects(1), GetColName("k.accountName"), False)
+        amountCol = getTableColumn(.ListObjects(1), GetColName("k.amount"), False)
+        descCol = getTableColumn(.ListObjects(1), GetColName("k.description"), False)
+        categCol = getTableColumn(.ListObjects(1), GetColName("k.subcategory"), False)
+        spreadCol = getTableColumn(.ListObjects(1), GetColName("k.inBudget"), False)
     End With
 
     Dim moreRows As Integer
@@ -131,12 +157,12 @@ Public Sub genBudget()
 
     With Sheets("Comptes Merge")
         Call resizeTable(.ListObjects(1), nbRows + moreRows)
-        Call setTableColumn(.ListObjects(1), "Date", dateCol, False)
-        Call setTableColumn(.ListObjects(1), "Nom Compte", accountCol, False)
-        Call setTableColumn(.ListObjects(1), "Montant", amountCol, False)
-        Call setTableColumn(.ListObjects(1), "Description", descCol, False)
-        Call setTableColumn(.ListObjects(1), "Sous-Catégorie", categCol, False)
-        Call setTableColumn(.ListObjects(1), "Spread Amount", spreadCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.date"), dateCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.accountName"), accountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.amount"), amountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.description"), descCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.subcategory"), categCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.amountSpread"), spreadCol, False)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
     End With
