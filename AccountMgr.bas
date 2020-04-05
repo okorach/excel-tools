@@ -173,8 +173,8 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
-    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
+    Call truncateTable(Sheets("ParamÃ¨tres").ListObjects("tblOpenAccounts"))
+    With Sheets("ParamÃ¨tres").ListObjects("tblOpenAccounts")
         For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
             If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -185,7 +185,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Paramètres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "ParamÃ¨tres!$L$2:$L$" & CStr(Sheets("ParamÃ¨tres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True

@@ -22,6 +22,7 @@ Public Function GetLabel(key)
     Else
         col = 2
     End If
+
     GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
     If IsError(GetLabel) Then
         GetLabel = key & " not found"
@@ -187,3 +188,5 @@ End Sub
 Public Sub GoToSolde()
     Sheets("Solde").Activate
 End Sub
+
+
