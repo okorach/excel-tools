@@ -184,7 +184,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Param?tres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = "Paramètres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -198,9 +198,9 @@ End Sub
 Public Sub sortAccount(oTable)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
-    oTable.Sort.SortFields.Add Key:=Range(oTable.name & "[Date]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[Date]"), SortOn:=xlSortOnValues, Order:= _
         xlAscending, DataOption:=xlSortNormal
-    oTable.Sort.SortFields.Add Key:=Range(oTable.name & "[Montant]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[Montant]"), SortOn:=xlSortOnValues, Order:= _
         xlDescending, DataOption:=xlSortNormal
     With oTable.Sort
         .Header = xlYes
