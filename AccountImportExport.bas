@@ -40,8 +40,8 @@ Private Function toMonth(str) As Integer
 End Function
 
 Private Function toDate(str) As Date
-    a = Split(str, " ", -1, vbTextCompare)
-    toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
+    A = Split(str, " ", -1, vbTextCompare)
+    toDate = DateSerial(CInt(A(2)), toMonth(A(1)), CInt(A(0)))
 End Function
 
 '------------------------------------------------------------------------------
@@ -173,16 +173,16 @@ With ActiveSheet.ListObjects(1)
 totalrows = .ListRows.Count
 Do Until EOF(1)
     Line Input #1, textline
-    a = Split(textline, ";", -1, vbTextCompare)
+    A = Split(textline, ";", -1, vbTextCompare)
     .ListRows.Add
     totalrows = totalrows + 1
-    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(a(0)))
-    If LenB(Trim$(a(2))) = 0 Then
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(a(3)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(5))
+    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
+    If LenB(Trim$(A(2))) = 0 Then
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
     Else
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(a(2)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(4))
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
     End If
 Loop
 End With
