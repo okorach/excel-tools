@@ -377,8 +377,3 @@ MsgBox Err.Number & vbCrLf & Err.Description
 End If
 End Sub
 
-' Change log
-'
-' Version | Date       | Author        | Changes
-' 1.0     | 2012-11-21 | O. Korach     | First version
-' 1.1     | 2013-02-12 | O. Korach     | Added table manipulation methods
