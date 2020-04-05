@@ -25,6 +25,7 @@ Const ACCOUNT_TYPE_VALUE = "B7"
 Const IN_BUDGET_LABEL = "A8"
 Const IN_BUDGET_VALUE = "B8"
 
+
 Sub CreateAccount()
     accountNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
     accountName = InputBox("Account name ?", "Account Name", "<accountName>")

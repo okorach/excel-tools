@@ -314,4 +314,3 @@ Public Function NumberOfDimensions(arr As Variant) As Integer
 
     NumberOfDimensions = Ndx - 1
 End Function
-

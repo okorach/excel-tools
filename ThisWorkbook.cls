@@ -15,26 +15,38 @@ Private Sub Workbook_Open()
 Application.Calculation = xlAutomatic
 End Sub
 
-Function getLabel(key)
+Public Function GetLabel(key)
     lang = getNamedVariableValue("Language")
     If lang = "English" Then
         col = 3
     Else
         col = 2
     End If
-    getLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
+
+    GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
+    If IsError(GetLabel) Then
+        GetLabel = key & " not found"
+    End If
 End Function
 
-Function getColName(key)
-    getColName = getLabel(key)
+Public Function GetColName(key)
+    GetColName = GetLabel(key)
 End Function
+
+Public Sub ErrorInfo(key1 As String, Optional key2 As String = "")
+    msg = GetLabel(key1)
+    If key2 <> "" Then
+        ms = msg & ", " & GetLabel(key2)
+    End If
+    MsgBox (msg)
+End Sub
 
 Sub mergeAccounts()
 
     Call freezeDisplay
 
     For Each colKey In Array("k.date", "k.accountName", "k.amount", "k.description", "k.subcategory", "k.inBudget")
-        col = getColName(colKey)
+        col = GetColName(colKey)
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
@@ -93,12 +105,12 @@ Public Sub genBudget()
     Dim spreadCol() As Variant
 
     With Sheets("Comptes Merge")
-        dateCol = getTableColumn(.ListObjects(1), getColName("k.date"), False)
-        accountCol = getTableColumn(.ListObjects(1), getColName("k.accountName"), False)
-        amountCol = getTableColumn(.ListObjects(1), getColName("k.amount"), False)
-        descCol = getTableColumn(.ListObjects(1), getColName("k.description"), False)
-        categCol = getTableColumn(.ListObjects(1), getColName("k.subcategory"), False)
-        spreadCol = getTableColumn(.ListObjects(1), getColName("k.inBudget"), False)
+        dateCol = getTableColumn(.ListObjects(1), GetColName("k.date"), False)
+        accountCol = getTableColumn(.ListObjects(1), GetColName("k.accountName"), False)
+        amountCol = getTableColumn(.ListObjects(1), GetColName("k.amount"), False)
+        descCol = getTableColumn(.ListObjects(1), GetColName("k.description"), False)
+        categCol = getTableColumn(.ListObjects(1), GetColName("k.subcategory"), False)
+        spreadCol = getTableColumn(.ListObjects(1), GetColName("k.inBudget"), False)
     End With
 
     Dim moreRows As Integer
@@ -146,12 +158,12 @@ Public Sub genBudget()
 
     With Sheets("Comptes Merge")
         Call resizeTable(.ListObjects(1), nbRows + moreRows)
-        Call setTableColumn(.ListObjects(1), getColName("k.date"), dateCol, False)
-        Call setTableColumn(.ListObjects(1), getColName("k.accountName"), accountCol, False)
-        Call setTableColumn(.ListObjects(1), getColName("k.amount"), amountCol, False)
-        Call setTableColumn(.ListObjects(1), getColName("k.description"), descCol, False)
-        Call setTableColumn(.ListObjects(1), getColName("k.subcategory"), categCol, False)
-        Call setTableColumn(.ListObjects(1), getColName("k.amountSpread"), spreadCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.date"), dateCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.accountName"), accountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.amount"), amountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.description"), descCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.subcategory"), categCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName("k.amountSpread"), spreadCol, False)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
     End With
@@ -168,7 +180,7 @@ End Sub
 Public Sub GoToAccount()
     selectedNbr = Range("H72").Value
     Dim accountName As String
-    accountName = Sheets("Paramètres").Range("L" & CStr(selectedNbr + 1))
+    accountName = Sheets("ParamÃ¨tres").Range("L" & CStr(selectedNbr + 1))
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If

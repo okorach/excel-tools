@@ -10,9 +10,10 @@ End Function
 
 Private Function toMonth(str) As Integer
     s = LCase$(Trim$(str))
+    ' TODO handle accents in Fev and Dec
     If s Like "jan*" Then
         toMonth = 1
-    ElseIf s Like "fe*" Or s Like "fé*" Then
+    ElseIf s Like "f?[bv]*" Then
         toMonth = 2
     ElseIf s Like "mar*" Then
         toMonth = 3
@@ -32,7 +33,7 @@ Private Function toMonth(str) As Integer
         toMonth = 10
     ElseIf s Like "nov*" Then
         toMonth = 11
-    ElseIf s Like "dec*" Or s Like "déc*" Then
+    ElseIf s Like "d?c*" Then
         toMonth = 12
     Else
         toMonth = 0
@@ -63,10 +64,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
+            Call ErrorMessage(k.errorImportNotRecognized, k.warningImportCancelled)
         End If
     Else
-        MsgBox ("Import annulé")
+        Call ErrorMessage(k.warningImportCancelled)
     End If
 End Sub
 Sub ImportING(fileToOpen As Variant)
@@ -218,8 +219,8 @@ iRow = 1
 Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Chèque") Then
-        tDesc(iRow) = "Chèque " & CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value Like "Ch?que") Then
+        tDesc(iRow) = "Cheque " & CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
         tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
     Else
@@ -400,7 +401,7 @@ Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
         accStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilité" Then
+    ElseIf Cells(iRow, 1) Like "Disponibilit?" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -499,7 +500,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
         End If
     Else
         If Not silent Then
-            MsgBox "Export aborted"
+            Call ErrorMessage(k.warningExportCancelled)
         End If
     End If
     Application.DisplayAlerts = False
@@ -527,7 +528,7 @@ Sub ExportAll()
         Next ws
         Call unfreezeDisplay
     Else
-        MsgBox ("Export aborted")
+        Call ErrorMessage(k.warningExportCancelled)
     End If
 End Sub
 Sub ExportLCL()
