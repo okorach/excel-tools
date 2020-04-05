@@ -10,9 +10,10 @@ End Function
 
 Private Function toMonth(str) As Integer
     s = LCase$(Trim$(str))
+    ' TODO handle accents in Fev and Dec
     If s Like "jan*" Then
         toMonth = 1
-    ElseIf s Like "fe*" Or s Like "fé*" Then
+    ElseIf s Like "f?[bv]*" Then
         toMonth = 2
     ElseIf s Like "mar*" Then
         toMonth = 3
@@ -32,7 +33,7 @@ Private Function toMonth(str) As Integer
         toMonth = 10
     ElseIf s Like "nov*" Then
         toMonth = 11
-    ElseIf s Like "dec*" Or s Like "déc*" Then
+    ElseIf s Like "d?c*" Then
         toMonth = 12
     Else
         toMonth = 0
@@ -40,8 +41,8 @@ Private Function toMonth(str) As Integer
 End Function
 
 Private Function toDate(str) As Date
-    a = Split(str, " ", -1, vbTextCompare)
-    toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
+    A = Split(str, " ", -1, vbTextCompare)
+    toDate = DateSerial(CInt(A(2)), toMonth(A(1)), CInt(A(0)))
 End Function
 
 '------------------------------------------------------------------------------
@@ -63,10 +64,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            MsgBox ("Format d'import (banque) non identifiable, opération annulée")
+            Call ErrorMessage(k.errorImportNotRecognized, k.warningImportCancelled)
         End If
     Else
-        MsgBox ("Import annulé")
+        Call ErrorMessage(k.warningImportCancelled)
     End If
 End Sub
 Sub ImportING(fileToOpen As Variant)
@@ -173,16 +174,16 @@ With ActiveSheet.ListObjects(1)
 totalrows = .ListRows.Count
 Do Until EOF(1)
     Line Input #1, textline
-    a = Split(textline, ";", -1, vbTextCompare)
+    A = Split(textline, ";", -1, vbTextCompare)
     .ListRows.Add
     totalrows = totalrows + 1
-    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(a(0)))
-    If LenB(Trim$(a(2))) = 0 Then
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(a(3)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(5))
+    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
+    If LenB(Trim$(A(2))) = 0 Then
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
     Else
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(a(2)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(a(1)) & " --> " & Trim$(a(4))
+        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
+        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
     End If
 Loop
 End With
@@ -218,8 +219,8 @@ iRow = 1
 Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = DateValue(Cells(iRow, 1).Value)
     tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value = "Chèque") Then
-        tDesc(iRow) = "Chèque " & CStr(Cells(iRow, 4).Value)
+    If (Cells(iRow, 3).Value Like "Ch?que") Then
+        tDesc(iRow) = "Cheque " & CStr(Cells(iRow, 4).Value)
     ElseIf (Cells(iRow, 3).Value = "Virement") Then
         tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
     Else
@@ -400,7 +401,7 @@ Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
         bank = Cells(iRow, 2).Value
     ElseIf Cells(iRow, 1) = "Status" Then
         accStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Disponibilité" Then
+    ElseIf Cells(iRow, 1) Like "Disponibilit?" Then
         availability = Cells(iRow, 2).Value
     Else
         ' Do nothing
@@ -499,7 +500,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
         End If
     Else
         If Not silent Then
-            MsgBox "Export aborted"
+            Call ErrorMessage(k.warningExportCancelled)
         End If
     End If
     Application.DisplayAlerts = False
@@ -527,7 +528,7 @@ Sub ExportAll()
         Next ws
         Call unfreezeDisplay
     Else
-        MsgBox ("Export aborted")
+        Call ErrorMessage(k.warningExportCancelled)
     End If
 End Sub
 Sub ExportLCL()
