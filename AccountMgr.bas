@@ -25,6 +25,12 @@ Const ACCOUNT_TYPE_VALUE = "B7"
 Const IN_BUDGET_LABEL = "A8"
 Const IN_BUDGET_VALUE = "B8"
 
+Const DATE_COL = "A"
+Const AMOUNT_COL = "B"
+Const BALANCE_COL = "C"
+Const PARAMS_SHEET = "Paramètres"
+
+
 
 Sub CreateAccount()
     accountNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
@@ -67,17 +73,13 @@ Public Sub formatAccountSheets()
        ' Make sure the sheet is not anything else than an account
        If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
             Dim name As String
-            Dim acctype As String
-            Dim acurrency As String
             name = ws.name
-            acctype = accountType(name)
-            acurrency = accountCurrency(name)
-            Call SetColumnWidth("A", 15, name)
+            Call SetColumnWidth(DATE_COL, 15, name)
             ws.ListObjects(1).ListColumns(1).DataBodyRange.NumberFormat = "m/d/yyyy"
-            Call SetColumnWidth("B", 20, name)
-            Call SetColumnWidth("C", 20, name)
-            If (acctype = "Standard") Then
-                If (acurrency = "EUR") Then
+            Call SetColumnWidth(AMOUNT_COL, 20, name)
+            Call SetColumnWidth(BALANCE_COL, 20, name)
+            If (accountType(name) = "Standard") Then
+                If (accountCurrency(name) = "EUR") Then
                     Call SetColumnWidth("D", 70, name)
                     Call SetColumnWidth("E", 15, name)
                     Call SetColumnWidth("F", 15, name)
@@ -130,51 +132,50 @@ End Sub
 
 '-------------------------------------------------
 Public Function isTemplate(ByVal ws As Worksheet) As Boolean
-    If (ws.Cells(1, 2).Value = "TEMPLATE") Then
-        isTemplate = True
-    Else
-        isTemplate = False
-    End If
+    isTemplate = (ws.Cells(1, 2).Value = "TEMPLATE")
 End Function
+
+'-------------------------------------------------
+Private Sub setClosedAccountsVisibility(visibility)
+    For Each ws In Worksheets
+        If (isClosed(ws.name)) Then
+            ws.Visible = visibility
+        End If
+    Next ws
+End Sub
 
 '-------------------------------------------------
 Public Sub hideClosedAccounts()
     If (ThisWorkbook.Names("hideClosedAccounts").RefersToRange.Value = 1) Then
-    For Each ws In Worksheets
-        If (accountStatus(ws.name) = "Closed") Then
-            ws.Visible = False
-        End If
-    Next ws
+        Call setClosedAccountsVisibility(False)
     End If
 End Sub
+
 '-------------------------------------------------
 Public Sub showClosedAccounts()
+    Call setClosedAccountsVisibility(True)
+End Sub
+
+'-------------------------------------------------
+Private Sub setTemplateAccountsVisibility(visibility)
     For Each ws In Worksheets
-        If (accountStatus(ws.name) = "Closed") Then
-            ws.Visible = True
+        If isTemplate(ws) Then
+            ws.Visible = visibility
         End If
     Next ws
 End Sub
 '-------------------------------------------------
 Public Sub hideTemplateAccounts()
-    For Each ws In Worksheets
-        If (isTemplate(ws)) Then
-            ws.Visible = False
-        End If
-    Next ws
+    Call setTemplateAccountsVisibility(False)
 End Sub
 '-------------------------------------------------
 Public Sub showTemplateAccounts()
-    For Each ws In Worksheets
-        If (isTemplate(ws)) Then
-            ws.Visible = True
-        End If
-    Next ws
+    Call setTemplateAccountsVisibility(True)
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets("Paramètres").ListObjects("tblOpenAccounts"))
-    With Sheets("Paramètres").ListObjects("tblOpenAccounts")
+    Call truncateTable(Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts"))
+    With Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts")
         For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
             If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -185,7 +186,7 @@ Public Sub refreshOpenAccountsList()
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = "Paramètres!$L$2:$L$" & CStr(Sheets("Paramètres").ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts").ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True
@@ -199,9 +200,9 @@ End Sub
 Public Sub sortAccount(oTable)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
-    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[Date]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.date") & "]"), SortOn:=xlSortOnValues, Order:= _
         xlAscending, DataOption:=xlSortNormal
-    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[Montant]"), SortOn:=xlSortOnValues, Order:= _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.amount") & "]"), SortOn:=xlSortOnValues, Order:= _
         xlDescending, DataOption:=xlSortNormal
     With oTable.Sort
         .Header = xlYes
@@ -280,7 +281,7 @@ End Function
 
 '-------------------------------------------------
 Public Function accountExists(accountName As String) As Boolean
-    accountExists = (sheetExists(accountName) And Sheets(accountName).Range(ACCOUNT_NAME_LABEL) = "Nom Compte")
+    accountExists = (sheetExists(accountName) And Sheets(accountName).Range(ACCOUNT_NAME_LABEL) = GetLabel("k.accountName"))
 End Function
 '-------------------------------------------------
 Public Function isAnAccountSheet(ByVal ws As Worksheet) As Boolean

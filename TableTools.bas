@@ -35,10 +35,10 @@ Public Sub resizeTable(oTable, targetSize As Integer)
         oTable.ListRows.Add ' Add 1 row at the end, then extend
         oTable.ListRows(nbRows + 1).Range.Resize(targetSize - nbRows - 1).Insert Shift:=xlDown
     ElseIf nbRows > targetSize Then
-        ' oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete Shift:=xlUp
-        For i = targetSize + 1 To nbRows
-            oTable.ListRows(targetSize + 1).Delete
-        Next i
+        oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete Shift:=xlUp
+        'For i = nbRows To targetSize + 1 Step -1
+        '    oTable.ListRows(i).Delete
+        'Next i
     End If
 
 End Sub
