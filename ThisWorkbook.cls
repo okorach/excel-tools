@@ -15,32 +15,6 @@ Private Sub Workbook_Open()
 Application.Calculation = xlAutomatic
 End Sub
 
-Public Function GetLabel(key)
-    lang = getNamedVariableValue("Language")
-    If lang = "English" Then
-        col = 3
-    Else
-        col = 2
-    End If
-
-    GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
-    If IsError(GetLabel) Then
-        GetLabel = key & " not found"
-    End If
-End Function
-
-Public Function GetColName(key)
-    GetColName = GetLabel(key)
-End Function
-
-Public Sub ErrorInfo(key1 As String, Optional key2 As String = "")
-    msg = GetLabel(key1)
-    If key2 <> "" Then
-        ms = msg & ", " & GetLabel(key2)
-    End If
-    MsgBox (msg)
-End Sub
-
 Sub mergeAccounts()
 
     Call freezeDisplay
@@ -188,5 +162,3 @@ End Sub
 Public Sub GoToSolde()
     Sheets("Solde").Activate
 End Sub
-
-
