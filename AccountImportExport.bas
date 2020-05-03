@@ -8,6 +8,7 @@ Private Function toAmount(str) As Double
     End If
 End Function
 
+
 Private Function toMonth(str) As Integer
     s = LCase$(Trim$(str))
     ' TODO handle accents in Fev and Dec
@@ -64,10 +65,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            Call ErrorMessage(k.errorImportNotRecognized, k.warningImportCancelled)
+            Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
         End If
     Else
-        Call ErrorMessage(k.warningImportCancelled)
+        Call ErrorMessage("k.warningImportCancelled")
     End If
 End Sub
 Sub ImportING(fileToOpen As Variant)
@@ -500,7 +501,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
         End If
     Else
         If Not silent Then
-            Call ErrorMessage(k.warningExportCancelled)
+            Call ErrorMessage("k.warningExportCancelled")
         End If
     End If
     Application.DisplayAlerts = False
@@ -528,7 +529,7 @@ Sub ExportAll()
         Next ws
         Call unfreezeDisplay
     Else
-        Call ErrorMessage(k.warningExportCancelled)
+        Call ErrorMessage("k.warningExportCancelled")
     End If
 End Sub
 Sub ExportLCL()
