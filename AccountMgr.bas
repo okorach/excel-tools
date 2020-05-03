@@ -1,12 +1,25 @@
 Attribute VB_Name = "AccountMgr"
-Const NOT_AN_ACCOUNT = 0
-Const DOMESTIC_ACCOUNT = 1
-Const FOREIGN_ACCOUNT = 2
-Const DOMESTIC_SHARES_ACCOUNT = 3
-Const FOREIGN_SHARES_ACCOUNT = 4
+Public Const NOT_AN_ACCOUNT As Integer = 0
+Public Const DOMESTIC_ACCOUNT As Integer = 1
+Public Const FOREIGN_ACCOUNT As Integer = 2
+Public Const DOMESTIC_SHARES_ACCOUNT As Integer = 3
+Public Const FOREIGN_SHARES_ACCOUNT As Integer = 4
 
-Const ACCOUNT_CLOSED = 0
-Const ACCOUNT_OPEN = 1
+Public Const DATE_KEY As String = "k.date"
+Public Const ACCOUNT_NAME_KEY As String = "k.accountName"
+Public Const AMOUNT_KEY As String = "k.amount"
+Public Const DESCRIPTION_KEY As String = "k.description"
+Public Const SUBCATEGORY_KEY As String = "k.subcategory"
+Public Const IN_BUDGET_KEY As String = "k.inBudget"
+Public Const SPREAD_KEY As String = "k.amountSpread"
+
+Public Const PARAMS_SHEET As String = "Param�tres"
+Public Const ACCOUNTS_SHEET As String = "Comptes"
+Public Const MERGE_SHEET As String = "Comptes Merge"
+Public Const BALANCE_SHEET As String = "Solde"
+
+Public Const ACCOUNT_CLOSED As Integer = 0
+Public Const ACCOUNT_OPEN As Integer = 1
 
 Const ACCOUNT_NAME_LABEL = "A1"
 Const ACCOUNT_NAME_VALUE = "B1"
@@ -28,9 +41,9 @@ Const IN_BUDGET_VALUE = "B8"
 Const DATE_COL = "A"
 Const AMOUNT_COL = "B"
 Const BALANCE_COL = "C"
-Const PARAMS_SHEET = "Paramètres"
 
-
+Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
+Const ACCOUNTS_TABLE = "tblAccounts"
 
 Sub CreateAccount()
     accountNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
@@ -38,13 +51,16 @@ Sub CreateAccount()
     Sheets("Account Template").Visible = True
     Sheets("Account Template").Copy Before:=Sheets(1)
     Sheets("Account Template").Visible = False
-    Sheets(1).name = accountName
-    ' Sheets(1).Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
-    Sheets(1).Range(ACCOUNT_NAME_VALUE).Value = accountName
-    Sheets(1).Range(ACCOUNT_NBR_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,2,FALSE)"
-    Sheets(1).Range(ACCOUNT_BANK_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,4,FALSE)"
-    Sheets(1).Range(ACCOUNT_STATUS_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,6,FALSE)"
-    Sheets(1).Range(ACCOUNT_AVAIL_VALUE).Formula = "=VLOOKUP(B$1,TblAccounts,5,FALSE)"
+    With Sheets(1)
+        .name = accountName
+        ' .Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
+        .Range(ACCOUNT_NAME_VALUE).Value = accountName
+        formulaRoot = "=VLOOKUP(B$1," & ACCOUNTS_TABLE
+        .Range(ACCOUNT_NBR_VALUE).Formula = formulaRoot & ",2,FALSE)"
+        .Range(ACCOUNT_BANK_VALUE).Formula = formulaRoot & ",4,FALSE)"
+        .Range(ACCOUNT_STATUS_VALUE).Formula = formulaRoot & ",6,FALSE)"
+        .Range(ACCOUNT_AVAIL_VALUE).Formula = formulaRoot & ",5,FALSE)"
+    End With
 End Sub
 
 
@@ -174,19 +190,19 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call freezeDisplay
-    Call truncateTable(Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts"))
-    With Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts")
-        For i = 1 To Sheets("Comptes").ListObjects("tblAccounts").ListRows.Count
-            If (Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 6).Value = "Open") Then
+    Call truncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
+    With Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS)
+        For i = 1 To Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows.Count
+            If (Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 6).Value = "Open") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
-                .ListRows(.ListRows.Count).Range.Cells(1, 1).Value = Sheets("Comptes").ListObjects("tblAccounts").ListRows(i).Range.Cells(1, 1).Value
+                .ListRows(.ListRows.Count).Range.Cells(1, 1).Value = Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 1).Value
             End If
         Next i
         nbrAccounts = .ListRows.Count + 1
     End With
     ActiveSheet.Shapes("Drop Down 2").Select
     With Selection
-        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects("tblOpenAccounts").ListRows.Count + 1)
+        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS).ListRows.Count + 1)
         .LinkedCell = "$H$72"
         .DropDownLines = 8
         .Display3DShading = True

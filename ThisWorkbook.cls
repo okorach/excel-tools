@@ -19,7 +19,7 @@ Sub mergeAccounts()
 
     Call freezeDisplay
 
-    For Each colKey In Array("k.date", "k.accountName", "k.amount", "k.description", "k.subcategory", "k.inBudget")
+    For Each colKey In Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY)
         col = GetColName(colKey)
         firstAccount = True
         Dim array1d() As Variant
@@ -28,9 +28,9 @@ Sub mergeAccounts()
            If (isAnAccountSheet(ws)) Then
                 'MsgBox (ws + " " + colNbr)
                 ' Loop on all accounts of the sheet
-                If (colKey = "k.accountName") Then
+                If (colKey = ACCOUNT_NAME_KEY) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
-                ElseIf (colKey = "k.inBudget" And Not isAccountInBudget(ws.name)) Then
+                ElseIf (colKey = IN_BUDGET_KEY And Not isAccountInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
                     arr1d = getTableColumn(ws.ListObjects(1), col, False)
@@ -43,14 +43,14 @@ Sub mergeAccounts()
                 End If
             End If
         Next ws
-        Call setTableColumn(Sheets("Comptes Merge").ListObjects(1), col, totalColumn, False)
+        Call setTableColumn(Sheets(MERGE_SHEET).ListObjects(1), col, totalColumn, False)
         Erase totalColumn
     Next colKey
-    ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge").Sort.SortFields.Clear
-    ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge").Sort. _
+    ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge").Sort. _
         SortFields.Add key:=Range("AccountsMerge[[#Headers],[#Data],[Date]]"), SortOn _
         :=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    With ActiveWorkbook.Worksheets("Comptes Merge").ListObjects("AccountsMerge"). _
+    With ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge"). _
         Sort
         .Header = xlYes
         .MatchCase = False
@@ -58,17 +58,17 @@ Sub mergeAccounts()
         .SortMethod = xlPinYin
         .Apply
     End With
-    Sheets("Comptes Merge").PivotTables(1).PivotCache.Refresh
+    Sheets(MERGE_SHEET).PivotTables(1).PivotCache.Refresh
 
 End Sub
 
 Public Sub genBudget()
 
     Dim newSize As Integer
-    'Sheets("Comptes Merge").ListObjects(1).Range.AutoFilter.ShowAllData
-    nbRows = Sheets("Comptes Merge").ListObjects(1).ListRows.Count
+    'Sheets(MERGE_SHEET).ListObjects(1).Range.AutoFilter.ShowAllData
+    nbRows = Sheets(MERGE_SHEET).ListObjects(1).ListRows.Count
     newSize = nbRows
-    nbCols = Sheets("Comptes Merge").ListObjects(1).ListColumns.Count
+    nbCols = Sheets(MERGE_SHEET).ListObjects(1).ListColumns.Count
 
     Dim oTable As Variant
     Dim dateCol() As Variant
@@ -78,13 +78,13 @@ Public Sub genBudget()
     Dim categCol() As Variant
     Dim spreadCol() As Variant
 
-    With Sheets("Comptes Merge")
-        dateCol = getTableColumn(.ListObjects(1), GetColName("k.date"), False)
-        accountCol = getTableColumn(.ListObjects(1), GetColName("k.accountName"), False)
-        amountCol = getTableColumn(.ListObjects(1), GetColName("k.amount"), False)
-        descCol = getTableColumn(.ListObjects(1), GetColName("k.description"), False)
-        categCol = getTableColumn(.ListObjects(1), GetColName("k.subcategory"), False)
-        spreadCol = getTableColumn(.ListObjects(1), GetColName("k.inBudget"), False)
+    With Sheets(MERGE_SHEET)
+        dateCol = getTableColumn(.ListObjects(1), GetColName(DATE_KEY), False)
+        accountCol = getTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), False)
+        amountCol = getTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), False)
+        descCol = getTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), False)
+        categCol = getTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), False)
+        spreadCol = getTableColumn(.ListObjects(1), GetColName(IN_BUDGET_KEY), False)
     End With
 
     Dim moreRows As Integer
@@ -130,14 +130,14 @@ Public Sub genBudget()
         End If
     Next i
 
-    With Sheets("Comptes Merge")
+    With Sheets(MERGE_SHEET)
         Call resizeTable(.ListObjects(1), nbRows + moreRows)
-        Call setTableColumn(.ListObjects(1), GetColName("k.date"), dateCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName("k.accountName"), accountCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName("k.amount"), amountCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName("k.description"), descCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName("k.subcategory"), categCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName("k.amountSpread"), spreadCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(DATE_KEY), dateCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), accountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), amountCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), descCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), categCol, False)
+        Call setTableColumn(.ListObjects(1), GetColName(SPREAD_KEY), spreadCol, False)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
     End With
@@ -154,11 +154,11 @@ End Sub
 Public Sub GoToAccount()
     selectedNbr = Range("H72").Value
     Dim accountName As String
-    accountName = Sheets("Paramètres").Range("L" & CStr(selectedNbr + 1))
+    accountName = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If
 End Sub
 Public Sub GoToSolde()
-    Sheets("Solde").Activate
+    Sheets(BALANCE_SHEET).Activate
 End Sub
