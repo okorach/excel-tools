@@ -287,14 +287,18 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
+dateCol = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
+amountCol = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
+descCol = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
+
 With ActiveSheet.ListObjects(1)
     n = .ListRows.Count
     For iRow = 1 To nbOps
         .ListRows.Add
         n = n + 1
-        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
-        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
+        .ListColumns(dateCol).DataBodyRange.Rows(n).Value = tDates(iRow)
+        .ListColumns(amountCol).DataBodyRange.Rows(n).Value = tValues(iRow)
+        .ListColumns(descCol).DataBodyRange.Rows(n).Value = tDesc(iRow)
     Next iRow
 End With
 
@@ -352,14 +356,18 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
+dateCol = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
+amountCol = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
+descCol = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
+
 With ActiveSheet.ListObjects(1)
     n = .ListRows.Count
     For iRow = 1 To nbOps
         .ListRows.Add
         n = n + 1
-        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
-        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
+        .ListColumns(dateCol).DataBodyRange.Rows(n).Value = tDates(iRow)
+        .ListColumns(amountCol).DataBodyRange.Rows(n).Value = tValues(iRow)
+        .ListColumns(descCol).DataBodyRange.Rows(n).Value = tDesc(iRow)
     Next iRow
 End With
 
