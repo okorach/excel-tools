@@ -12,9 +12,6 @@ Attribute VB_Name = "MiscTools"
 ' SetColumnWidth(colString As String, width As Double, Optional ws As Variant = "")
 
 
-Const CHF_FORMAT = "#,###,##0"" CHF"";- #,###,##0"" CHF"";"""""
-Const EUR_FORMAT = "#,###,##0"" _"";- #,###,##0"" _"";"""""
-Const USD_FORMAT = "#,###,##0"" $"";- #,###,##0"" $"";"""""
 
 Public Sub freezeDisplay()
     ' Freeze the Excel display so that macros run faster
