@@ -1,8 +1,8 @@
 Attribute VB_Name = "AccountMgr"
 
-Public Const CHF_FORMAT = "#,###,##0"" CHF "";-#,###,##0"" CHF "";"""""
-Public Const EUR_FORMAT = "#,###,##0"" € "";-#,###,##0"" € "";"""""
-Public Const USD_FORMAT = "#,###,##0"" $ "";-#,###,##0"" $ "";"""""
+Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
+Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
 Public Const NOT_AN_ACCOUNT As Integer = 0
 Public Const DOMESTIC_ACCOUNT As Integer = 1
@@ -456,6 +456,30 @@ Public Function isClosed(accountName As String) As Boolean
     isClosed = Not isOpen(accountName)
 End Function
 
+
+Public Sub AddSavingsRow()
+    Call AddInvestmentRow(ActiveSheet.ListObjects(1))
+End Sub
+
+Private Sub AddInvestmentRow(oTable)
+    oTable.ListRows.Add
+    nbRows = oTable.ListRows.Count
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = Date
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(BALANCE_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).Value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).Value
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).Value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).Value
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=[Solde]-R[-1]C[1]"
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=CONCATENATE(""Delta solde "",TEXT(R[-1]C[-3],date_format))"
+End Sub
 
 '-------------------------------------------------
 Public Function accountExists(accountName As String) As Boolean
