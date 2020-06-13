@@ -1,4 +1,9 @@
 Attribute VB_Name = "AccountMgr"
+
+Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
+Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
+
 Public Const NOT_AN_ACCOUNT As Integer = 0
 Public Const DOMESTIC_ACCOUNT As Integer = 1
 Public Const FOREIGN_ACCOUNT As Integer = 2
@@ -8,8 +13,10 @@ Public Const FOREIGN_SHARES_ACCOUNT As Integer = 4
 Public Const DATE_KEY As String = "k.date"
 Public Const ACCOUNT_NAME_KEY As String = "k.accountName"
 Public Const AMOUNT_KEY As String = "k.amount"
+Public Const BALANCE_KEY As String = "k.accountBalance"
 Public Const DESCRIPTION_KEY As String = "k.description"
 Public Const SUBCATEGORY_KEY As String = "k.subcategory"
+Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
@@ -225,40 +232,59 @@ Public Sub formatAccountSheets()
        ' Make sure the sheet is not anything else than an account
        If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
             Dim name As String
+            Dim col As Integer
             name = ws.name
-            Call SetColumnWidth(DATE_COL, 15, name)
-            ws.ListObjects(1).ListColumns(1).DataBodyRange.NumberFormat = "m/d/yyyy"
-            Call SetColumnWidth(AMOUNT_COL, 20, name)
-            Call SetColumnWidth(BALANCE_COL, 20, name)
-            If (accountType(name) = "Standard") Then
-                If (accountCurrency(name) = "EUR") Then
-                    Call SetColumnWidth("D", 70, name)
-                    Call SetColumnWidth("E", 15, name)
-                    Call SetColumnWidth("F", 15, name)
-                    Call SetColumnWidth("G", 5, name)
-                    Call SetColumnWidth("H", 5, name)
-                    Call SetColumnWidth("I", 15, name)
-                Else:
-                    Call SetColumnWidth("D", 20, name)
-                    Call SetColumnWidth("E", 70, name)
-                    Call SetColumnWidth("F", 15, name)
-                    Call SetColumnWidth("G", 15, name)
-                    Call SetColumnWidth("H", 5, name)
-                    Call SetColumnWidth("I", 5, name)
-                    Call SetColumnWidth("J", 15, name)
-                End If
-            Else ' Shares accounts formatting
-                Call SetColumnWidth("D", 70, name)
-                Call SetColumnWidth("E", 20, name)
-                If (acurrency = "EUR") Then
-                   Call SetColumnWidth("F", 5, name)
-                   Call SetColumnWidth("G", 20, name)
-                   Call SetColumnWidth("H", 20, name)
-                Else
-                   Call SetColumnWidth("F", 15, name)
-                   Call SetColumnWidth("G", 5, name)
-                   Call SetColumnWidth("H", 15, name)
-                End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = "m/d/yyyy"
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(AMOUNT_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), "Montant USD")
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = USD_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(BALANCE_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 18, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), "Solde CHF")
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 18, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), "Solde USD")
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 18, name)
+                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 70, name)
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(SUBCATEGORY_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(CATEGORY_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 15, name)
+            End If
+            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(IN_BUDGET_KEY))
+            If col <> 0 Then
+                Call SetColumnWidth(Chr(col + 64), 5, name)
+                Call SetColumnWidth(Chr(col + 65), 5, name)
             End If
           ws.Cells.RowHeight = 13
           ws.Rows.Font.size = 10
@@ -430,6 +456,30 @@ Public Function isClosed(accountName As String) As Boolean
     isClosed = Not isOpen(accountName)
 End Function
 
+
+Public Sub AddSavingsRow()
+    Call AddInvestmentRow(ActiveSheet.ListObjects(1))
+End Sub
+
+Private Sub AddInvestmentRow(oTable)
+    oTable.ListRows.Add
+    nbRows = oTable.ListRows.Count
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = Date
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(BALANCE_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).Value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).Value
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).Value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).Value
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=[Solde]-R[-1]C[1]"
+    
+    col = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=CONCATENATE(""Delta solde "",TEXT(R[-1]C[-3],date_format))"
+End Sub
 
 '-------------------------------------------------
 Public Function accountExists(accountName As String) As Boolean
