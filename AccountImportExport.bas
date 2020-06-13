@@ -46,6 +46,9 @@ Private Function toDate(str) As Date
     toDate = DateSerial(CInt(A(2)), toMonth(A(1)), CInt(A(0)))
 End Function
 
+
+
+
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
@@ -71,17 +74,20 @@ Sub ImportAny()
         Call ErrorMessage("k.warningImportCancelled")
     End If
 End Sub
+
+
+
 Sub ImportING(fileToOpen As Variant)
 
 Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 Dim iRow As Integer
 Dim tDates() As Variant
 Dim tDesc() As String
-Dim tValues() As Double
+Dim tAmounts() As Double
 
 ReDim tDates(1 To 30000)
 ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
+ReDim tAmounts(1 To 30000)
 iRow = 1
 Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
     iRow = iRow + 1
@@ -91,24 +97,13 @@ iRow = 1
 Do While LenB(Cells(iRow, 1).Value) > 0
     tDates(iRow) = Cells(iRow, 1).Value
     tDesc(iRow) = Cells(iRow, 2).Value
-    tValues(iRow) = toAmount(Cells(iRow, 4).Value)
+    tAmounts(iRow) = toAmount(Cells(iRow, 4).Value)
     iRow = iRow + 1
 Loop
 ActiveWorkbook.Close
 
-With ActiveSheet.ListObjects(1)
-    totalrows = .ListRows.Count
-    For iRow = 1 To nbRows
-        .ListRows.Add
-        totalrows = totalrows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(ActiveSheet.ListObjects(1))
-
+Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
+Call sortAccount(tbl)
 Range("A" & CStr(totalrows)).Select
 
 End Sub
@@ -149,19 +144,8 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
-With ActiveSheet.ListObjects(1)
-    totalrows = .ListRows.Count
-    For iRow = 1 To nbRows
-        .ListRows.Add
-        totalrows = totalrows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(ActiveSheet.ListObjects(1))
-
+Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
+Call sortAccount(tbl)
 Range("A" & CStr(totalrows)).Select
 
 End Sub
@@ -173,24 +157,31 @@ Line Input #1, textline
 
 With ActiveSheet.ListObjects(1)
 totalrows = .ListRows.Count
+
+Dim dateCol As Integer
+Dim amountCol As Integer
+Dim descCol As Integer
+dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
+amountCol = GetColumnNumberFromName(tbl, GetLabel(AMOUNT_KEY))
+descCol = GetColumnNumberFromName(tbl, GetLabel(DESCRIPTION_KEY))
+
 Do Until EOF(1)
     Line Input #1, textline
     A = Split(textline, ";", -1, vbTextCompare)
     .ListRows.Add
     totalrows = totalrows + 1
-    .ListColumns(1).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
+    .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
     If LenB(Trim$(A(2))) = 0 Then
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
+        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
+        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
     Else
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
+        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
+        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
     End If
 Loop
 End With
 Close #1
 Call sortAccount(ActiveSheet.ListObjects(1))
-
 Range("A" & CStr(totalrows)).Select
 
 End Sub
@@ -231,18 +222,8 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
-With ActiveSheet.ListObjects(1)
-    totalrows = .ListRows.Count
-    For iRow = 1 To nbRows
-        .ListRows.Add
-        totalrows = totalrows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(ActiveSheet.ListObjects(1))
+Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
+Call sortAccount(tbl)
 Range("A" & CStr(totalrows)).Select
 
 End Sub
@@ -287,18 +268,8 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
-With ActiveSheet.ListObjects(1)
-    n = .ListRows.Count
-    For iRow = 1 To nbOps
-        .ListRows.Add
-        n = n + 1
-        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
-        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(ActiveSheet.ListObjects(1))
+Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
+Call sortAccount(tbl)
 Range("A" & CStr(n)).Select
 
 End Sub
@@ -352,18 +323,8 @@ Do While LenB(Cells(iRow, 1).Value) > 0
 Loop
 ActiveWorkbook.Close
 
-With ActiveSheet.ListObjects(1)
-    n = .ListRows.Count
-    For iRow = 1 To nbOps
-        .ListRows.Add
-        n = n + 1
-        .ListColumns(1).DataBodyRange.Rows(n).Value = tDates(iRow)
-        .ListColumns(3).DataBodyRange.Rows(n).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(n).Value = tDesc(iRow)
-    Next iRow
-End With
-
-Call sortAccount(ActiveSheet.ListObjects(1))
+Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
+Call sortAccount(tbl)
 Range("A" & CStr(n)).Select
 
 End Sub
@@ -435,21 +396,32 @@ ActiveSheet.Cells(3, 2).Value = bank
 ActiveSheet.Cells(4, 2).Value = accStatus
 ActiveSheet.Cells(5, 2).Value = availability
 
-With ActiveSheet.ListObjects(1)
+Dim tbl As Variant
+Dim dateCol As Integer
+Dim amountCol As Integer
+Dim descCol As Integer
+Dim subcatCol As Integer
+Dim budgetCol As Integer
+tbl = ActiveSheet.ListObjects(1)
+dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
+amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+budgetCol = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
+With tbl
     totalrows = .ListRows.Count
     For iRow = 1 To nbRows
         .ListRows.Add
         totalrows = totalrows + 1
-        .ListColumns(1).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-        .ListColumns(2).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-        .ListColumns(4).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-        .ListColumns(5).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
-        .ListColumns(7).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
+        .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+        .ListColumns(subcatCol).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
+        .ListColumns(budgetCol).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
     Next iRow
 End With
 
-Call sortAccount(ActiveSheet.ListObjects(1))
-
+Call sortAccount(tbl)
 Range("A" & CStr(totalrows)).Select
 
 End Sub
@@ -537,4 +509,30 @@ Sub ExportLCL()
 End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
+End Sub
+
+
+Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
+                            Optional amountColName As String = "")
+    Dim dateCol As Integer
+    Dim amountCol As Integer
+    Dim descCol As Integer
+    Dim tbl As Variant
+    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    If amountColName = "" Then
+        amountColName = GetLabel(AMOUNT_KEY)
+    End If
+    amountCol = GetColumnNumberFromName(oTable, amountColName)
+    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    
+    With tbl
+        totalrows = .ListRows.Count
+        For iRow = 1 To nbRows
+            .ListRows.Add
+            totalrows = totalrows + 1
+            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
+            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+        Next iRow
+    End With
 End Sub
