@@ -84,7 +84,15 @@ Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Vari
     getTableAsArray = arr
 End Function
 
-
+Public Function GetColumnNumberFromName(oTable, columnName As String) As Long
+    On Error GoTo Except
+    GetColumnNumberFromName = oTable.ListColumns(columnName).Index
+    GoTo ThisIsTheEnd
+Except:
+    GetColumnNumberFromName = 0
+ThisIsTheEnd:
+    
+End Function
 '------------------------------------------------------------------------------
 ' Set the values of a 2D array into a table object
 '------------------------------------------------------------------------------
