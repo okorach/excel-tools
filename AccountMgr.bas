@@ -375,7 +375,7 @@ End Sub
 Public Sub sortCurrentAccount()
     Call sortAccount(ActiveSheet.ListObjects(1))
 End Sub
-Public Sub sortAccount(oTable)
+Public Sub sortAccount(oTable As Variant)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
     oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.date") & "]"), SortOn:=xlSortOnValues, Order:= _
