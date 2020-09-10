@@ -375,7 +375,7 @@ End Sub
 Public Sub sortCurrentAccount()
     Call sortAccount(ActiveSheet.ListObjects(1))
 End Sub
-Public Sub sortAccount(oTable)
+Public Sub sortAccount(oTable As Variant)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
     oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.date") & "]"), SortOn:=xlSortOnValues, Order:= _
@@ -475,10 +475,10 @@ Private Sub AddInvestmentRow(oTable)
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).Value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).Value
     
     col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=[Solde]-R[-1]C[1]"
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
     
     col = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = "=CONCATENATE(""Delta solde "",TEXT(R[-1]C[-3],date_format))"
+    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
 End Sub
 
 '-------------------------------------------------
