@@ -1,4 +1,6 @@
 Attribute VB_Name = "AccountImportExport"
+Const MAX_IMPORT = 30000
+
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
         str = Replace(Replace(str, ",", "."), "'", "")
@@ -57,6 +59,7 @@ Sub ImportAny()
     Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
+        Call freezeDisplay
         Dim bank As String
         bank = Cells(3, 2).Value
         If (bank = "ING Direct") Then
@@ -68,121 +71,122 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
+            Call unfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
         End If
+        Call unfreezeDisplay
     Else
         Call ErrorMessage("k.warningImportCancelled")
     End If
 End Sub
 
 
-
 Sub ImportING(fileToOpen As Variant)
 
-Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tAmounts() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tAmounts(1 To 30000)
-iRow = 1
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-Loop
-nbRows = iRow - 1
-iRow = 1
-Do While LenB(Cells(iRow, 1).Value) > 0
-    tDates(iRow) = Cells(iRow, 1).Value
-    tDesc(iRow) = Cells(iRow, 2).Value
-    tAmounts(iRow) = toAmount(Cells(iRow, 4).Value)
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
-Call sortAccount(tbl)
-Range("A" & CStr(totalrows)).Select
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tAmounts() As Double
+    
+    iRow = 1
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+    Loop
+    nbRows = iRow - 1
+    ReDim tDates(1 To nbRows)
+    ReDim tDesc(1 To nbRows)
+    ReDim tAmounts(1 To nbRows)
+    
+    iRow = 1
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        tDates(iRow) = Cells(iRow, 1).Value
+        tDesc(iRow) = Cells(iRow, 2).Value
+        tAmounts(iRow) = toAmount(Cells(iRow, 4).Value)
+        iRow = iRow + 1
+    Loop
+    ActiveWorkbook.Close
+    
+    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
 
 End Sub
 
 Sub ImportRevolut(fileToOpen As Variant)
 
-Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 2
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-Loop
-nbRows = iRow - 2
-iRow = 2
-Do While LenB(Cells(iRow, 1).Value) > 0
-    tDates(iRow - 1) = toDate(Trim$(Cells(iRow, 1).Value))
-    tDesc(iRow - 1) = ""
-    If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
-        tValues(iRow - 1) = toAmount(Trim$(Cells(iRow, 4).Value))
-        If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
-            tDesc(iRow - 1) = Trim$(Cells(iRow, 6).Value) & " : "
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tAmounts() As Double
+    
+    
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+    Loop
+    nbRows = iRow - 2
+    ReDim tDates(1 To nbRows)
+    ReDim tDesc(1 To nbRows)
+    ReDim tAmounts(1 To nbRows)
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        tDates(iRow - 1) = toDate(Trim$(Cells(iRow, 1).Value))
+        tDesc(iRow - 1) = ""
+        If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
+            tAmounts(iRow - 1) = toAmount(Trim$(Cells(iRow, 4).Value))
+            If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
+                tDesc(iRow - 1) = Trim$(Cells(iRow, 6).Value) & " : "
+            End If
+        Else
+            tAmounts(iRow - 1) = -toAmount(Trim$(Cells(iRow, 3).Value))
+            If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
+                tDesc(iRow - 1) = Trim$(Cells(iRow, 5).Value) & " : "
+            End If
         End If
-    Else
-        tValues(iRow - 1) = -toAmount(Trim$(Cells(iRow, 3).Value))
-        If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
-            tDesc(iRow - 1) = Trim$(Cells(iRow, 5).Value) & " : "
-        End If
-    End If
-    tDesc(iRow - 1) = tDesc(iRow - 1) & Trim$(Cells(iRow, 2).Value)
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
-Call sortAccount(tbl)
-Range("A" & CStr(totalrows)).Select
+        tDesc(iRow - 1) = tDesc(iRow - 1) & Trim$(Cells(iRow, 2).Value)
+        iRow = iRow + 1
+    Loop
+    ActiveWorkbook.Close
+    
+    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
 
 End Sub
+
+
 Sub ImportRevolutCSV(fileToOpen As Variant)
 
-Open fileToOpen For Input As #1
-
-Line Input #1, textline
-
-With ActiveSheet.ListObjects(1)
-totalrows = .ListRows.Count
-
-Dim dateCol As Integer
-Dim amountCol As Integer
-Dim descCol As Integer
-dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
-amountCol = GetColumnNumberFromName(tbl, GetLabel(AMOUNT_KEY))
-descCol = GetColumnNumberFromName(tbl, GetLabel(DESCRIPTION_KEY))
-
-Do Until EOF(1)
+    Dim tbl As Variant
+    tbl = ActiveSheet.ListObjects(1)
+    
+    Dim dateCol As Integer
+    Dim amountCol As Integer
+    Dim descCol As Integer
+    dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
+    amountCol = GetColumnNumberFromName(tbl, GetLabel(AMOUNT_KEY))
+    descCol = GetColumnNumberFromName(tbl, GetLabel(DESCRIPTION_KEY))
+    
+    Dim totalrows As Integer
+    totalrows = tbl.ListRows.Count
+    
+    Open fileToOpen For Input As #1
     Line Input #1, textline
-    A = Split(textline, ";", -1, vbTextCompare)
-    .ListRows.Add
-    totalrows = totalrows + 1
-    .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
-    If LenB(Trim$(A(2))) = 0 Then
-        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
-        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
-    Else
-        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
-        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
-    End If
-Loop
-End With
-Close #1
-Call sortAccount(ActiveSheet.ListObjects(1))
-Range("A" & CStr(totalrows)).Select
+    Do Until EOF(1)
+        Line Input #1, textline
+        A = Split(textline, ";", -1, vbTextCompare)
+        tbl.ListRows.Add
+        totalrows = totalrows + 1
+        tbl.ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
+        If LenB(Trim$(A(2))) = 0 Then
+            tbl.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
+            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
+        Else
+            tbl.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
+            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
+        End If
+    Loop
+    Close #1
+    Call sortAccount(tbl)
+    Range("A" & CStr(tbl.ListRows.Count)).Select
 
 End Sub
 
@@ -192,39 +196,36 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportLCL(fileToOpen As Variant)
 
-
-Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-Loop
-nbRows = iRow - 2 ' Last row is a total, don't import it
-iRow = 1
-Do While LenB(Cells(iRow, 1).Value) > 0
-    tDates(iRow) = DateValue(Cells(iRow, 1).Value)
-    tValues(iRow) = toAmount(Cells(iRow, 2).Value)
-    If (Cells(iRow, 3).Value Like "Ch?que") Then
-        tDesc(iRow) = "Cheque " & CStr(Cells(iRow, 4).Value)
-    ElseIf (Cells(iRow, 3).Value = "Virement") Then
-        tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
-    Else
-        tDesc(iRow) = Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value
-    End If
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
-Call sortAccount(tbl)
-Range("A" & CStr(totalrows)).Select
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tAmounts() As Double
+    
+    iRow = 1
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+    Loop
+    nbRows = iRow - 2 ' Last row is a total, don't import it
+    
+    ReDim tDates(1 To nbRows)
+    ReDim tDesc(1 To nbRows)
+    ReDim tAmounts(1 To nbRows)
+    
+    For iRow = 1 To nbRows
+        tDates(iRow) = DateValue(Cells(iRow, 1).Value)
+        tAmounts(iRow) = toAmount(Cells(iRow, 2).Value)
+        If (Cells(iRow, 3).Value Like "Ch?que") Then
+            tDesc(iRow) = "Cheque " & CStr(Cells(iRow, 4).Value)
+        ElseIf (Cells(iRow, 3).Value = "Virement") Then
+            tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
+        Else
+            tDesc(iRow) = Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value
+        End If
+    Next iRow
+    ActiveWorkbook.Close
+    
+    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc)
 
 End Sub
 
@@ -233,44 +234,42 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportUBS(fileToOpen As Variant)
 
-Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-nbOps = 0
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-    If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
-        nbOps = nbOps + 1
-    End If
-Loop
-nbRows = iRow - 1
-iRow = 2
-nbOps = 0
-Do While LenB(Cells(iRow, 1).Value) > 0
-    If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
-        nbOps = nbOps + 1
-        If (LenB(Cells(iRow, 19).Value) > 0) Then
-            tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        Else
-            tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tAmounts() As Double
+    
+    
+    iRow = 1
+    nbOps = 0
+    Do While LenB(Cells(iRow, 1).Value) > 0 And nbOps < MAX_IMPORT
+        iRow = iRow + 1
+        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
+            nbOps = nbOps + 1
         End If
-        tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(nbOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
-    End If
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
-Call sortAccount(tbl)
-Range("A" & CStr(n)).Select
+    Loop
+    nbRows = iRow - 1
+    ReDim tDates(1 To nbOps)
+    ReDim tDesc(1 To nbOps)
+    ReDim tAmounts(1 To nbOps)
+    iRow = 2
+    iOps = 0
+    For iRow = 2 To nbRows
+        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) And iOps < nbOps Then
+            iOps = iOps + 1
+            If (LenB(Cells(iRow, 19).Value) > 0) Then
+                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            Else
+                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+            End If
+            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        End If
+    Next iRow
+    ActiveWorkbook.Close
+    
+    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
 
 End Sub
 
@@ -279,53 +278,51 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportUBScsv(fileToOpen As Variant)
 
-Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
-    :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
-    xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=True, _
-    Comma:=False, Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), _
-    Array(2, 1), Array(3, 1), Array(4, 1), Array(5, 1), Array(6, 1), Array(7, 1), Array(8, 1), _
-    Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
-    , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
-    TrailingMinusNumbers:=True
-    'ReadOnly:=True
-
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tValues() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-nbOps = 0
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-    If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value > 0) Then
-        nbOps = nbOps + 1
-    End If
-Loop
-nbRows = iRow - 1
-iRow = 2
-nbOps = 0
-Do While LenB(Cells(iRow, 1).Value) > 0
-    If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0 Then
-        nbOps = nbOps + 1
-        If LenB(Cells(iRow, 19).Value) > 0 Then
-            tValues(nbOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        Else
-            tValues(nbOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+    Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
+        :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
+        xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=True, _
+        Comma:=False, Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), _
+        Array(2, 1), Array(3, 1), Array(4, 1), Array(5, 1), Array(6, 1), Array(7, 1), Array(8, 1), _
+        Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
+        , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
+        TrailingMinusNumbers:=True
+        'ReadOnly:=True
+    
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tAmounts() As Double
+    
+    
+    iRow = 1
+    nbOps = 0
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value > 0) Then
+            nbOps = nbOps + 1
         End If
-        tDates(nbOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(nbOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
-    End If
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-Call addTransactions(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
-Call sortAccount(tbl)
-Range("A" & CStr(n)).Select
+    Loop
+    nbRows = iRow - 1
+    ReDim tDates(1 To nbOps)
+    ReDim tDesc(1 To nbOps)
+    ReDim tAmounts(1 To nbOps)
+    iRow = 2
+    iOps = 0
+    For iRow = 2 To nbRows
+        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0 And iOps < nbOps Then
+            iOps = iOps + 1
+            If LenB(Cells(iRow, 19).Value) > 0 Then
+                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            Else
+                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
+            End If
+            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        End If
+    Next iRow
+    ActiveWorkbook.Close
+    
+    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
 
 End Sub
 
@@ -334,95 +331,95 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportGeneric(fileToOpen As Variant)
 
-Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
-Dim iRow As Integer
-Dim tDates() As Variant
-Dim tDesc() As String
-Dim tSubCateg() As String
-Dim tBudgetSpread() As Variant
-Dim tValues() As Double
-
-ReDim tDates(1 To 30000)
-ReDim tDesc(1 To 30000)
-ReDim tSubCateg(1 To 30000)
-ReDim tBudgetSpread(1 To 30000)
-ReDim tValues(1 To 30000)
-iRow = 1
-
-' Read Header part
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
+    'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
+    Dim iRow As Integer
+    Dim tDates() As Variant
+    Dim tDesc() As String
+    Dim tSubCateg() As String
+    Dim tBudgetSpread() As Variant
+    Dim tAmounts() As Double
+    
+    iRow = 1
+    
+    ' Read Header part
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+        If Cells(iRow, 1) = "Korach Exporter version" Then
+            exporterVersion = Cells(iRow, 2).Value
+        ElseIf Cells(iRow, 1) = "No Compte" Then
+            accountNbr = Cells(iRow, 2).Value
+        ElseIf Cells(iRow, 1) = "Nom Compte" Then
+            accountName = Cells(iRow, 2).Value
+        ElseIf Cells(iRow, 1) = "Banque" Then
+            bank = Cells(iRow, 2).Value
+        ElseIf Cells(iRow, 1) = "Status" Then
+            accStatus = Cells(iRow, 2).Value
+        ElseIf Cells(iRow, 1) Like "Disponibilit?" Then
+            availability = Cells(iRow, 2).Value
+        Else
+            ' Do nothing
+        End If
+    Loop
+    
     iRow = iRow + 1
-    If Cells(iRow, 1) = "Korach Exporter version" Then
-        exporterVersion = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "No Compte" Then
-        accountNbr = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Nom Compte" Then
-        accountName = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Banque" Then
-        bank = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) = "Status" Then
-        accStatus = Cells(iRow, 2).Value
-    ElseIf Cells(iRow, 1) Like "Disponibilit?" Then
-        availability = Cells(iRow, 2).Value
-    Else
-        ' Do nothing
-    End If
-Loop
-
-iRow = iRow + 1
-transactionStart = iRow
-' Count nbr of transaction
-Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < 30000
-    iRow = iRow + 1
-Loop
-' Read transaction part
-nbRows = iRow - transactionStart
-iRow = transactionStart
-Do While LenB(Cells(iRow, 1).Value) > 0
-    i = iRow - transactionStart + 1
-    tDates(i) = Cells(iRow, 1).Value
-    tDesc(i) = Cells(iRow, 4).Value
-    tValues(i) = toAmount(Cells(iRow, 3).Value)
-    tSubCateg(i) = Cells(iRow, 5).Value
-    tBudgetSpread(i) = Cells(iRow, 7).Value
-    iRow = iRow + 1
-Loop
-ActiveWorkbook.Close
-
-ActiveSheet.Cells(1, 2).Value = accountName
-ActiveSheet.Cells(2, 2).Value = accountNbr
-ActiveSheet.Cells(3, 2).Value = bank
-ActiveSheet.Cells(4, 2).Value = accStatus
-ActiveSheet.Cells(5, 2).Value = availability
-
-Dim tbl As Variant
-Dim dateCol As Integer
-Dim amountCol As Integer
-Dim descCol As Integer
-Dim subcatCol As Integer
-Dim budgetCol As Integer
-tbl = ActiveSheet.ListObjects(1)
-dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
-amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
-budgetCol = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
-With tbl
-    totalrows = .ListRows.Count
-    For iRow = 1 To nbRows
-        .ListRows.Add
-        totalrows = totalrows + 1
-        .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-        .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-        .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-        .ListColumns(subcatCol).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
-        .ListColumns(budgetCol).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
+    transactionStart = iRow
+    ' Count nbr of transaction
+    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+        iRow = iRow + 1
+    Loop
+    ' Read transaction part
+    transactionStop = iRow - 1
+    nbRows = transactionStop - transactionStart + 1
+    ReDim tDates(1 To nbRows)
+    ReDim tDesc(1 To nbRows)
+    ReDim tSubCateg(1 To nbRows)
+    ReDim tBudgetSpread(1 To nbRows)
+    ReDim tAmounts(1 To nbRows)
+    
+    For iRow = transactionStart To transactionStop
+        i = iRow - transactionStart + 1
+        tDates(i) = Cells(iRow, 1).Value
+        tDesc(i) = Cells(iRow, 4).Value
+        tAmounts(i) = toAmount(Cells(iRow, 3).Value)
+        tSubCateg(i) = Cells(iRow, 5).Value
+        tBudgetSpread(i) = Cells(iRow, 7).Value
     Next iRow
-End With
-
-Call sortAccount(tbl)
-Range("A" & CStr(totalrows)).Select
+    ActiveWorkbook.Close
+    
+    ActiveSheet.Cells(1, 2).Value = accountName
+    ActiveSheet.Cells(2, 2).Value = accountNbr
+    ActiveSheet.Cells(3, 2).Value = bank
+    ActiveSheet.Cells(4, 2).Value = accStatus
+    ActiveSheet.Cells(5, 2).Value = availability
+    
+    Dim tbl As Variant
+    Dim dateCol As Integer
+    Dim amountCol As Integer
+    Dim descCol As Integer
+    Dim subcatCol As Integer
+    Dim budgetCol As Integer
+    tbl = ActiveSheet.ListObjects(1)
+    dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
+    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    budgetCol = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
+    With tbl
+        totalrows = .ListRows.Count
+        For iRow = 1 To nbRows
+            .ListRows.Add
+            totalrows = totalrows + 1
+            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
+            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tAmounts(iRow)
+            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+            .ListColumns(subcatCol).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
+            .ListColumns(budgetCol).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
+        Next iRow
+    End With
+    
+    Call sortAccount(tbl)
+    Range("A" & CStr(tbl.ListRows.Count)).Select
 
 End Sub
 
@@ -517,7 +514,6 @@ Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmoun
     Dim dateCol As Integer
     Dim amountCol As Integer
     Dim descCol As Integer
-    Dim tbl As Variant
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
     If amountColName = "" Then
         amountColName = GetLabel(AMOUNT_KEY)
@@ -525,14 +521,22 @@ Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmoun
     amountCol = GetColumnNumberFromName(oTable, amountColName)
     descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
     
-    With tbl
+    With oTable
         totalrows = .ListRows.Count
-        For iRow = 1 To nbRows
+        For iRow = 1 To UBound(transDates)
             .ListRows.Add
             totalrows = totalrows + 1
-            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tValues(iRow)
-            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
+            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = transDates(iRow)
+            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = transAmounts(iRow)
+            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = transDesc(iRow)
         Next iRow
     End With
+End Sub
+
+Private Sub addTransactionsSortAndSelect(oTable As Variant, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
+                            Optional amountColName As String = "")
+    Call addTransactions(oTable, transDates, transAmounts, transDesc, amountColName)
+    Call sortAccount(oTable)
+    Range("A" & CStr(oTable.ListRows.Count)).Select
+
 End Sub
