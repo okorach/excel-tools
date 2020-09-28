@@ -245,27 +245,25 @@ Sub ImportUBS(fileToOpen As Variant)
     nbOps = 0
     Do While LenB(Cells(iRow, 1).Value) > 0 And nbOps < MAX_IMPORT
         iRow = iRow + 1
-        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
-            nbOps = nbOps + 1
-        End If
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
-    iRow = 2
-    iOps = 0
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) And iOps < nbOps Then
-            iOps = iOps + 1
-            If (LenB(Cells(iRow, 19).Value) > 0) Then
-                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            Else
-                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
-            End If
-            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        If Cells(iRow, 13) = "Solde prix prestations" Then
+            tAmounts(iRow - 1) = 0
+        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        Else
+            tAmounts(iRow - 1) = 0
         End If
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     Next iRow
     ActiveWorkbook.Close
     
@@ -298,27 +296,25 @@ Sub ImportUBScsv(fileToOpen As Variant)
     nbOps = 0
     Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
         iRow = iRow + 1
-        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value > 0) Then
-            nbOps = nbOps + 1
-        End If
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
-    iRow = 2
-    iOps = 0
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0 And iOps < nbOps Then
-            iOps = iOps + 1
-            If LenB(Cells(iRow, 19).Value) > 0 Then
-                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            Else
-                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
-            End If
-            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        If Cells(iRow, 13) = "Solde prix prestations" Then
+            tAmounts(iRow - 1) = 0
+        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        Else
+            tAmounts(iRow - 1) = 0
         End If
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     Next iRow
     ActiveWorkbook.Close
     
@@ -540,3 +536,5 @@ Private Sub addTransactionsSortAndSelect(oTable As Variant, transDates As Varian
     Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
+
+
