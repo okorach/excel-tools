@@ -247,23 +247,23 @@ Sub ImportUBS(fileToOpen As Variant)
         iRow = iRow + 1
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
         If Cells(iRow, 13) = "Solde prix prestations" Then
-            tAmounts(iRow-1) = 0
+            tAmounts(iRow - 1) = 0
         ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-            tAmounts(iRow-1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
         ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-            tAmounts(iRow-1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
         ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-            tAmounts(iRow-1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
         Else
-            tAmounts(iRow-1) = 0
+            tAmounts(iRow - 1) = 0
         End If
-        tDates(iRow-1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iRow-1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     Next iRow
     ActiveWorkbook.Close
     
@@ -298,23 +298,23 @@ Sub ImportUBScsv(fileToOpen As Variant)
         iRow = iRow + 1
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
         If Cells(iRow, 13) = "Solde prix prestations" Then
-            tAmounts(iRow-1) = 0
+            tAmounts(iRow - 1) = 0
         ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-            tAmounts(iRow-1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
         ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-            tAmounts(iRow-1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
         ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-            tAmounts(iRow-1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
         Else
-            tAmounts(iRow-1) = 0
+            tAmounts(iRow - 1) = 0
         End If
-        tDates(iRow-1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iRow-1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
     Next iRow
     ActiveWorkbook.Close
     
@@ -536,3 +536,5 @@ Private Sub addTransactionsSortAndSelect(oTable As Variant, transDates As Varian
     Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
+
+
