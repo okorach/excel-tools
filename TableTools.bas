@@ -78,7 +78,7 @@ Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Vari
     For Each c In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(i, j) = oSrcTable.ListColumns(c).DataBodyRange.Rows(j).Value
+            arr(i, j) = oTable.ListColumns(c).DataBodyRange.Rows(j).Value
         Next j
     Next c
     getTableAsArray = arr
