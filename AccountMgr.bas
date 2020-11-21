@@ -51,6 +51,7 @@ Const BALANCE_COL = "C"
 
 Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
 Const ACCOUNTS_TABLE = "tblAccounts"
+Const SUBSTITUTIONS_TABLE = "tblSubtitutions"
 
 Public Sub mergeAccounts()
 
