@@ -81,7 +81,45 @@ Sub ImportAny()
 End Sub
 
 
+' PRLV SEPA CE URSSAF RHONE ALPES-CNTFS : FR55ZZZ143065 000828DC120181231145950A000136092 DE CE URSSAF RHONE ALPES-CNTFS : 000828DC120181231145950A000136092 FR55ZZZ143065
+Private Function deleteDuplicateSepa(desc As String) As String
+    idstr = "PRLV SEPA "
+    deleteDuplicateSepa = desc
+    If (InStr(desc, idstr) = 1) Then
+        Dim i_end_emitter As Integer
+        Dim s_emitter As String
+        Dim i_repeat_emitter As Integer
+        i_end_emitter = InStr(desc, ":")
+        s_emitter = Mid(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
+        i_repeat_emitter = InStr(desc, " DE " & s_emitter)
+        If i_repeat_emitter > 0 Then
+            deleteDuplicateSepa = Left(desc, i_repeat_emitter - 1)
+        End If
+    End If
+End Function
+
+Private Function strReplace(oldString, newString, targetString As String) As String
+    strReplace = targetString
+    i = InStr(targetString, oldString)
+    If (i > 0) Then
+        strReplace = Left(targetString, i - 1) & newString & Right(targetString, Len(targetString) - i - Len(oldString) + 1)
+    End If
+End Function
+
+Private Function simplifyDescription(desc As String, subsTable As Variant) As String
+    Dim s As String
+    s = Trim(desc)
+    s = deleteDuplicateSepa(s)
+    n = UBound(subsTable, 2)
+    For i = 1 To n
+        s = strReplace(subsTable(1, i), subsTable(2, i), s)
+    Next i
+    simplifyDescription = s
+End Function
+
 Sub ImportING(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     Dim iRow As Integer
@@ -101,7 +139,7 @@ Sub ImportING(fileToOpen As Variant)
     iRow = 1
     Do While LenB(Cells(iRow, 1).Value) > 0
         tDates(iRow) = Cells(iRow, 1).Value
-        tDesc(iRow) = Cells(iRow, 2).Value
+        tDesc(iRow) = simplifyDescription(Cells(iRow, 2).Value, subsTable)
         tAmounts(iRow) = toAmount(Cells(iRow, 4).Value)
         iRow = iRow + 1
     Loop
@@ -112,6 +150,8 @@ Sub ImportING(fileToOpen As Variant)
 End Sub
 
 Sub ImportRevolut(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     Dim iRow As Integer
@@ -135,12 +175,12 @@ Sub ImportRevolut(fileToOpen As Variant)
         If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
             tAmounts(iRow - 1) = toAmount(Trim$(Cells(iRow, 4).Value))
             If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
-                tDesc(iRow - 1) = Trim$(Cells(iRow, 6).Value) & " : "
+                tDesc(iRow - 1) = simplifyDescription(Trim$(Cells(iRow, 6).Value) & " : ", subsTable)
             End If
         Else
             tAmounts(iRow - 1) = -toAmount(Trim$(Cells(iRow, 3).Value))
             If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
-                tDesc(iRow - 1) = Trim$(Cells(iRow, 5).Value) & " : "
+                tDesc(iRow - 1) = simplifyDescription(Trim$(Cells(iRow, 5).Value) & " : ", subsTable)
             End If
         End If
         tDesc(iRow - 1) = tDesc(iRow - 1) & Trim$(Cells(iRow, 2).Value)
@@ -154,6 +194,8 @@ End Sub
 
 
 Sub ImportRevolutCSV(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim tbl As Variant
     tbl = ActiveSheet.ListObjects(1)
@@ -178,10 +220,10 @@ Sub ImportRevolutCSV(fileToOpen As Variant)
         tbl.ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = toDate(Trim$(A(0)))
         If LenB(Trim$(A(2))) = 0 Then
             tbl.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
-            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(5))
+            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = simplifyDescription(Trim$(A(1)) & " --> " & Trim$(A(5)), subsTable)
         Else
             tbl.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
-            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = Trim$(A(1)) & " --> " & Trim$(A(4))
+            tbl.ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = simplifyDescription(Trim$(A(1)) & " --> " & Trim$(A(4)), subsTable)
         End If
     Loop
     Close #1
@@ -195,6 +237,8 @@ End Sub
 '
 '------------------------------------------------------------------------------
 Sub ImportLCL(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     Dim iRow As Integer
@@ -216,11 +260,11 @@ Sub ImportLCL(fileToOpen As Variant)
         tDates(iRow) = DateValue(Cells(iRow, 1).Value)
         tAmounts(iRow) = toAmount(Cells(iRow, 2).Value)
         If (Cells(iRow, 3).Value Like "Ch?que") Then
-            tDesc(iRow) = "Cheque " & CStr(Cells(iRow, 4).Value)
+            tDesc(iRow) = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value))
         ElseIf (Cells(iRow, 3).Value = "Virement") Then
-            tDesc(iRow) = "Virement " & Cells(iRow, 5).Value
+            tDesc(iRow) = "Virement " & simplifyDescription(Cells(iRow, 5).Value)
         Else
-            tDesc(iRow) = Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value
+            tDesc(iRow) = simplifyDescription(Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value, subsTable)
         End If
     Next iRow
     ActiveWorkbook.Close
@@ -234,6 +278,8 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportUBS(fileToOpen As Variant)
 
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     Dim iRow As Integer
     Dim tDates() As Variant
@@ -245,27 +291,25 @@ Sub ImportUBS(fileToOpen As Variant)
     nbOps = 0
     Do While LenB(Cells(iRow, 1).Value) > 0 And nbOps < MAX_IMPORT
         iRow = iRow + 1
-        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) Then
-            nbOps = nbOps + 1
-        End If
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
-    iRow = 2
-    iOps = 0
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If (LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0) And iOps < nbOps Then
-            iOps = iOps + 1
-            If (LenB(Cells(iRow, 19).Value) > 0) Then
-                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            Else
-                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
-            End If
-            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        If Cells(iRow, 13) = "Solde prix prestations" Then
+            tAmounts(iRow - 1) = 0
+        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        Else
+            tAmounts(iRow - 1) = 0
         End If
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
     Next iRow
     ActiveWorkbook.Close
     
@@ -277,6 +321,8 @@ End Sub
 '
 '------------------------------------------------------------------------------
 Sub ImportUBScsv(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
         :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
@@ -298,27 +344,25 @@ Sub ImportUBScsv(fileToOpen As Variant)
     nbOps = 0
     Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
         iRow = iRow + 1
-        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value > 0) Then
-            nbOps = nbOps + 1
-        End If
     Loop
     nbRows = iRow - 1
-    ReDim tDates(1 To nbOps)
-    ReDim tDesc(1 To nbOps)
-    ReDim tAmounts(1 To nbOps)
-    iRow = 2
-    iOps = 0
+    ReDim tDates(1 To nbRows - 1)
+    ReDim tDesc(1 To nbRows - 1)
+    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If LenB(Cells(iRow, 20).Value) > 0 Or LenB(Cells(iRow, 19).Value) > 0 And iOps < nbOps Then
-            iOps = iOps + 1
-            If LenB(Cells(iRow, 19).Value) > 0 Then
-                tAmounts(iOps) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            Else
-                tAmounts(iOps) = toAmount(Cells(iRow, 20).Value) ' Credit column
-            End If
-            tDates(iOps) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            tDesc(iOps) = Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value
+        If Cells(iRow, 13) = "Solde prix prestations" Then
+            tAmounts(iRow - 1) = 0
+        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
+        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
+        Else
+            tAmounts(iRow - 1) = 0
         End If
+        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+        tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
     Next iRow
     ActiveWorkbook.Close
     
@@ -330,6 +374,8 @@ End Sub
 '
 '------------------------------------------------------------------------------
 Sub ImportGeneric(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
     'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
@@ -380,7 +426,7 @@ Sub ImportGeneric(fileToOpen As Variant)
     For iRow = transactionStart To transactionStop
         i = iRow - transactionStart + 1
         tDates(i) = Cells(iRow, 1).Value
-        tDesc(i) = Cells(iRow, 4).Value
+        tDesc(i) = simplyDescription(Cells(iRow, 4).Value, subsTable)
         tAmounts(i) = toAmount(Cells(iRow, 3).Value)
         tSubCateg(i) = Cells(iRow, 5).Value
         tBudgetSpread(i) = Cells(iRow, 7).Value
@@ -424,6 +470,8 @@ Sub ImportGeneric(fileToOpen As Variant)
 End Sub
 
 Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolean = False)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim sFolder As String
     exportFrom = ActiveWorkbook.name
@@ -540,3 +588,5 @@ Private Sub addTransactionsSortAndSelect(oTable As Variant, transDates As Varian
     Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
+
+
