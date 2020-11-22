@@ -16,11 +16,26 @@ Application.Calculation = xlAutomatic
 End Sub
 
 Public Sub GoToAccount()
-    selectedNbr = Range("H72").Value
+    selectedNbr = Range("Solde!H72").Value
     Dim accountName As String
     accountName = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If
 End Sub
+
+Public Sub GoToNext()
+    curr = ActiveSheet.Index
+    If (curr < Sheets.Count) Then
+        Sheets(curr + 1).Activate
+    End If
+End Sub
+
+Public Sub GoToPrev()
+    curr = ActiveSheet.Index
+    If (curr > 1) Then
+        Sheets(curr - 1).Activate
+    End If
+End Sub
+
 
