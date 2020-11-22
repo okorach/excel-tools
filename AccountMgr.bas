@@ -225,76 +225,92 @@ Public Sub doForAllAccounts()
     Call hideTemplateAccounts
 End Sub
 '-------------------------------------------------
-Public Sub formatAccountSheets()
-'
-'  Reformat all account sheets
-'
-   For Each ws In Worksheets
-       ' Make sure the sheet is not anything else than an account
-       If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
-            Dim name As String
-            Dim col As Integer
-            name = ws.name
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 15, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = "m/d/yyyy"
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(AMOUNT_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 15, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 17, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), "Montant USD")
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 15, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = USD_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(BALANCE_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 18, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), "Solde CHF")
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 18, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), "Solde USD")
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 18, name)
-                ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 70, name)
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(SUBCATEGORY_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 15, name)
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(CATEGORY_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 15, name)
-            End If
-            col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(IN_BUDGET_KEY))
-            If col <> 0 Then
-                Call SetColumnWidth(Chr(col + 64), 5, name)
-                Call SetColumnWidth(Chr(col + 65), 5, name)
-            End If
-          ws.Cells.RowHeight = 13
-          ws.Rows.Font.size = 10
-
-          If (ws.Shapes.Count > 0) Then
+Public Sub formatAccountSheet(ws)
+' Make sure the sheet is not anything else than an account
+    If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
+        Dim name As String
+        Dim col As Integer
+        name = ws.name
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 15, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = "m/d/yyyy"
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(AMOUNT_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 15, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 17, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), "Montant USD")
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 15, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = USD_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(BALANCE_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 18, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), "Solde CHF")
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 18, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), "Solde USD")
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 18, name)
+            ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 70, name)
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(SUBCATEGORY_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 15, name)
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(CATEGORY_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 15, name)
+        End If
+        col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(IN_BUDGET_KEY))
+        If col <> 0 Then
+            Call SetColumnWidth(Chr(col + 64), 5, name)
+            Call SetColumnWidth(Chr(col + 65), 5, name)
+        End If
+        ws.Cells.RowHeight = 13
+        ws.Rows.Font.size = 10
+        
+        If (ws.Shapes.Count > 0) Then
+            home_x = 200
+            home_y = 10
+            btn_height = 22
             Dim i As Integer
             i = 0
             For Each Shape In ws.Shapes
-                If (Shape.Type = msoFormControl) Then
+                If Shape.name = "BtnPrev" Then
+                    Call ShapePlacementXY(Shape, home_x, home_y, home_x + 29, home_y + btn_height - 1)
+                ElseIf Shape.name = "BtnHome" Then
+                    Call ShapePlacementXY(Shape, home_x + 30, home_y, home_x + 99, home_y + btn_height - 1)
+                ElseIf Shape.name = "BtnNext" Then
+                    Call ShapePlacementXY(Shape, home_x + 100, home_y, home_x + 129, home_y + btn_height - 1)
+                ElseIf Shape.name = "BtnTop" Then
+                    Call ShapePlacementXY(Shape, home_x, home_y + btn_height, home_x + 99, home_y + 2 * btn_height - 1)
+                ElseIf Shape.name = "BtnBottom" Then
+                    Call ShapePlacementXY(Shape, home_x, home_y + 2 * btn_height, home_x + 99, home_y + 3 * btn_height - 1)
+                ElseIf Shape.name = "BtnSort" Then
+                    Call ShapePlacementXY(Shape, home_x, home_y + 3 * btn_height, home_x + 99, home_y + 4 * btn_height - 1)
+                ElseIf Shape.name = "BtnImport" Then
+                    Call ShapePlacementXY(Shape, home_x + 100, home_y + btn_height, home_x + 199, home_y + 2 * btn_height - 1)
+                ElseIf Shape.name = "BtnAddEntry" Then
+                    Call ShapePlacementXY(Shape, home_x + 100, home_y + 2 * btn_height, home_x + 199, home_y + 3 * btn_height - 1)
+
+                ElseIf (Shape.Type = msoFormControl) Then
                     ' This is a button, move it to right place
                     row = i Mod 4
                     col = i \ 4
@@ -302,8 +318,15 @@ Public Sub formatAccountSheets()
                     i = i + 1
                 End If
             Next Shape
-          End If
-       End If
+        End If
+    End If
+End Sub
+Public Sub formatAllAccountSheets()
+'
+'  Reformat all account sheets
+'
+   For Each ws In Worksheets
+       Call formatAccountSheet(ws)
    Next ws
    Call hideClosedAccounts
    Call hideTemplateAccounts
