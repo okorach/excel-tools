@@ -260,9 +260,9 @@ Sub ImportLCL(fileToOpen As Variant)
         tDates(iRow) = DateValue(Cells(iRow, 1).Value)
         tAmounts(iRow) = toAmount(Cells(iRow, 2).Value)
         If (Cells(iRow, 3).Value Like "Ch?que") Then
-            tDesc(iRow) = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value))
+            tDesc(iRow) = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value), subsTable)
         ElseIf (Cells(iRow, 3).Value = "Virement") Then
-            tDesc(iRow) = "Virement " & simplifyDescription(Cells(iRow, 5).Value)
+            tDesc(iRow) = "Virement " & simplifyDescription(Cells(iRow, 5).Value, subsTable)
         Else
             tDesc(iRow) = simplifyDescription(Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value, subsTable)
         End If

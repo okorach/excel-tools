@@ -1,7 +1,7 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const EUR_FORMAT = "#,###,##0.00"" � "";-#,###,##0.00"" � "";0.00"" � """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
 Public Const NOT_AN_ACCOUNT As Integer = 0
@@ -20,7 +20,7 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Const PARAMS_SHEET As String = "Paramètres"
+Public Const PARAMS_SHEET As String = "Param�tres"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const BALANCE_SHEET As String = "Solde"
@@ -49,9 +49,9 @@ Const DATE_COL = "A"
 Const AMOUNT_COL = "B"
 Const BALANCE_COL = "C"
 
-Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
-Const ACCOUNTS_TABLE = "tblAccounts"
-Const SUBSTITUTIONS_TABLE = "tblSubtitutions"
+Public Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
+Public Const ACCOUNTS_TABLE = "tblAccounts"
+Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
 Public Sub mergeAccounts()
 
@@ -524,3 +524,5 @@ End Sub
 Public Sub GoToSolde()
     Sheets(BALANCE_SHEET).Activate
 End Sub
+
+
