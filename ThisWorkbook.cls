@@ -16,9 +16,8 @@ Application.Calculation = xlAutomatic
 End Sub
 
 Public Sub GoToAccount()
-    selectedNbr = Range("Solde!H72").Value
     Dim accountName As String
-    accountName = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
+    accountName = getSelectedAccount()
     If accountExists(accountName) Then
         Sheets(accountName).Activate
     End If

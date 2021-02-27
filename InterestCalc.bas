@@ -27,8 +27,7 @@ Sub ImportAccount()
 End Sub
 
 Sub ExportAccount()
-    accNbr = Sheets(INTEREST_CALC_SHEET).Range("B1").Value
-    Call ExportAccountName(Sheets("Params").Range("E" + CStr(accNbr)).Value)
+    Call ExportAccountName(getSelectedAccount())
 End Sub
 
 Sub ExportAccountName(accName As String)
