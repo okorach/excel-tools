@@ -1,5 +1,6 @@
 Attribute VB_Name = "InterestCalc"
 Public Const INTEREST_CALC_SHEET As String = "Calculator"
+Private Const BALANCE_HISTORY_TABLE As String = "TableBalanceHistory"
 
 Sub CalcInterestForAllAccounts()
 
@@ -15,42 +16,48 @@ Sub CalcInterestForAllAccounts()
     
 End Sub
 
-Sub CalcInterestForAccount(name As String)
-    Call ImportAccountName(name)
+Sub CalcInterestForAccount(accName As String)
+    Call ImportToCalculator(accName)
     Call CalcAllInterests
-    Call ExportAccountName(name)
+    Sheets(INTEREST_CALC_SHEET).Activate
+End Sub
+
+Sub CalcAndStoreInterestForAccount(accName As String)
+    Call CalcInterestForAccount(accName)
+    Call ExportFromCalculator(accName)
 End Sub
 
 Sub ImportAccount()
-    accNbr = Sheets(INTEREST_CALC_SHEET).Range("B1").Value
-    Call ImportAccountName(Sheets("Params").Range("E" + CStr(accNbr)).Value)
+    Call ImportToCalculator(getSelectedAccount())
 End Sub
 
 Sub ExportAccount()
-    Call ExportAccountName(getSelectedAccount())
+    Call ExportFromCalculator(getSelectedAccount())
 End Sub
 
-Sub ExportAccountName(accName As String)
+Sub ExportFromCalculator(accName As String)
     Call ExportInterestResults(accName)
 End Sub
 
-Sub ImportAccountName(accName As String)
+Sub ImportToCalculator(accName As String)
 
     freezeDisplay
     Sheets(INTEREST_CALC_SHEET).Range("G1").Value = "Deposit history for " & accName
     Sheets(INTEREST_CALC_SHEET).Range("L1").Value = "Balance history for " & accName
     
-    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(1), Sheets(accName).ListObjects(1).ListRows.Count)
-    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(2), Sheets(accName).ListObjects(2).ListRows.Count)
+    deposits = getDepositHistory(accName)
+    balances = getBalanceHistory(accName, "Yearly")
+    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(2), UBound(deposits, 1))
+    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(1), UBound(balances, 1))
     
-    Sheets(accName).ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
-    Sheets(accName).ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
+    ' Sheets(accName).ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
+    ' Sheets(accName).ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
     
-    ' Copy 2 first colmuns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), getTableColumn(Sheets(accName).ListObjects(1), 1), 1)
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), getTableColumn(Sheets(accName).ListObjects(1), 2), 2)
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), getTableColumn(Sheets(accName).ListObjects(2), 1), 1)
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), getTableColumn(Sheets(accName).ListObjects(2), 2), 2)
+    ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
+    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), 1, getArrayColumn(deposits, 1, False))
+    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), 2, getArrayColumn(deposits, 2, False))
+    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 1, getArrayColumn(balances, 1, False))
+    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 2, getArrayColumn(balances, 2, False))
     'Sheets("Calculator").ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
     'Sheets("Calculator").ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de périodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de périodes])"
     
@@ -73,22 +80,23 @@ Sub CalcAllInterests()
 End Sub
 
 Sub CalcCompoundInterests()
+    Sheets(INTEREST_CALC_SHEET).Range("B5").Value = 0
 
     For i = 2 To Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListRows.Count
-        Sheets(INTEREST_CALC_SHEET).Range("B2").Value = Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(1).DataBodyRange.Rows(1).Value
-        Sheets(INTEREST_CALC_SHEET).Range("B3").Value = Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(1).DataBodyRange.Rows(i).Value
-        Sheets(INTEREST_CALC_SHEET).Range("B4").GoalSeek Goal:=Sheets("Calculator").Range("C3").Value, ChangingCell:=Range("B5")
-        Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(4).DataBodyRange.Rows(i).Value = Sheets("Calculator").Range("B5").Value
+        Sheets(INTEREST_CALC_SHEET).Range("B2").Value = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(1).DataBodyRange.Rows(1).Value
+        Sheets(INTEREST_CALC_SHEET).Range("B3").Value = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(1).DataBodyRange.Rows(i).Value
+        Sheets(INTEREST_CALC_SHEET).Range("B4").GoalSeek Goal:=Sheets(INTEREST_CALC_SHEET).Range("C3").Value, ChangingCell:=Sheets(INTEREST_CALC_SHEET).Range("B5")
+        Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(4).DataBodyRange.Rows(i).Value = Sheets(INTEREST_CALC_SHEET).Range("B5").Value
     Next i
 End Sub
 
 Sub CalcPeriodicInterests()
-
+    Sheets(INTEREST_CALC_SHEET).Range("B5").Value = 0
     For i = 2 To Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListRows.Count
-        Sheets(INTEREST_CALC_SHEET).Range("B2").Value = Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(1).DataBodyRange.Rows(i - 1).Value
-        Sheets(INTEREST_CALC_SHEET).Range("B3").Value = Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(1).DataBodyRange.Rows(i).Value
+        Sheets(INTEREST_CALC_SHEET).Range("B2").Value = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(1).DataBodyRange.Rows(i - 1).Value
+        Sheets(INTEREST_CALC_SHEET).Range("B3").Value = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(1).DataBodyRange.Rows(i).Value
         Sheets(INTEREST_CALC_SHEET).Range("B5").Value = 0.1
-        Sheets(INTEREST_CALC_SHEET).Range("B4").GoalSeek Goal:=Sheets(INTEREST_CALC_SHEET).Range("C3").Value, ChangingCell:=Range("B5")
-        Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory").ListColumns(3).DataBodyRange.Rows(i).Value = Sheets(INTEREST_CALC_SHEET).Range("B5").Value
+        Sheets(INTEREST_CALC_SHEET).Range("B4").GoalSeek Goal:=Sheets(INTEREST_CALC_SHEET).Range("C3").Value, ChangingCell:=Sheets(INTEREST_CALC_SHEET).Range("B5")
+        Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListColumns(3).DataBodyRange.Rows(i).Value = Sheets(INTEREST_CALC_SHEET).Range("B5").Value
     Next i
 End Sub
