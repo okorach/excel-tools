@@ -24,18 +24,30 @@ Public Sub GoToAccount()
     End If
 End Sub
 
-Public Sub GoToNext()
+Public Sub GoToSheet(shift As Integer)
+    Dim curr As Integer
     curr = ActiveSheet.Index
-    If (curr < Sheets.Count) Then
-        Sheets(curr + 1).Activate
+    If (curr + shift) > 0 And (curr + shift) <= Sheets.Count Then
+        Sheets(curr + shift).Activate
+    ElseIf shift < 0 Then
+        Sheets(1).Activate
+    ElseIf shift > 0 Then
+        Sheets(Sheets.Count).Activate
     End If
+End Sub
+
+Public Sub GoToNext()
+    Call GoToSheet(1)
 End Sub
 
 Public Sub GoToPrev()
-    curr = ActiveSheet.Index
-    If (curr > 1) Then
-        Sheets(curr - 1).Activate
-    End If
+    Call GoToSheet(-1)
 End Sub
 
+Public Sub GoBack5()
+    Call GoToSheet(-5)
+End Sub
 
+Public Sub GoFwd5()
+    Call GoToSheet(5)
+End Sub

@@ -293,12 +293,16 @@ Public Sub formatAccountSheet(ws)
             Dim i As Integer
             i = 0
             For Each Shape In ws.Shapes
-                If Shape.name = "BtnPrev" Then
+                If Shape.name = "BtnPrev5" Then
                     Call ShapePlacementXY(Shape, home_x, home_y, home_x + 29, home_y + btn_height - 1)
+                ElseIf Shape.name = "BtnPrev" Then
+                    Call ShapePlacementXY(Shape, home_x + 30, home_y, home_x + 59, home_y + btn_height - 1)
                 ElseIf Shape.name = "BtnHome" Then
-                    Call ShapePlacementXY(Shape, home_x + 30, home_y, home_x + 99, home_y + btn_height - 1)
+                    Call ShapePlacementXY(Shape, home_x + 60, home_y, home_x + 129, home_y + btn_height - 1)
                 ElseIf Shape.name = "BtnNext" Then
-                    Call ShapePlacementXY(Shape, home_x + 100, home_y, home_x + 129, home_y + btn_height - 1)
+                    Call ShapePlacementXY(Shape, home_x + 130, home_y, home_x + 159, home_y + btn_height - 1)
+                ElseIf Shape.name = "BtnNext5" Then
+                    Call ShapePlacementXY(Shape, home_x + 160, home_y, home_x + 189, home_y + btn_height - 1)
                 ElseIf Shape.name = "BtnTop" Then
                     Call ShapePlacementXY(Shape, home_x, home_y + btn_height, home_x + 99, home_y + 2 * btn_height - 1)
                 ElseIf Shape.name = "BtnBottom" Then
