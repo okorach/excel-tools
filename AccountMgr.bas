@@ -1,7 +1,7 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" � """
+Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
 Public Const NOT_AN_ACCOUNT As Integer = 0
@@ -534,3 +534,76 @@ Public Function getSelectedAccount() As String
     getSelectedAccount = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
 End Function
 
+Private Function getAccountArray(accountName As String, tableType As String) As Variant
+    getAccountArray = Empty
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If Sheets(accountName).ListObjects(i).name Like tableType & "_*" Then
+            getAccountArray = getTableAsArray(Sheets(accountName).ListObjects(i))
+            Exit For
+        End If
+    Next i
+End Function
+
+Private Function getDepositArray(accountName As String) As Variant
+    getDepositArray = getAccountArray(accountName, "Deposits")
+End Function
+
+Private Function getTransactionArray(accountName As String) As Variant
+    getTransactionArray = getAccountArray(accountName, "Transactions")
+End Function
+
+Private Function getBalanceArray(accountName As String) As Variant
+    getBalanceArray = getAccountArray(accountName, "Balance")
+End Function
+
+Public Function getDepositHistory(accountName As String) As Variant
+    getDepositHistory = getDepositArray(accountName)
+End Function
+
+Public Function getBalanceHistory(accountName As String, Optional sampling As String = "Yearly") As Variant
+    Dim histAll() As Variant
+    Dim histSampled() As Variant
+    Dim nbYears As Integer
+    Dim i, j As Integer
+    Dim lastMonth, lastYear As Integer
+    Dim lastBalance As Double
+    Dim histSize As Integer
+    histAll = getBalanceArray(accountName)
+    histSize = UBound(histAll, 1)
+    nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
+    ReDim histSampled(1 To nbYears, 1 To 2)
+    lastMonth = 0
+    lastYear = Year(histAll(1, 1)) - 1
+    lastBalance = 0
+    j = 1
+    For i = 1 To histSize
+        m = Month(histAll(i, 1))
+        y = Year(histAll(i, 1))
+        If sampling = "Monthly" And m <> lastMonth Then
+            d = Day(histAll(i, 1))
+            histSampled(j, 2) = DateSerial(y, m, 1)
+            If d <> 1 Then
+                histSampled(j, 2) = lastBalance
+            Else
+                histSampled(j, 2) = histAll(i, 3)
+            End If
+            j = j + 1
+        ElseIf sampling = "Yearly" And y <> lastYear Then
+            histSampled(j, 1) = DateSerial(lastYear, 12, 31)
+            histSampled(j, 2) = lastBalance
+            j = j + 1
+        End If
+        lastMonth = m
+        lastBalance = histAll(i, 3)
+        lastYear = y
+    Next i
+    If sampling = "Yearly" Then
+        histSampled(j, 1) = histAll(histSize, 1)
+        histSampled(j, 2) = lastBalance
+    End If
+    getBalanceHistory = histSampled
+End Function
+
+Public Sub CalcAccountInterests()
+    Call CalcInterestForAccount(ActiveSheet.name)
+End Sub
