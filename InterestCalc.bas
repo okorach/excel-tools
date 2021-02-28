@@ -3,28 +3,26 @@ Public Const INTEREST_CALC_SHEET As String = "Calculator"
 Private Const BALANCE_HISTORY_TABLE As String = "TableBalanceHistory"
 
 Sub CalcInterestForAllAccounts()
-
     freezeDisplay
-    
     For i = 1 To Sheets.Count
         If (Sheets(i).name <> INTEREST_CALC_SHEET And Sheets(i).name <> "Params" And Sheets(i).name <> "Summary") Then
             Call CalcInterestForAccount(Sheets(i).name)
         End If
     Next i
-    
     unfreezeDisplay
-    
 End Sub
 
 Sub CalcInterestForAccount(accName As String)
     Call ImportToCalculator(accName)
-    Call CalcAllInterests
-    Sheets(INTEREST_CALC_SHEET).Activate
+    Call CalcPeriodicInterests
+    ' Call CalcCompoundInterests
+    Call ExportInterestResults(accName)
 End Sub
 
 Sub CalcAndStoreInterestForAccount(accName As String)
     Call CalcInterestForAccount(accName)
     Call ExportFromCalculator(accName)
+    Call ExportInterestResults(accName)
 End Sub
 
 Sub ImportAccount()
@@ -40,44 +38,67 @@ Sub ExportFromCalculator(accName As String)
 End Sub
 
 Sub ImportToCalculator(accName As String)
-
+    Dim oCalcSheet, oDepositTbl, oBalanceTbl As Variant
     freezeDisplay
-    Sheets(INTEREST_CALC_SHEET).Range("G1").Value = "Deposit history for " & accName
-    Sheets(INTEREST_CALC_SHEET).Range("L1").Value = "Balance history for " & accName
+    With Sheets(INTEREST_CALC_SHEET)
+        .Range("G1").Value = "Deposit history for " & accName
+        .Range("L1").Value = "Balance history for " & accName
+        deposits = getDepositHistory(accName)
+        balances = getBalanceHistory(accName, "Yearly")
+        Call resizeTable(.ListObjects(1), UBound(balances, 1))
+        Call resizeTable(.ListObjects(2), UBound(deposits, 1))
+
     
-    deposits = getDepositHistory(accName)
-    balances = getBalanceHistory(accName, "Yearly")
-    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(2), UBound(deposits, 1))
-    Call resizeTable(Sheets(INTEREST_CALC_SHEET).ListObjects(1), UBound(balances, 1))
-    
-    ' Sheets(accName).ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
-    ' Sheets(accName).ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
-    
-    ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), 1, getArrayColumn(deposits, 1, False))
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(2), 2, getArrayColumn(deposits, 2, False))
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 1, getArrayColumn(balances, 1, False))
-    Call setTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 2, getArrayColumn(balances, 2, False))
-    'Sheets("Calculator").ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
-    'Sheets("Calculator").ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de périodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de périodes])"
-    
-    ' Clear old calculated interest rates
-    Call clearTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 3)
-    Call clearTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects(1), 4)
-    
+        ' .ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
+        ' .ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
+        
+        ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
+        Call setTableColumn(.ListObjects(2), 1, getArrayColumn(deposits, 1, False))
+        Call setTableColumn(.ListObjects(2), 2, getArrayColumn(deposits, 2, False))
+        Call setTableColumn(.ListObjects(1), 1, getArrayColumn(balances, 1, False))
+        Call setTableColumn(.ListObjects(1), 2, getArrayColumn(balances, 2, False))
+        '.ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
+        '.ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de pï¿½riodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de pï¿½riodes])"
+        
+        ' Clear old calculated interest rates
+        Call clearTableColumn(.ListObjects(1), 3)
+        Call clearTableColumn(.ListObjects(1), 4)
+    End With
     unfreezeDisplay
 End Sub
 
 Sub ExportInterestResults(accName)
-    Call setTableColumn(Sheets(accName).ListObjects(1), getTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory"), 3), 3)
-    Call setTableColumn(Sheets(accName).ListObjects(1), getTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory"), 4), 4)
+    Dim yields As Variant
+    Dim colOffset As String
+    Dim n As Integer
+    yields = getTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory"), 3, False)
+    n = UBound(yields)
+    With Sheets(accName)
+        colOffset = "I"
+        If .Range("B7") = "Shares" Then
+            colOffset = "H"
+        End If
+        
+        .Range(colOffset & "2").Value = yields(n)
+        .Range(colOffset & "3").Value = "-"
+        .Range(colOffset & "4").Value = "-"
+        .Range(colOffset & "5").Value = "-"
+        .Range(colOffset & "6").Value = "-"
+        If n >= 2 Then
+            .Range(colOffset & "3").Value = yields(n - 1)
+        End If
+        If n >= 4 Then
+            .Range(colOffset & "4").Value = ArrayAverage(yields, n - 3, n - 1)
+        End If
+        If n >= 6 Then
+            .Range(colOffset & "5").Value = ArrayAverage(yields, n - 5, n - 1)
+        End If
+        If n >= 2 Then
+            .Range(colOffset & "6").Value = ArrayAverage(yields, 1, n - 1)
+        End If
+    End With
 End Sub
 
-
-Sub CalcAllInterests()
-    Call CalcCompoundInterests
-    Call CalcPeriodicInterests
-End Sub
 
 Sub CalcCompoundInterests()
     Sheets(INTEREST_CALC_SHEET).Range("B5").Value = 0
