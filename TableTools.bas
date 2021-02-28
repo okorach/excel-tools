@@ -88,7 +88,7 @@ End Function
 
 Public Function GetColumnNumberFromName(oTable, columnName As String) As Long
     On Error GoTo Except
-    GetColumnNumberFromName = oTable.ListColumns(columnName).Index
+    GetColumnNumberFromName = oTable.ListColumns(columnName).index
     GoTo ThisIsTheEnd
 Except:
     GetColumnNumberFromName = 0
@@ -312,11 +312,40 @@ Public Function Create1DArray(arraySize As Integer, elementValue As Variant) As 
     Next i
     Create1DArray = arr1d
 End Function
+
 '------------------------------------------------------------------------------
 Public Function Create2DArray(arraySize As Integer, elementValue As Variant) As Variant
     Create2DArray = OneDtoTwoD(Create1DArray(arraySize, elementValue))
 End Function
 
+'-------------------------------------------------------------------------------
+Public Function ArraySum(arr As Variant, Optional lb As Integer = -1, Optional ub As Integer = -1) As Double
+    ' Calculate the sum of an (1D) array
+    If lb = -1 Then
+        lb = LBound(arr)
+    End If
+    If ub = -1 Then
+        ub = UBound(arr)
+    End If
+    Dim sum As Double
+    sum = 0
+    For i = lb To ub
+        sum = sum + arr(i)
+    Next i
+    ArraySum = sum
+End Function
+
+'-------------------------------------------------------------------------------
+Public Function ArrayAverage(arr As Variant, Optional lb As Integer = -1, Optional ub As Integer = -1) As Double
+    ' Calculate the average of an (1D) array
+    If lb = -1 Then
+        lb = LBound(arr)
+    End If
+    If ub = -1 Then
+        ub = UBound(arr)
+    End If
+    ArrayAverage = ArraySum(arr, lb, ub) / (ub - lb + 1)
+End Function
 
 '------------------------------------------------------------------------------
 ' Returns nbr of dimensions of array
