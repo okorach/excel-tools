@@ -49,8 +49,8 @@ Sub ImportToCalculator(accName As String)
         Call resizeTable(.ListObjects(2), UBound(deposits, 1))
 
     
-        ' .ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
-        ' .ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
+        ' oBalanceTbl.name = "TableBalance" & Replace(accName, " ", "")
+        ' oDepositTbl.name = "TableDeposit" & Replace(accName, " ", "")
         
         ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
         Call setTableColumn(.ListObjects(2), 1, getArrayColumn(deposits, 1, False))
@@ -58,7 +58,7 @@ Sub ImportToCalculator(accName As String)
         Call setTableColumn(.ListObjects(1), 1, getArrayColumn(balances, 1, False))
         Call setTableColumn(.ListObjects(1), 2, getArrayColumn(balances, 2, False))
         '.ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
-        '.ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de pï¿½riodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de pï¿½riodes])"
+        '.ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de périodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de périodes])"
         
         ' Clear old calculated interest rates
         Call clearTableColumn(.ListObjects(1), 3)
@@ -67,34 +67,33 @@ Sub ImportToCalculator(accName As String)
     unfreezeDisplay
 End Sub
 
-Sub ExportInterestResults(accName)
+Sub ExportInterestResults(accName As String)
     Dim yields As Variant
     Dim colOffset As String
-    Dim n As Integer
+    Dim n, i, k As Integer
     yields = getTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory"), 3, False)
-    n = UBound(yields)
+    nbrYields = UBound(yields)
+    yieldIndex = AccountYieldsTableIndex(accName)
     With Sheets(accName)
-        colOffset = "I"
-        If .Range("B7") = "Shares" Then
-            colOffset = "H"
+        'colOffset = "I"
+        'If .Range("B7") = "Shares" Then
+        '    colOffset = "H"
+        'End If
+        .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(1).Value = yields(nbrYields)
+        For k = 2 To 5
+         .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(k).Value = "-"
+        Next k
+        If nbrYields >= 2 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(2).Value = yields(nbrYields - 1)
         End If
-        
-        .Range(colOffset & "2").Value = yields(n)
-        .Range(colOffset & "3").Value = "-"
-        .Range(colOffset & "4").Value = "-"
-        .Range(colOffset & "5").Value = "-"
-        .Range(colOffset & "6").Value = "-"
-        If n >= 2 Then
-            .Range(colOffset & "3").Value = yields(n - 1)
+        If nbrYields >= 4 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(3).Value = ArrayAverage(yields, nbrYields - 3, nbrYields - 1)
         End If
-        If n >= 4 Then
-            .Range(colOffset & "4").Value = ArrayAverage(yields, n - 3, n - 1)
+        If nbrYields >= 6 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(4).Value = ArrayAverage(yields, nbrYields - 5, nbrYields - 1)
         End If
-        If n >= 6 Then
-            .Range(colOffset & "5").Value = ArrayAverage(yields, n - 5, n - 1)
-        End If
-        If n >= 2 Then
-            .Range(colOffset & "6").Value = ArrayAverage(yields, 1, n - 1)
+        If nbrYields >= 2 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(5).Value = ArrayAverage(yields, 1, nbrYields - 1)
         End If
     End With
 End Sub
