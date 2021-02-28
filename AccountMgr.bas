@@ -309,6 +309,8 @@ Public Sub formatAccountSheet(ws)
                     Call ShapePlacementXY(Shape, home_x, home_y + 2 * btn_height, home_x + 99, home_y + 3 * btn_height - 1)
                 ElseIf Shape.name = "BtnSort" Then
                     Call ShapePlacementXY(Shape, home_x, home_y + 3 * btn_height, home_x + 99, home_y + 4 * btn_height - 1)
+                ElseIf Shape.name = "BtnInterests" Then
+                    Call ShapePlacementXY(Shape, home_x + 100, home_y + 3 * btn_height, home_x + 199, home_y + 4 * btn_height - 1)
                 ElseIf Shape.name = "BtnImport" Then
                     Call ShapePlacementXY(Shape, home_x + 100, home_y + btn_height, home_x + 199, home_y + 2 * btn_height - 1)
                 ElseIf Shape.name = "BtnAddEntry" Then
@@ -552,9 +554,6 @@ Private Function getTransactionArray(accountName As String) As Variant
     getTransactionArray = getAccountArray(accountName, "Transactions")
 End Function
 
-Private Function getBalanceArray(accountName As String) As Variant
-    getBalanceArray = getAccountArray(accountName, "Balance")
-End Function
 
 Public Function getDepositHistory(accountName As String) As Variant
     getDepositHistory = getDepositArray(accountName)
@@ -568,7 +567,7 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
     Dim lastMonth, lastYear As Integer
     Dim lastBalance As Double
     Dim histSize As Integer
-    histAll = getBalanceArray(accountName)
+    histAll = AccountBalanceArray(accountName)
     histSize = UBound(histAll, 1)
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
     ReDim histSampled(1 To nbYears, 1 To 2)
@@ -581,7 +580,7 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
         y = Year(histAll(i, 1))
         If sampling = "Monthly" And m <> lastMonth Then
             d = Day(histAll(i, 1))
-            histSampled(j, 2) = DateSerial(y, m, 1)
+            histSampled(j, 1) = DateSerial(y, m, 1)
             If d <> 1 Then
                 histSampled(j, 2) = lastBalance
             Else
@@ -589,9 +588,12 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
             End If
             j = j + 1
         ElseIf sampling = "Yearly" And y <> lastYear Then
-            histSampled(j, 1) = DateSerial(lastYear, 12, 31)
-            histSampled(j, 2) = lastBalance
-            j = j + 1
+            While y <> lastYear
+                histSampled(j, 1) = DateSerial(lastYear, 12, 31)
+                histSampled(j, 2) = lastBalance
+                j = j + 1
+                lastYear = lastYear + 1
+            Wend
         End If
         lastMonth = m
         lastBalance = histAll(i, 3)
@@ -607,3 +609,48 @@ End Function
 Public Sub CalcAccountInterests()
     Call CalcInterestForAccount(ActiveSheet.name)
 End Sub
+
+Public Function AccountTableIndexFromSuffix(accountName As String, suffix As String) As Integer
+    AccountTableIndex = 0
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If LCase(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+            AccountTableIndexFromSuffix = i
+            Exit For
+        End If
+    Next i
+End Function
+
+Public Function AccountTableArrayFromSuffix(accountName As String, suffix As String) As Variant
+    AccountTableArrayFromSuffix = Empty
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If LCase(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+            AccountTableArrayFromSuffix = getTableAsArray(Sheets(accountName).ListObjects(i))
+            Exit For
+        End If
+    Next i
+End Function
+
+Public Function AccountBalanceTableIndex(accountName As String) As Integer
+    AccountBalanceTableIndex = AccountTableIndexFromSuffix(accountName, "balance")
+End Function
+
+Public Function AccountDepositsTableIndex(accountName As String) As Integer
+    AccountDepositsTableIndex = AccountTableIndexFromSuffix(accountName, "deposits")
+End Function
+
+Public Function AccountYieldsTableIndex(accountName As String) As Integer
+    AccountYieldsTableIndex = AccountTableIndexFromSuffix(accountName, "yields")
+End Function
+
+Public Function AccountBalanceArray(accountName As String) As Variant
+    AccountBalanceArray = AccountTableArrayFromSuffix(accountName, "balance")
+End Function
+
+Public Function AccountDepositsArray(accountName As String) As Variant
+    AccountDepositsArray = AccountTableArrayFromSuffix(accountName, "deposits")
+End Function
+
+Public Function AccountYieldsArray(accountName As String) As Variant
+    AccountYieldsArray = AccountTableArrayFromSuffix(accountName, "yields")
+End Function
+
