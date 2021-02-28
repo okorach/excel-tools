@@ -25,7 +25,7 @@ End Sub
 
 Public Sub GoToSheet(shift As Integer)
     Dim curr As Integer
-    curr = ActiveSheet.Index
+    curr = ActiveSheet.index
     If (curr + shift) > 0 And (curr + shift) <= Sheets.Count Then
         Sheets(curr + shift).Activate
     ElseIf shift < 0 Then
