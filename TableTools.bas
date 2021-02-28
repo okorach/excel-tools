@@ -33,9 +33,11 @@ Public Sub resizeTable(oTable, targetSize As Integer)
     nbRows = oTable.ListRows.Count
     If nbRows < targetSize Then
         oTable.ListRows.Add ' Add 1 row at the end, then extend
-        oTable.ListRows(nbRows + 1).Range.Resize(targetSize - nbRows - 1).Insert Shift:=xlDown
+        If targetSize - nbRows > 1 Then
+            oTable.ListRows(nbRows + 1).Range.Resize(targetSize - nbRows - 1).Insert shift:=xlDown
+        End If
     ElseIf nbRows > targetSize Then
-        oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete Shift:=xlUp
+        oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete shift:=xlUp
         'For i = nbRows To targetSize + 1 Step -1
         '    oTable.ListRows(i).Delete
         'Next i
@@ -73,12 +75,12 @@ Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Vari
     Dim cList() As Variant
     cList = getColList(oTable, colList)
     Dim arr() As Variant
-    ReDim arr(1 To nbrCols, 1 To nbrRows)
+    ReDim arr(1 To nbrRows, 1 To nbrCols)
     i = 0
     For Each c In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(i, j) = oTable.ListColumns(c).DataBodyRange.Rows(j).Value
+            arr(j, i) = oTable.ListColumns(c).DataBodyRange.Rows(j).Value
         Next j
     Next c
     getTableAsArray = arr
@@ -125,6 +127,22 @@ Public Function getTableColumn(oTable, colNbrOrName, Optional twoD As Boolean = 
     End If
 End Function
 
+Public Function getArrayColumn(matrix As Variant, colNbr As Integer, Optional twoD As Boolean = True) As Variant
+    Dim nbrRows As Integer
+    nbrRows = UBound(matrix, 1)
+    Dim arr() As Variant
+    ReDim arr(1 To nbrRows)
+    n = UBound(arr)
+    For i = 1 To n
+        arr(i) = matrix(i, colNbr)
+    Next i
+    If (twoD) Then
+        getArrayColumn = OneDtoTwoD(arr)
+    Else
+        getArrayColumn = arr
+    End If
+End Function
+
 
 '------------------------------------------------------------------------------
 ' Sets one column of a table to a given array
@@ -134,7 +152,7 @@ End Function
 Public Sub setTableColumn(oTable, colNbrOrName As Variant, tValues As Variant, Optional twoD As Boolean = True, Optional withResize As Boolean = True)
 
     Dim arr() As Variant
-    If (Not twoD) Then
+    If twoD Then
         arr = OneDtoTwoD(tValues)
     Else
         arr = tValues
@@ -218,7 +236,7 @@ End Function
 '------------------------------------------------------------------------------
 ' Clears data in a table object
 '------------------------------------------------------------------------------
-Public Sub clearTableColumn(oTable, colNbr)
+Public Sub clearTableColumn(oTable As Variant, colNbrOrName As Variant)
     tableSize = oTable.ListRows.Count
     Dim emptyArr() As String
     ReDim emptyArr(1 To tableSize)
