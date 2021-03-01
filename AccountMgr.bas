@@ -233,55 +233,55 @@ Public Sub formatAccountSheet(ws)
         name = ws.name
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = "m/d/yyyy"
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(AMOUNT_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 17, name)
+            Call SetColumnWidth(Chr$(col + 64), 17, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Montant USD")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = USD_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(BALANCE_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Solde CHF")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Solde USD")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 70, name)
+            Call SetColumnWidth(Chr$(col + 64), 70, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(SUBCATEGORY_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(CATEGORY_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(IN_BUDGET_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 5, name)
-            Call SetColumnWidth(Chr(col + 65), 5, name)
+            Call SetColumnWidth(Chr$(col + 64), 5, name)
+            Call SetColumnWidth(Chr$(col + 65), 5, name)
         End If
         ws.Cells.RowHeight = 13
         ws.Rows.Font.size = 10
@@ -309,6 +309,8 @@ Public Sub formatAccountSheet(ws)
                     Call ShapePlacementXY(Shape, home_x, home_y + 2 * btn_height, home_x + 99, home_y + 3 * btn_height - 1)
                 ElseIf Shape.name = "BtnSort" Then
                     Call ShapePlacementXY(Shape, home_x, home_y + 3 * btn_height, home_x + 99, home_y + 4 * btn_height - 1)
+                ElseIf Shape.name = "BtnInterests" Then
+                    Call ShapePlacementXY(Shape, home_x + 100, home_y + 3 * btn_height, home_x + 199, home_y + 4 * btn_height - 1)
                 ElseIf Shape.name = "BtnImport" Then
                     Call ShapePlacementXY(Shape, home_x + 100, home_y + btn_height, home_x + 199, home_y + 2 * btn_height - 1)
                 ElseIf Shape.name = "BtnAddEntry" Then
@@ -529,4 +531,128 @@ Public Sub GoToSolde()
     Sheets(BALANCE_SHEET).Activate
 End Sub
 
+Public Function getSelectedAccount() As String
+    selectedNbr = getNamedVariableValue("selectedAccount")
+    getSelectedAccount = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
+End Function
+
+Private Function getAccountArray(accountName As String, tableType As String) As Variant
+    getAccountArray = Empty
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If Sheets(accountName).ListObjects(i).name Like tableType & "_*" Then
+            getAccountArray = getTableAsArray(Sheets(accountName).ListObjects(i))
+            Exit For
+        End If
+    Next i
+End Function
+
+Private Function getDepositArray(accountName As String) As Variant
+    getDepositArray = getAccountArray(accountName, "Deposits")
+End Function
+
+Private Function getTransactionArray(accountName As String) As Variant
+    getTransactionArray = getAccountArray(accountName, "Transactions")
+End Function
+
+
+Public Function getDepositHistory(accountName As String) As Variant
+    getDepositHistory = getDepositArray(accountName)
+End Function
+
+Public Function getBalanceHistory(accountName As String, Optional sampling As String = "Yearly") As Variant
+    Dim histAll() As Variant
+    Dim histSampled() As Variant
+    Dim nbYears As Integer
+    Dim i As Integer
+    Dim j As Integer
+    Dim lastMonth As Integer
+    Dim lastYear As Integer
+    Dim lastBalance As Double
+    Dim histSize As Integer
+    histAll = AccountBalanceArray(accountName)
+    histSize = UBound(histAll, 1)
+    nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
+    ReDim histSampled(1 To nbYears, 1 To 2)
+    lastMonth = 0
+    lastYear = Year(histAll(1, 1)) - 1
+    lastBalance = 0
+    j = 1
+    For i = 1 To histSize
+        m = Month(histAll(i, 1))
+        y = Year(histAll(i, 1))
+        If sampling = "Monthly" And m <> lastMonth Then
+            d = Day(histAll(i, 1))
+            histSampled(j, 1) = DateSerial(y, m, 1)
+            If d <> 1 Then
+                histSampled(j, 2) = lastBalance
+            Else
+                histSampled(j, 2) = histAll(i, 3)
+            End If
+            j = j + 1
+        ElseIf sampling = "Yearly" And y <> lastYear Then
+            While y <> lastYear
+                histSampled(j, 1) = DateSerial(lastYear, 12, 31)
+                histSampled(j, 2) = lastBalance
+                j = j + 1
+                lastYear = lastYear + 1
+            Wend
+        End If
+        lastMonth = m
+        lastBalance = histAll(i, 3)
+        lastYear = y
+    Next i
+    If sampling = "Yearly" Then
+        histSampled(j, 1) = histAll(histSize, 1)
+        histSampled(j, 2) = lastBalance
+    End If
+    getBalanceHistory = histSampled
+End Function
+
+Public Sub CalcAccountInterests()
+    Call CalcInterestForAccount(ActiveSheet.name)
+End Sub
+
+Public Function AccountTableIndexFromSuffix(accountName As String, suffix As String) As Integer
+    AccountTableIndex = 0
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+            AccountTableIndexFromSuffix = i
+            Exit For
+        End If
+    Next i
+End Function
+
+Public Function AccountTableArrayFromSuffix(accountName As String, suffix As String) As Variant
+    AccountTableArrayFromSuffix = Empty
+    For i = 1 To Sheets(accountName).ListObjects.Count
+        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+            AccountTableArrayFromSuffix = getTableAsArray(Sheets(accountName).ListObjects(i))
+            Exit For
+        End If
+    Next i
+End Function
+
+Public Function AccountBalanceTableIndex(accountName As String) As Integer
+    AccountBalanceTableIndex = AccountTableIndexFromSuffix(accountName, "balance")
+End Function
+
+Public Function AccountDepositsTableIndex(accountName As String) As Integer
+    AccountDepositsTableIndex = AccountTableIndexFromSuffix(accountName, "deposits")
+End Function
+
+Public Function AccountYieldsTableIndex(accountName As String) As Integer
+    AccountYieldsTableIndex = AccountTableIndexFromSuffix(accountName, "yields")
+End Function
+
+Public Function AccountBalanceArray(accountName As String) As Variant
+    AccountBalanceArray = AccountTableArrayFromSuffix(accountName, "balance")
+End Function
+
+Public Function AccountDepositsArray(accountName As String) As Variant
+    AccountDepositsArray = AccountTableArrayFromSuffix(accountName, "deposits")
+End Function
+
+Public Function AccountYieldsArray(accountName As String) As Variant
+    AccountYieldsArray = AccountTableArrayFromSuffix(accountName, "yields")
+End Function
 

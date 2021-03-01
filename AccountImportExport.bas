@@ -90,10 +90,10 @@ Private Function deleteDuplicateSepa(desc As String) As String
         Dim s_emitter As String
         Dim i_repeat_emitter As Integer
         i_end_emitter = InStr(desc, ":")
-        s_emitter = Mid(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
+        s_emitter = Mid$(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
         i_repeat_emitter = InStr(desc, " DE " & s_emitter)
         If i_repeat_emitter > 0 Then
-            deleteDuplicateSepa = Left(desc, i_repeat_emitter - 1)
+            deleteDuplicateSepa = Left$(desc, i_repeat_emitter - 1)
         End If
     End If
 End Function
@@ -102,17 +102,16 @@ Private Function strReplace(oldString, newString, targetString As String) As Str
     strReplace = targetString
     i = InStr(targetString, oldString)
     If (i > 0) Then
-        strReplace = Left(targetString, i - 1) & newString & Right(targetString, Len(targetString) - i - Len(oldString) + 1)
+        strReplace = Left$(targetString, i - 1) & newString & Right$(targetString, Len(targetString) - i - Len(oldString) + 1)
     End If
 End Function
 
 Private Function simplifyDescription(desc As String, subsTable As Variant) As String
     Dim s As String
-    s = Trim(desc)
-    s = deleteDuplicateSepa(s)
-    n = UBound(subsTable, 2)
+    s = deleteDuplicateSepa(Trim$(desc))
+    n = UBound(subsTable, 1)
     For i = 1 To n
-        s = strReplace(subsTable(1, i), subsTable(2, i), s)
+        s = strReplace(subsTable(i, 1), subsTable(i, 2), s)
     Next i
     simplifyDescription = s
 End Function
@@ -273,31 +272,21 @@ Sub ImportLCL(fileToOpen As Variant)
 
 End Sub
 
+Private Function CountUBSrows() As Integer
+    Dim i As Integer
+    i = 1
+    Do While LenB(Cells(i, 1).Value) > 0
+        i = i + 1
+    Loop
+    CountUBSrows = i - 1
+End Function
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
-Sub ImportUBS(fileToOpen As Variant)
-
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
-    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef tAmounts As Variant, nbRows As Integer)
     Dim iRow As Integer
-    Dim tDates() As Variant
-    Dim tDesc() As String
-    Dim tAmounts() As Double
-    
-    
-    iRow = 1
-    nbOps = 0
-    Do While LenB(Cells(iRow, 1).Value) > 0 And nbOps < MAX_IMPORT
-        iRow = iRow + 1
-    Loop
-    nbRows = iRow - 1
-    ReDim tDates(1 To nbRows - 1)
-    ReDim tDesc(1 To nbRows - 1)
-    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If Cells(iRow, 13) = "Solde prix prestations" Then
+        If ws.Cells(iRow, 13) = "Solde prix prestations" Then
             tAmounts(iRow - 1) = 0
         ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
             tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
@@ -311,6 +300,19 @@ Sub ImportUBS(fileToOpen As Variant)
         tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
         tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
     Next iRow
+End Sub
+Sub ImportUBS(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+
+    Dim nbRows As Integer
+    nbRows = CountUBSrows()
+    ReDim tDates(1 To nbRows - 1) As Variant
+    ReDim tDesc(1 To nbRows - 1) As String
+    ReDim tAmounts(1 To nbRows - 1) As Double
+    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
     ActiveWorkbook.Close
     
     Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
@@ -334,36 +336,12 @@ Sub ImportUBScsv(fileToOpen As Variant)
         TrailingMinusNumbers:=True
         'ReadOnly:=True
     
-    Dim iRow As Integer
-    Dim tDates() As Variant
-    Dim tDesc() As String
-    Dim tAmounts() As Double
-    
-    
-    iRow = 1
-    nbOps = 0
-    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
-        iRow = iRow + 1
-    Loop
-    nbRows = iRow - 1
-    ReDim tDates(1 To nbRows - 1)
-    ReDim tDesc(1 To nbRows - 1)
-    ReDim tAmounts(1 To nbRows - 1)
-    For iRow = 2 To nbRows
-        If Cells(iRow, 13) = "Solde prix prestations" Then
-            tAmounts(iRow - 1) = 0
-        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
-        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
-        Else
-            tAmounts(iRow - 1) = 0
-        End If
-        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
-    Next iRow
+    Dim nbRows As Integer
+    nbRows = CountUBSrows()
+    ReDim tDates(1 To nbRows - 1) As Variant
+    ReDim tDesc(1 To nbRows - 1) As String
+    ReDim tAmounts(1 To nbRows - 1) As Double
+    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
     ActiveWorkbook.Close
     
     Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
