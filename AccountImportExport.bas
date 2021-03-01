@@ -90,7 +90,7 @@ Private Function deleteDuplicateSepa(desc As String) As String
         Dim s_emitter As String
         Dim i_repeat_emitter As Integer
         i_end_emitter = InStr(desc, ":")
-        s_emitter = Mid(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
+        s_emitter = Mid$(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
         i_repeat_emitter = InStr(desc, " DE " & s_emitter)
         If i_repeat_emitter > 0 Then
             deleteDuplicateSepa = Left$(desc, i_repeat_emitter - 1)

@@ -38,7 +38,6 @@ Sub ExportFromCalculator(accName As String)
 End Sub
 
 Sub ImportToCalculator(accName As String)
-    Dim oCalcSheet, oDepositTbl, oBalanceTbl As Variant
     freezeDisplay
     With Sheets(INTEREST_CALC_SHEET)
         .Range("G1").Value = "Deposit history for " & accName
@@ -49,8 +48,8 @@ Sub ImportToCalculator(accName As String)
         Call resizeTable(.ListObjects(2), UBound(deposits, 1))
 
     
-        ' oBalanceTbl.name = "TableBalance" & Replace(accName, " ", "")
-        ' oDepositTbl.name = "TableDeposit" & Replace(accName, " ", "")
+        ' .ListObjects(1).name = "TableBalance" & Replace(accName, " ", "")
+        ' .ListObjects(2).name = "TableDeposit" & Replace(accName, " ", "")
         
         ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
         Call setTableColumn(.ListObjects(2), 1, getArrayColumn(deposits, 1, False))
@@ -70,7 +69,9 @@ End Sub
 Sub ExportInterestResults(accName As String)
     Dim yields As Variant
     Dim colOffset As String
-    Dim n, i, k As Integer
+    Dim n As Integer
+    Dim i As Integer
+    Dim k As Integer
     yields = getTableColumn(Sheets(INTEREST_CALC_SHEET).ListObjects("TableBalanceHistory"), 3, False)
     nbrYields = UBound(yields)
     yieldIndex = AccountYieldsTableIndex(accName)

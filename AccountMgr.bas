@@ -233,55 +233,55 @@ Public Sub formatAccountSheet(ws)
         name = ws.name
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = "m/d/yyyy"
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(AMOUNT_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Montant CHF")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 17, name)
+            Call SetColumnWidth(Chr$(col + 64), 17, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Montant USD")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = USD_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(BALANCE_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = EUR_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Solde CHF")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), "Solde USD")
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 18, name)
+            Call SetColumnWidth(Chr$(col + 64), 18, name)
             ws.ListObjects(1).ListColumns(col).DataBodyRange.NumberFormat = CHF_FORMAT
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DESCRIPTION_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 70, name)
+            Call SetColumnWidth(Chr$(col + 64), 70, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(SUBCATEGORY_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(CATEGORY_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 15, name)
+            Call SetColumnWidth(Chr$(col + 64), 15, name)
         End If
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(IN_BUDGET_KEY))
         If col <> 0 Then
-            Call SetColumnWidth(Chr(col + 64), 5, name)
-            Call SetColumnWidth(Chr(col + 65), 5, name)
+            Call SetColumnWidth(Chr$(col + 64), 5, name)
+            Call SetColumnWidth(Chr$(col + 65), 5, name)
         End If
         ws.Cells.RowHeight = 13
         ws.Rows.Font.size = 10
@@ -563,8 +563,10 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
     Dim histAll() As Variant
     Dim histSampled() As Variant
     Dim nbYears As Integer
-    Dim i, j As Integer
-    Dim lastMonth, lastYear As Integer
+    Dim i As Integer
+    Dim j As Integer
+    Dim lastMonth As Integer
+    Dim lastYear As Integer
     Dim lastBalance As Double
     Dim histSize As Integer
     histAll = AccountBalanceArray(accountName)
@@ -613,7 +615,7 @@ End Sub
 Public Function AccountTableIndexFromSuffix(accountName As String, suffix As String) As Integer
     AccountTableIndex = 0
     For i = 1 To Sheets(accountName).ListObjects.Count
-        If LCase(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
             AccountTableIndexFromSuffix = i
             Exit For
         End If
@@ -623,7 +625,7 @@ End Function
 Public Function AccountTableArrayFromSuffix(accountName As String, suffix As String) As Variant
     AccountTableArrayFromSuffix = Empty
     For i = 1 To Sheets(accountName).ListObjects.Count
-        If LCase(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
             AccountTableArrayFromSuffix = getTableAsArray(Sheets(accountName).ListObjects(i))
             Exit For
         End If
