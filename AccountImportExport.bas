@@ -272,31 +272,21 @@ Sub ImportLCL(fileToOpen As Variant)
 
 End Sub
 
+Private Function CountUBSrows() As Integer
+    Dim i As Integer
+    i = 1
+    Do While LenB(Cells(i, 1).Value) > 0
+        i = i + 1
+    Loop
+    CountUBSrows = i - 1
+End Function
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
-Sub ImportUBS(fileToOpen As Variant)
-
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
-    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef tAmounts As Variant, nbRows As Integer)
     Dim iRow As Integer
-    Dim tDates() As Variant
-    Dim tDesc() As String
-    Dim tAmounts() As Double
-    
-    
-    iRow = 1
-    nbOps = 0
-    Do While LenB(Cells(iRow, 1).Value) > 0 And nbOps < MAX_IMPORT
-        iRow = iRow + 1
-    Loop
-    nbRows = iRow - 1
-    ReDim tDates(1 To nbRows - 1)
-    ReDim tDesc(1 To nbRows - 1)
-    ReDim tAmounts(1 To nbRows - 1)
     For iRow = 2 To nbRows
-        If Cells(iRow, 13) = "Solde prix prestations" Then
+        If ws.Cells(iRow, 13) = "Solde prix prestations" Then
             tAmounts(iRow - 1) = 0
         ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
             tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
@@ -310,6 +300,19 @@ Sub ImportUBS(fileToOpen As Variant)
         tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
         tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
     Next iRow
+End Sub
+Sub ImportUBS(fileToOpen As Variant)
+
+    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+
+    Dim nbRows As Integer
+    nbRows = CountUBSrows()
+    ReDim tDates(1 To nbRows - 1) As Variant
+    ReDim tDesc(1 To nbRows - 1) As String
+    ReDim tAmounts(1 To nbRows - 1) As Double
+    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
     ActiveWorkbook.Close
     
     Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
@@ -333,36 +336,12 @@ Sub ImportUBScsv(fileToOpen As Variant)
         TrailingMinusNumbers:=True
         'ReadOnly:=True
     
-    Dim iRow As Integer
-    Dim tDates() As Variant
-    Dim tDesc() As String
-    Dim tAmounts() As Double
-    
-    
-    iRow = 1
-    nbOps = 0
-    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
-        iRow = iRow + 1
-    Loop
-    nbRows = iRow - 1
-    ReDim tDates(1 To nbRows - 1)
-    ReDim tDesc(1 To nbRows - 1)
-    ReDim tAmounts(1 To nbRows - 1)
-    For iRow = 2 To nbRows
-        If Cells(iRow, 13) = "Solde prix prestations" Then
-            tAmounts(iRow - 1) = 0
-        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
-        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
-        Else
-            tAmounts(iRow - 1) = 0
-        End If
-        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
-    Next iRow
+    Dim nbRows As Integer
+    nbRows = CountUBSrows()
+    ReDim tDates(1 To nbRows - 1) As Variant
+    ReDim tDesc(1 To nbRows - 1) As String
+    ReDim tAmounts(1 To nbRows - 1) As Double
+    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
     ActiveWorkbook.Close
     
     Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
