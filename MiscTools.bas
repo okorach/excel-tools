@@ -13,7 +13,7 @@ Attribute VB_Name = "MiscTools"
 
 
 
-Public Sub freezeDisplay()
+Public Sub FreezeDisplay()
     ' Freeze the Excel display so that macros run faster
     Application.EnableEvents = False
     Application.ScreenUpdating = False
@@ -21,7 +21,7 @@ Public Sub freezeDisplay()
     Application.DisplayStatusBar = False
 End Sub
 
-Public Sub unfreezeDisplay()
+Public Sub UnfreezeDisplay()
     ' Unfreeze the Excel display (to be used after executing macros, or when intermediate display is needed)
     Application.EnableEvents = True
     Application.ScreenUpdating = True
@@ -29,42 +29,37 @@ Public Sub unfreezeDisplay()
     Application.DisplayStatusBar = True
 End Sub
 
-Public Sub scrollToBottom()
+Public Sub ScrollToBottom()
     ActiveWindow.ScrollRow = ActiveSheet.ListObjects(1).ListRows.Count - 10
 End Sub
 
-Public Sub scrollToTop()
+Public Sub ScrollToTop()
     ActiveWindow.ScrollRow = 10
 End Sub
 
-Public Function sheetExists(sheetToFind As String) As Boolean
-    sheetExists = False
+Public Function SheetExists(sheetToFind As String) As Boolean
+    SheetExists = False
     For Each Sheet In Worksheets
         If sheetToFind = Sheet.name Then
-            sheetExists = True
+            SheetExists = True
             Exit Function
         End If
     Next Sheet
 End Function
 
-Public Function getNamedVariableValue(varName As String)
-    getNamedVariableValue = Names(varName).RefersToRange.Value
+Public Sub ShowAllSheets()
+    For Each ws In Worksheets
+        ws.Visible = True
+    Next ws
+End Sub
+
+Public Function GetNamedVariableValue(varName As String)
+    GetNamedVariableValue = Names(varName).RefersToRange.Value
 End Function
 
-Public Function GetLabel(key)
-    lang = getNamedVariableValue("Language")
-    If lang = "English" Then
-        col = 3
-    Else
-        col = 2
-    End If
-    GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
-    If IsError(GetLabel) Then
-        GetLabel = key & " not found"
-    End If
-End Function
 
-Public Function GetColName(key)
+
+Public Function GetColName(key) As String
     GetColName = GetLabel(key)
 End Function
 
@@ -76,7 +71,7 @@ Public Sub ErrorMessage(key1 As String, Optional key2 As String = "")
     MsgBox (msg)
 End Sub
 
-Public Sub FreezeCell(r As String, Optional wsName As String = "")
+Public Sub FreezeCell(R As String, Optional wsName As String = "")
     ' Replaces a cell that may contain a formula by the result of this formula
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
@@ -86,10 +81,10 @@ Public Sub FreezeCell(r As String, Optional wsName As String = "")
     Else
         Set ws = Worksheets(wsName)
     End If
-        If (IsError(ws.Range(r).Value)) Then
-            ws.Range(r).Value = 0
+        If (IsError(ws.Range(R).Value)) Then
+            ws.Range(R).Value = 0
         Else
-            ws.Range(r).Formula = Range(r).Value
+            ws.Range(R).Formula = Range(R).Value
         End If
 End Sub
 
@@ -119,7 +114,7 @@ Public Sub FreezeCellXY(row As Integer, col As Integer, Optional wsName As Strin
     Call FreezeCell(Cells(row, col).Address(False, False), wsName)
 End Sub
 
-Public Sub FreezeRegion(r As String, Optional wsName As String = "")
+Public Sub FreezeRegion(R As String, Optional wsName As String = "")
     ' Replaces a cell that may contain a formula by the result of this formula
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
@@ -128,14 +123,14 @@ Public Sub FreezeRegion(r As String, Optional wsName As String = "")
     Else
         Set ws = Sheets(wsName)
     End If
-    ws.Range(r).Copy
-    ws.Range(r).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+    ws.Range(R).Copy
+    ws.Range(R).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
 End Sub
 
 Public Sub FreezeRegionXY(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, Optional wsName As String = "")
-    Dim r As String
-    r = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
-    Call FreezeRegion(r, wsName)
+    Dim R As String
+    R = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
+    Call FreezeRegion(R, wsName)
 End Sub
 
 Sub reformatAmount(colObject As ListColumn)

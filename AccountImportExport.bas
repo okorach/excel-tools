@@ -59,7 +59,7 @@ Sub ImportAny()
     Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
-        Call freezeDisplay
+        Call FreezeDisplay
         Dim bank As String
         bank = Cells(3, 2).Value
         If (bank = "ING Direct") Then
@@ -71,10 +71,10 @@ Sub ImportAny()
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(fileToOpen)
         Else
-            Call unfreezeDisplay
+            Call UnfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
         End If
-        Call unfreezeDisplay
+        Call UnfreezeDisplay
     Else
         Call ErrorMessage("k.warningImportCancelled")
     End If
@@ -515,14 +515,14 @@ Sub ExportAll()
     End With
 
     If LenB(sFolder) > 0 Then ' if a file was chosen
-        Call freezeDisplay
+        Call FreezeDisplay
         For Each ws In Worksheets
             If ws.Cells(1, 1).Value = "Nom Compte" Then
                 filename = sFolder & "\" & ws.name & ".csv"
                 Call ExportGeneric(ws.name, filename, True)
             End If
         Next ws
-        Call unfreezeDisplay
+        Call UnfreezeDisplay
     Else
         Call ErrorMessage("k.warningExportCancelled")
     End If

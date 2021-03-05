@@ -1,4 +1,4 @@
-Attribute VB_Name = "TableTools"
+Attribute VB_Name = "TablesMgr"
 '==============================================================================
 '
 '  Table Tools
@@ -54,9 +54,9 @@ Private Function getColList(oTable, currentColList) As Variant
         nbrCols = oTable.ListColumns.Count
         Dim localColList() As Variant
         ReDim localColList(1 To nbrCols)
-        For c = 1 To nbrCols
-            localColList(c) = c
-        Next c
+        For C = 1 To nbrCols
+            localColList(C) = C
+        Next C
         getColList = localColList
     Else
         getColList = currentColList
@@ -77,12 +77,12 @@ Public Function getTableAsArray(oTable, Optional colList As Variant = 0) As Vari
     Dim arr() As Variant
     ReDim arr(1 To nbrRows, 1 To nbrCols)
     i = 0
-    For Each c In cList
+    For Each C In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(j, i) = oTable.ListColumns(c).DataBodyRange.Rows(j).Value
+            arr(j, i) = oTable.ListColumns(C).DataBodyRange.Rows(j).Value
         Next j
-    Next c
+    Next C
     getTableAsArray = arr
 End Function
 
@@ -149,10 +149,10 @@ End Function
 ' col may be an integer (Column Nbr) or a String (Column name)
 '------------------------------------------------------------------------------
 
-Public Sub setTableColumn(oTable, colNbrOrName As Variant, tValues As Variant, Optional twoD As Boolean = True, Optional withResize As Boolean = True)
+Public Sub SetTableColumn(oTable, colNbrOrName As Variant, tValues As Variant, Optional withResize As Boolean = True)
 
     Dim arr() As Variant
-    If twoD Then
+    If NumberOfDimensions(tValues) = 1 Then
         arr = OneDtoTwoD(tValues)
     Else
         arr = tValues
@@ -243,7 +243,7 @@ Public Sub clearTableColumn(oTable As Variant, colNbrOrName As Variant)
     For i = 1 To tableSize
         emptyArr(i) = ""
     Next i
-    Call setTableColumn(oTable, colNbrOrName, emptyArr)
+    Call SetTableColumn(oTable, colNbrOrName, emptyArr)
 End Sub
 '------------------------------------------------------------------------------
 Public Sub clearTableRow(oTable, rowNbr)
