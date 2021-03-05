@@ -97,7 +97,7 @@ Public Sub SwapCells(cell1 As String, cell2 As String)
 End Sub
 
 '------------------------------------------------------
-Public Sub SwapCellsXY(ByVal Row1 As Integer, ByVal Col1 As Integer, ByVal Row2 As Integer, ByVal Col2 As Integer, Optional wsName As String = "")
+Public Sub SwapCellsXY(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Long, ByVal Col2 As Long, Optional wsName As String = "")
     Dim ws As Worksheet
     Dim Temp As Variant
     If LenB(wsName) = 0 Then
@@ -110,7 +110,7 @@ Public Sub SwapCellsXY(ByVal Row1 As Integer, ByVal Col1 As Integer, ByVal Row2 
     ws.Cells(Row2, Col2).Value = Temp
 End Sub
 
-Public Sub FreezeCellXY(row As Integer, col As Integer, Optional wsName As String = "")
+Public Sub FreezeCellXY(row As Long, col As Long, Optional wsName As String = "")
     Call FreezeCell(Cells(row, col).Address(False, False), wsName)
 End Sub
 
@@ -127,7 +127,7 @@ Public Sub FreezeRegion(R As String, Optional wsName As String = "")
     ws.Range(R).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
 End Sub
 
-Public Sub FreezeRegionXY(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, Optional wsName As String = "")
+Public Sub FreezeRegionXY(x1 As Long, y1 As Long, x2 As Long, y2 As Long, Optional wsName As String = "")
     Dim R As String
     R = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
     Call FreezeRegion(R, wsName)
@@ -312,7 +312,7 @@ Public Function URLEncode( _
 
   If StringLen > 0 Then
     ReDim Result(StringLen) As String
-    Dim i As Long, CharCode As Integer
+    Dim i As Long, CharCode As Long
     Dim Char As String, Space As String
 
     If SpaceAsPlus Then Space = "+" Else Space = "%20"
@@ -348,7 +348,7 @@ Dim oPivotFields As PivotField
 Dim oSourceRange As Range
 Dim strLabel As String
 Dim strFormat As String
-Dim i As Integer
+Dim i As Long
 
 On Error GoTo MyErr
 

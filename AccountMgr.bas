@@ -4,11 +4,11 @@ Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" C
 Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
-Public Const NOT_AN_ACCOUNT As Integer = 0
-Public Const DOMESTIC_ACCOUNT As Integer = 1
-Public Const FOREIGN_ACCOUNT As Integer = 2
-Public Const DOMESTIC_SHARES_ACCOUNT As Integer = 3
-Public Const FOREIGN_SHARES_ACCOUNT As Integer = 4
+Public Const NOT_AN_ACCOUNT As Long = 0
+Public Const DOMESTIC_ACCOUNT As Long = 1
+Public Const FOREIGN_ACCOUNT As Long = 2
+Public Const DOMESTIC_SHARES_ACCOUNT As Long = 3
+Public Const FOREIGN_SHARES_ACCOUNT As Long = 4
 
 Public Const DATE_KEY As String = "k.date"
 Public Const ACCOUNT_NAME_KEY As String = "k.accountName"
@@ -25,8 +25,8 @@ Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const BALANCE_SHEET As String = "Solde"
 
-Public Const ACCOUNT_CLOSED As Integer = 0
-Public Const ACCOUNT_OPEN As Integer = 1
+Public Const ACCOUNT_CLOSED As Long = 0
+Public Const ACCOUNT_OPEN As Long = 1
 
 Const ACCOUNT_NAME_LABEL = "A1"
 Const ACCOUNT_NAME_VALUE = "B1"
@@ -75,7 +75,7 @@ Public Sub MergeAccounts()
                 ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
-                    arr1d = getTableColumn(ws.ListObjects(1), col, False)
+                    arr1d = GetTableColumn(ws.ListObjects(1), col)
                 End If
                 If (firstAccount) Then
                    totalColumn = arr1d
@@ -88,31 +88,20 @@ Public Sub MergeAccounts()
         Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(1), col, totalColumn)
         Erase totalColumn
     Next colKey
-    ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge").Sort.SortFields.Clear
-    ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge").Sort. _
-        SortFields.Add key:=Range("AccountsMerge[[#Headers],[#Data],[Date]]"), SortOn _
-        :=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    With ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge"). _
-        Sort
-        .Header = xlYes
-        .MatchCase = False
-        .Orientation = xlTopToBottom
-        .SortMethod = xlPinYin
-        .Apply
-    End With
+
+    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), "Date", xlAscending, "Montant", xlDescending)
     Sheets(MERGE_SHEET).PivotTables(1).PivotCache.Refresh
 
 End Sub
 
 Public Sub GenBudget()
 
-    Dim newSize As Integer
-    'Sheets(MERGE_SHEET).ListObjects(1).Range.AutoFilter.ShowAllData
+    Dim i As Long
+    Dim newSize As Long
+    Dim nbRows As Long
     nbRows = Sheets(MERGE_SHEET).ListObjects(1).ListRows.Count
     newSize = nbRows
-    nbCols = Sheets(MERGE_SHEET).ListObjects(1).ListColumns.Count
 
-    Dim oTable As Variant
     Dim dateCol() As Variant
     Dim accountCol() As Variant
     Dim amountCol() As Variant
@@ -121,15 +110,15 @@ Public Sub GenBudget()
     Dim spreadCol() As Variant
 
     With Sheets(MERGE_SHEET)
-        dateCol = getTableColumn(.ListObjects(1), GetColName(DATE_KEY), False)
-        accountCol = getTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), False)
-        amountCol = getTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), False)
-        descCol = getTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), False)
-        categCol = getTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), False)
-        spreadCol = getTableColumn(.ListObjects(1), GetColName(IN_BUDGET_KEY), False)
+        dateCol = GetTableColumn(.ListObjects(1), GetColName(DATE_KEY))
+        accountCol = GetTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY))
+        amountCol = GetTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY))
+        descCol = GetTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY))
+        categCol = GetTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY))
+        spreadCol = GetTableColumn(.ListObjects(1), GetColName(IN_BUDGET_KEY))
     End With
 
-    Dim moreRows As Integer
+    Dim moreRows As Long
     moreRows = 0
     For i = 1 To nbRows
         divider = spreadCol(i)
@@ -150,6 +139,7 @@ Public Sub GenBudget()
             spreadCol(i) = -amountCol(i)
         End If
         If (IsNumeric(divider) And Int(divider) = divider And divider <> 1 And divider <> 0) Then
+            Dim k As Long
             newDate = dateCol(i)
             m = Month(newDate)
             y = Year(newDate)
@@ -173,14 +163,14 @@ Public Sub GenBudget()
     Next i
 
     With Sheets(MERGE_SHEET)
-        Call resizeTable(.ListObjects(1), nbRows + moreRows)
+        Call ResizeTable(.ListObjects(1), nbRows + moreRows)
         Call SetTableColumn(.ListObjects(1), GetColName(DATE_KEY), dateCol)
         Call SetTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), accountCol)
         Call SetTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), amountCol)
         Call SetTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), descCol)
         Call SetTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), categCol)
         Call SetTableColumn(.ListObjects(1), GetColName(SPREAD_KEY), spreadCol)
-        Call resizeTable(.ListObjects(1), newSize)
+        Call ResizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
     End With
 
@@ -233,7 +223,7 @@ Public Sub FormatAccountSheet(ws As Worksheet)
 ' Make sure the sheet is not anything else than an account
     If (IsAnAccountSheet(ws) Or isTemplate(ws)) Then
         Dim name As String
-        Dim col As Integer
+        Dim col As Long
         name = ws.name
         col = GetColumnNumberFromName(ws.ListObjects(1), GetLabel(DATE_KEY))
         If col <> 0 Then
@@ -296,10 +286,10 @@ End Sub
 
 Private Sub formatAccountSheetButtons(ws As Worksheet)
     If (ws.Shapes.Count > 0) Then
-        Dim home_x As Integer
-        Dim home_y As Integer
-        Dim btn_height As Integer
-        Dim i As Integer
+        Dim home_x As Long
+        Dim home_y As Long
+        Dim btn_height As Long
+        Dim i As Long
         home_x = 200
         home_y = 10
         btn_height = 22
@@ -394,7 +384,7 @@ Public Sub showTemplateAccounts()
 End Sub
 Public Sub refreshOpenAccountsList()
     Call FreezeDisplay
-    Call truncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
+    Call TruncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
     With Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS)
         For i = 1 To Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows.Count
             If (Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 6).Value = "Open") Then
@@ -416,25 +406,10 @@ End Sub
 
 Public Sub sortCurrentAccount()
     Call sortAccount(ActiveSheet.ListObjects(1))
+    Call SortTable(ActiveSheet.ListObjects(1), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    Call SetTableColumnFormat(ActiveSheet.ListObjects(1), 1, "m/d/yyyy")
 End Sub
 
-Public Sub sortAccount(oTable As Variant)
-    oTable.Sort.SortFields.Clear
-    ' Sort table by date first, then by amount
-    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.date") & "]"), SortOn:=xlSortOnValues, Order:= _
-        xlAscending, DataOption:=xlSortNormal
-    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & GetLabel("k.amount") & "]"), SortOn:=xlSortOnValues, Order:= _
-        xlDescending, DataOption:=xlSortNormal
-    With oTable.Sort
-        .Header = xlYes
-        .MatchCase = False
-        .Orientation = xlTopToBottom
-        .SortMethod = xlPinYin
-        .Apply
-    End With
-    ' Reset date column format
-    Call setTableColumnFormat(oTable, 1, "m/d/yyyy")
-End Sub
 '-------------------------------------------------
 Public Function AccountType(accountId As String) As String
     Dim ws As Worksheet
@@ -529,13 +504,13 @@ End Function
 Public Function AccountBalanceHistory(accountId As String, Optional sampling As String = "Yearly") As Variant
     Dim histAll() As Variant
     Dim histSampled() As Variant
-    Dim nbYears As Integer
-    Dim i As Integer
-    Dim j As Integer
-    Dim lastMonth As Integer
-    Dim lastYear As Integer
+    Dim nbYears As Long
+    Dim i As Long
+    Dim j As Long
+    Dim lastMonth As Long
+    Dim lastYear As Long
     Dim lastBalance As Double
-    Dim histSize As Integer
+    Dim histSize As Long
     histAll = AccountBalanceArray(accountId)
     histSize = UBound(histAll, 1)
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
@@ -599,8 +574,8 @@ Public Sub CalcInterestForAllAccounts()
 End Sub
 
 Public Sub StoreAccountInterests(accountId As String, yields As Variant)
-    Dim nbrYields As Integer
-    Dim yieldIndex As Integer
+    Dim nbrYields As Long
+    Dim yieldIndex As Long
     Dim ws As Worksheet
     nbrYields = UBound(yields)
     yieldIndex = AccountYieldsTableIndex(accountId)
@@ -626,9 +601,9 @@ Public Sub StoreAccountInterests(accountId As String, yields As Variant)
 End Sub
 
 
-Private Function AccountTableIndexFromSuffix(accountId As String, suffix As String) As Integer
+Private Function AccountTableIndexFromSuffix(accountId As String, suffix As String) As Long
     Dim ws As Worksheet
-    Dim i As Integer
+    Dim i As Long
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
         If LCase$(ws.ListObjects(i).name) Like suffix & "_*" Then
@@ -640,26 +615,26 @@ End Function
 
 Public Function AccountTableArrayFromSuffix(accountId As String, suffix As String) As Variant
     Dim ws As Worksheet
-    Dim i As Integer
+    Dim i As Long
     Set ws = getAccountSheet(accountId)
     AccountTableArrayFromSuffix = Empty
     For i = 1 To ws.ListObjects.Count
         If LCase$(ws.ListObjects(i).name) Like suffix & "_*" Then
-            AccountTableArrayFromSuffix = getTableAsArray(ws.ListObjects(i))
+            AccountTableArrayFromSuffix = GetTableAsArray(ws.ListObjects(i))
             Exit For
         End If
     Next i
 End Function
 
-Public Function AccountBalanceTableIndex(accountId As String) As Integer
+Public Function AccountBalanceTableIndex(accountId As String) As Long
     AccountBalanceTableIndex = AccountTableIndexFromSuffix(accountId, "balance")
 End Function
 
-Public Function AccountDepositsTableIndex(accountId As String) As Integer
+Public Function AccountDepositsTableIndex(accountId As String) As Long
     AccountDepositsTableIndex = AccountTableIndexFromSuffix(accountId, "deposits")
 End Function
 
-Public Function AccountYieldsTableIndex(accountId As String) As Integer
+Public Function AccountYieldsTableIndex(accountId As String) As Long
     AccountYieldsTableIndex = AccountTableIndexFromSuffix(accountId, "yields")
 End Function
 
@@ -694,13 +669,13 @@ End Sub
 '--------------------------------------------------------------------------
 
 Private Function getAccountArray(accountId As String, tableType As String) As Variant
-    Dim i As Integer
+    Dim i As Long
     Dim ws As Worksheet
     getAccountArray = Empty
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
         If ws.ListObjects(i).name Like tableType & "_*" Then
-            getAccountArray = getTableAsArray(ws.ListObjects(i))
+            getAccountArray = GetTableAsArray(ws.ListObjects(i))
             Exit For
         End If
     Next i

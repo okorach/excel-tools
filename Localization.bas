@@ -1,5 +1,7 @@
 Attribute VB_Name = "Localization"
 Public Function GetLabel(key)
+    Dim col As Integer
+    Dim lang As String
     lang = GetNamedVariableValue("Language")
     If lang = "English" Then
         col = 3

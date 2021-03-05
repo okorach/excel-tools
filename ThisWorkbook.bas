@@ -23,8 +23,8 @@ Public Sub GoToAccount()
     End If
 End Sub
 
-Public Sub GoToSheet(shift As Integer)
-    Dim curr As Integer
+Public Sub GoToSheet(shift As Long)
+    Dim curr As Long
     curr = ActiveSheet.index
     If (curr + shift) > 0 And (curr + shift) <= Sheets.Count Then
         Sheets(curr + shift).Activate

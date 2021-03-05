@@ -11,7 +11,7 @@ Private Function toAmount(str) As Double
 End Function
 
 
-Private Function toMonth(str) As Integer
+Private Function toMonth(str) As Long
     s = LCase$(Trim$(str))
     ' TODO handle accents in Fev and Dec
     If s Like "jan*" Then
@@ -86,9 +86,9 @@ Private Function deleteDuplicateSepa(desc As String) As String
     idstr = "PRLV SEPA "
     deleteDuplicateSepa = desc
     If (InStr(desc, idstr) = 1) Then
-        Dim i_end_emitter As Integer
+        Dim i_end_emitter As Long
         Dim s_emitter As String
-        Dim i_repeat_emitter As Integer
+        Dim i_repeat_emitter As Long
         i_end_emitter = InStr(desc, ":")
         s_emitter = Mid$(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
         i_repeat_emitter = InStr(desc, " DE " & s_emitter)
@@ -118,10 +118,10 @@ End Function
 
 Sub ImportING(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    Dim iRow As Integer
+    Dim iRow As Long
     Dim tDates() As Variant
     Dim tDesc() As String
     Dim tAmounts() As Double
@@ -150,10 +150,10 @@ End Sub
 
 Sub ImportRevolut(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    Dim iRow As Integer
+    Dim iRow As Long
     Dim tDates() As Variant
     Dim tDesc() As String
     Dim tAmounts() As Double
@@ -194,19 +194,19 @@ End Sub
 
 Sub ImportRevolutCSV(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim tbl As Variant
     tbl = ActiveSheet.ListObjects(1)
     
-    Dim dateCol As Integer
-    Dim amountCol As Integer
-    Dim descCol As Integer
+    Dim dateCol As Long
+    Dim amountCol As Long
+    Dim descCol As Long
     dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
     amountCol = GetColumnNumberFromName(tbl, GetLabel(AMOUNT_KEY))
     descCol = GetColumnNumberFromName(tbl, GetLabel(DESCRIPTION_KEY))
     
-    Dim totalrows As Integer
+    Dim totalrows As Long
     totalrows = tbl.ListRows.Count
     
     Open fileToOpen For Input As #1
@@ -237,10 +237,10 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportLCL(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    Dim iRow As Integer
+    Dim iRow As Long
     Dim tDates() As Variant
     Dim tDesc() As String
     Dim tAmounts() As Double
@@ -272,8 +272,8 @@ Sub ImportLCL(fileToOpen As Variant)
 
 End Sub
 
-Private Function CountUBSrows() As Integer
-    Dim i As Integer
+Private Function CountUBSrows() As Long
+    Dim i As Long
     i = 1
     Do While LenB(Cells(i, 1).Value) > 0
         i = i + 1
@@ -283,8 +283,8 @@ End Function
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
-Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef tAmounts As Variant, nbRows As Integer)
-    Dim iRow As Integer
+Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef tAmounts As Variant, nbRows As Long)
+    Dim iRow As Long
     For iRow = 2 To nbRows
         If ws.Cells(iRow, 13) = "Solde prix prestations" Then
             tAmounts(iRow - 1) = 0
@@ -303,11 +303,11 @@ Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef t
 End Sub
 Sub ImportUBS(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 
-    Dim nbRows As Integer
+    Dim nbRows As Long
     nbRows = CountUBSrows()
     ReDim tDates(1 To nbRows - 1) As Variant
     ReDim tDesc(1 To nbRows - 1) As String
@@ -324,7 +324,7 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportUBScsv(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
         :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
@@ -336,7 +336,7 @@ Sub ImportUBScsv(fileToOpen As Variant)
         TrailingMinusNumbers:=True
         'ReadOnly:=True
     
-    Dim nbRows As Integer
+    Dim nbRows As Long
     nbRows = CountUBSrows()
     ReDim tDates(1 To nbRows - 1) As Variant
     ReDim tDesc(1 To nbRows - 1) As String
@@ -353,11 +353,11 @@ End Sub
 '------------------------------------------------------------------------------
 Sub ImportGeneric(fileToOpen As Variant)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
     'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
-    Dim iRow As Integer
+    Dim iRow As Long
     Dim tDates() As Variant
     Dim tDesc() As String
     Dim tSubCateg() As String
@@ -418,11 +418,11 @@ Sub ImportGeneric(fileToOpen As Variant)
     ActiveSheet.Cells(5, 2).Value = availability
     
     Dim tbl As Variant
-    Dim dateCol As Integer
-    Dim amountCol As Integer
-    Dim descCol As Integer
-    Dim subcatCol As Integer
-    Dim budgetCol As Integer
+    Dim dateCol As Long
+    Dim amountCol As Long
+    Dim descCol As Long
+    Dim subcatCol As Long
+    Dim budgetCol As Long
     tbl = ActiveSheet.ListObjects(1)
     dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
     amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
@@ -449,7 +449,7 @@ End Sub
 
 Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolean = False)
 
-    subsTable = getTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim sFolder As String
     exportFrom = ActiveWorkbook.name
@@ -537,9 +537,9 @@ End Sub
 
 Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
                             Optional amountColName As String = "")
-    Dim dateCol As Integer
-    Dim amountCol As Integer
-    Dim descCol As Integer
+    Dim dateCol As Long
+    Dim amountCol As Long
+    Dim descCol As Long
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
     If amountColName = "" Then
         amountColName = GetLabel(AMOUNT_KEY)
