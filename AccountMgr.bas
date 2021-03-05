@@ -1,7 +1,7 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" â‚¬ "";-#,###,##0.00"" â‚¬ "";0.00"" â‚¬ """
+Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
 Public Const NOT_AN_ACCOUNT As Integer = 0
@@ -20,7 +20,7 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Const PARAMS_SHEET As String = "Paramï¿½tres"
+Public Const PARAMS_SHEET As String = "Paramètres"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const BALANCE_SHEET As String = "Solde"
@@ -53,22 +53,26 @@ Public Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
 Public Const ACCOUNTS_TABLE = "tblAccounts"
 Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
-Public Sub mergeAccounts()
+Public Sub MergeAccounts()
 
-    Call freezeDisplay
+    Dim firstAccount As Boolean
+    Dim ws As Worksheet
+
+    Call FreezeDisplay
 
     For Each colKey In Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY)
+        Dim col As String
         col = GetColName(colKey)
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
            ' Make sure the sheet is not a template or anything else than an account
-           If (isAnAccountSheet(ws)) Then
+           If (IsAnAccountSheet(ws)) Then
                 'MsgBox (ws + " " + colNbr)
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
-                ElseIf (colKey = IN_BUDGET_KEY And Not isAccountInBudget(ws.name)) Then
+                ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
                 Else
                     arr1d = getTableColumn(ws.ListObjects(1), col, False)
@@ -81,7 +85,7 @@ Public Sub mergeAccounts()
                 End If
             End If
         Next ws
-        Call setTableColumn(Sheets(MERGE_SHEET).ListObjects(1), col, totalColumn, False)
+        Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(1), col, totalColumn)
         Erase totalColumn
     Next colKey
     ActiveWorkbook.Worksheets(MERGE_SHEET).ListObjects("AccountsMerge").Sort.SortFields.Clear
@@ -100,7 +104,7 @@ Public Sub mergeAccounts()
 
 End Sub
 
-Public Sub genBudget()
+Public Sub GenBudget()
 
     Dim newSize As Integer
     'Sheets(MERGE_SHEET).ListObjects(1).Range.AutoFilter.ShowAllData
@@ -170,23 +174,23 @@ Public Sub genBudget()
 
     With Sheets(MERGE_SHEET)
         Call resizeTable(.ListObjects(1), nbRows + moreRows)
-        Call setTableColumn(.ListObjects(1), GetColName(DATE_KEY), dateCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), accountCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), amountCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), descCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), categCol, False)
-        Call setTableColumn(.ListObjects(1), GetColName(SPREAD_KEY), spreadCol, False)
+        Call SetTableColumn(.ListObjects(1), GetColName(DATE_KEY), dateCol)
+        Call SetTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), accountCol)
+        Call SetTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), amountCol)
+        Call SetTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), descCol)
+        Call SetTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), categCol)
+        Call SetTableColumn(.ListObjects(1), GetColName(SPREAD_KEY), spreadCol)
         Call resizeTable(.ListObjects(1), newSize)
         .PivotTables(1).PivotCache.Refresh
     End With
 
 End Sub
 
-Public Sub refreshAllAccounts()
-    Call freezeDisplay
-    Call mergeAccounts
-    Call genBudget
-    Call unfreezeDisplay
+Public Sub RefreshAllAccounts()
+    Call FreezeDisplay
+    Call MergeAccounts
+    Call GenBudget
+    Call UnfreezeDisplay
 End Sub
 
 Sub CreateAccount()
@@ -213,21 +217,21 @@ Public Sub doForAllAccounts()
 ' Applies a given macro to all account sheets
 '
 '
-    Call showAllSheets
+    Call ShowAllSheets
     For Each ws In Worksheets
        ' Make sure the sheet is not anything else than an account
-        If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
+        If (IsAnAccountSheet(ws) Or isTemplate(ws)) Then
             ws.Select
             ' Call macro here
         End If
     Next ws
-    Call hideClosedAccounts
+    Call HideClosedAccounts
     Call hideTemplateAccounts
 End Sub
 '-------------------------------------------------
-Public Sub formatAccountSheet(ws)
+Public Sub FormatAccountSheet(ws As Worksheet)
 ' Make sure the sheet is not anything else than an account
-    If (isAnAccountSheet(ws) Or isTemplate(ws)) Then
+    If (IsAnAccountSheet(ws) Or isTemplate(ws)) Then
         Dim name As String
         Dim col As Integer
         name = ws.name
@@ -286,45 +290,53 @@ Public Sub formatAccountSheet(ws)
         ws.Cells.RowHeight = 13
         ws.Rows.Font.size = 10
         
-        If (ws.Shapes.Count > 0) Then
-            home_x = 200
-            home_y = 10
-            btn_height = 22
-            Dim i As Integer
-            i = 0
-            For Each Shape In ws.Shapes
-                If Shape.name = "BtnPrev5" Then
-                    Call ShapePlacementXY(Shape, home_x, home_y, home_x + 29, home_y + btn_height - 1)
-                ElseIf Shape.name = "BtnPrev" Then
-                    Call ShapePlacementXY(Shape, home_x + 30, home_y, home_x + 59, home_y + btn_height - 1)
-                ElseIf Shape.name = "BtnHome" Then
-                    Call ShapePlacementXY(Shape, home_x + 60, home_y, home_x + 129, home_y + btn_height - 1)
-                ElseIf Shape.name = "BtnNext" Then
-                    Call ShapePlacementXY(Shape, home_x + 130, home_y, home_x + 159, home_y + btn_height - 1)
-                ElseIf Shape.name = "BtnNext5" Then
-                    Call ShapePlacementXY(Shape, home_x + 160, home_y, home_x + 189, home_y + btn_height - 1)
-                ElseIf Shape.name = "BtnTop" Then
-                    Call ShapePlacementXY(Shape, home_x, home_y + btn_height, home_x + 99, home_y + 2 * btn_height - 1)
-                ElseIf Shape.name = "BtnBottom" Then
-                    Call ShapePlacementXY(Shape, home_x, home_y + 2 * btn_height, home_x + 99, home_y + 3 * btn_height - 1)
-                ElseIf Shape.name = "BtnSort" Then
-                    Call ShapePlacementXY(Shape, home_x, home_y + 3 * btn_height, home_x + 99, home_y + 4 * btn_height - 1)
-                ElseIf Shape.name = "BtnInterests" Then
-                    Call ShapePlacementXY(Shape, home_x + 100, home_y + 3 * btn_height, home_x + 199, home_y + 4 * btn_height - 1)
-                ElseIf Shape.name = "BtnImport" Then
-                    Call ShapePlacementXY(Shape, home_x + 100, home_y + btn_height, home_x + 199, home_y + 2 * btn_height - 1)
-                ElseIf Shape.name = "BtnAddEntry" Then
-                    Call ShapePlacementXY(Shape, home_x + 100, home_y + 2 * btn_height, home_x + 199, home_y + 3 * btn_height - 1)
+        Call formatAccountSheetButtons(ws)
+    End If
+End Sub
 
-                ElseIf (Shape.Type = msoFormControl) Then
-                    ' This is a button, move it to right place
-                    row = i Mod 4
-                    col = i \ 4
-                    Call ShapePlacementXY(Shape, 300 + col * 100, 5 + row * 22, 400 + col * 100, 25 + row * 22)
-                    i = i + 1
-                End If
-            Next Shape
-        End If
+Private Sub formatAccountSheetButtons(ws As Worksheet)
+    If (ws.Shapes.Count > 0) Then
+        Dim home_x As Integer
+        Dim home_y As Integer
+        Dim btn_height As Integer
+        Dim i As Integer
+        home_x = 200
+        home_y = 10
+        btn_height = 22
+        i = 0
+        Dim s As Shape
+        For Each s In ws.Shapes
+            If s.name = "BtnPrev5" Then
+                Call ShapePlacementXY(s, home_x, home_y, home_x + 29, home_y + btn_height - 1)
+            ElseIf s.name = "BtnPrev" Then
+                Call ShapePlacementXY(s, home_x + 30, home_y, home_x + 59, home_y + btn_height - 1)
+            ElseIf s.name = "BtnHome" Then
+                Call ShapePlacementXY(s, home_x + 60, home_y, home_x + 129, home_y + btn_height - 1)
+            ElseIf s.name = "BtnNext" Then
+                Call ShapePlacementXY(s, home_x + 130, home_y, home_x + 159, home_y + btn_height - 1)
+            ElseIf s.name = "BtnNext5" Then
+                Call ShapePlacementXY(s, home_x + 160, home_y, home_x + 189, home_y + btn_height - 1)
+            ElseIf s.name = "BtnTop" Then
+                Call ShapePlacementXY(s, home_x, home_y + btn_height, home_x + 99, home_y + 2 * btn_height - 1)
+            ElseIf s.name = "BtnBottom" Then
+                Call ShapePlacementXY(s, home_x, home_y + 2 * btn_height, home_x + 99, home_y + 3 * btn_height - 1)
+            ElseIf s.name = "BtnSort" Then
+                Call ShapePlacementXY(s, home_x, home_y + 3 * btn_height, home_x + 99, home_y + 4 * btn_height - 1)
+            ElseIf s.name = "BtnInterests" Then
+                Call ShapePlacementXY(s, home_x + 100, home_y + 3 * btn_height, home_x + 199, home_y + 4 * btn_height - 1)
+            ElseIf s.name = "BtnImport" Then
+                Call ShapePlacementXY(s, home_x + 100, home_y + btn_height, home_x + 199, home_y + 2 * btn_height - 1)
+            ElseIf s.name = "BtnAddEntry" Then
+                Call ShapePlacementXY(s, home_x + 100, home_y + 2 * btn_height, home_x + 199, home_y + 3 * btn_height - 1)
+
+            ElseIf (s.Type = msoFormControl) Then
+                ' This is a button, move it to right place
+                row = i Mod 4
+                col = i \ 4
+                Call ShapePlacementXY(s, 300 + col * 100, 5 + row * 22, 400 + col * 100, 25 + row * 22)
+                i = i + 1
+            End If
+        Next s
     End If
 End Sub
 Public Sub formatAllAccountSheets()
@@ -332,9 +344,9 @@ Public Sub formatAllAccountSheets()
 '  Reformat all account sheets
 '
    For Each ws In Worksheets
-       Call formatAccountSheet(ws)
+       Call FormatAccountSheet(ws)
    Next ws
-   Call hideClosedAccounts
+   Call HideClosedAccounts
    Call hideTemplateAccounts
 End Sub
 
@@ -346,15 +358,15 @@ End Function
 '-------------------------------------------------
 Private Sub setClosedAccountsVisibility(visibility)
     For Each ws In Worksheets
-        If (isClosed(ws.name)) Then
+        If IsClosed(ws.name) Then
             ws.Visible = visibility
         End If
     Next ws
 End Sub
 
 '-------------------------------------------------
-Public Sub hideClosedAccounts()
-    If (ThisWorkbook.Names("hideClosedAccounts").RefersToRange.Value = 1) Then
+Public Sub HideClosedAccounts()
+    If GetNamedVariableValue("hideClosedAccounts") = 1 Then
         Call setClosedAccountsVisibility(False)
     End If
 End Sub
@@ -381,7 +393,7 @@ Public Sub showTemplateAccounts()
     Call setTemplateAccountsVisibility(True)
 End Sub
 Public Sub refreshOpenAccountsList()
-    Call freezeDisplay
+    Call FreezeDisplay
     Call truncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
     With Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS)
         For i = 1 To Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows.Count
@@ -399,12 +411,13 @@ Public Sub refreshOpenAccountsList()
         .DropDownLines = 8
         .Display3DShading = True
     End With
-    Call unfreezeDisplay
+    Call UnfreezeDisplay
 End Sub
 
 Public Sub sortCurrentAccount()
     Call sortAccount(ActiveSheet.ListObjects(1))
 End Sub
+
 Public Sub sortAccount(oTable As Variant)
     oTable.Sort.SortFields.Clear
     ' Sort table by date first, then by amount
@@ -423,69 +436,58 @@ Public Sub sortAccount(oTable As Variant)
     Call setTableColumnFormat(oTable, 1, "m/d/yyyy")
 End Sub
 '-------------------------------------------------
-Public Function accountType(accountName As String) As String
-    If (accountName = "Account Template") Then
-        accountType = "Standard"
-    ElseIf (Not accountExists(accountName)) Then
-        accountType = "ERROR: Not an account"
-    ElseIf (Sheets(accountName).Range("B6").Value = "EUR") Then
-        accountType = Sheets(accountName).Range("B7").Value
+Public Function AccountType(accountId As String) As String
+    Dim ws As Worksheet
+    Set ws = getAccountSheet(accountId)
+    If (accountId = "Account Template") Then
+        AccountType = "Standard"
+    ElseIf (Not AccountExists(accountId)) Then
+        AccountType = "ERROR: Not an account"
+    ElseIf (wsRange("B6").Value = "EUR") Then
+        AccountType = ws.Range("B7").Value
     End If
 End Function
 '-------------------------------------------------
-Public Function accountNumber(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountNumber = Sheets(accountName).Range(ACCOUNT_NBR_VALUE).Value
-    Else
-        accountNumber = ""
+Private Function AccountAttribute(accountId As String, attributeCell As String) As String
+    AccountAttribute = ""
+    If (AccountExists(accountId)) Then
+        Dim ws As Worksheet
+        Set ws = getAccountSheet(accountId)
+        AccountAttribute = ws.Range(ACCOUNT_NBR_VALUE).Value
     End If
 End Function
-'-------------------------------------------------
-Public Function accountBank(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountBank = Sheets(accountName).Range(ACCOUNT_BANK_VALUE).Value
-    Else
-        accountBank = ""
-    End If
+Public Function AccountNumber(accountId As String) As String
+    AccountNumber = AccountAttribute(accountId, ACCOUNT_NBR_VALUE)
+End Function
+
+Public Function AccountBank(accountId As String) As String
+    AccountBank = AccountAttribute(accountId, ACCOUNT_BANK_VALUE)
+End Function
+
+Public Function AccountStatus(accountId As String) As String
+    AccountStatus = AccountAttribute(accountId, ACCOUNT_STATUS_VALUE)
+End Function
+
+Public Function AccountAvailability(accountId As String) As String
+    AccountAvailability = AccountAttribute(accountId, ACCOUNT_AVAIL_VALUE)
+End Function
+
+Public Function AccountCurrency(accountId As String) As String
+    AccountCurrency = AccountAttribute(accountId, ACCOUNT_CURRENCY_VALUE)
 End Function
 
 '-------------------------------------------------
-Public Function accountStatus(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountStatus = Sheets(accountName).Range(ACCOUNT_STATUS_VALUE).Value
-    Else
-        accountStatus = ""
-    End If
+Public Function IsAccountInBudget(accountId As String) As Boolean
+    IsAccountInBudget = (AccountExists(accountId) And Sheets(accountId).Range(IN_BUDGET_VALUE).Value = "Yes")
 End Function
 '-------------------------------------------------
-Public Function accountAvailability(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountAvailability = Sheets(accountName).Range(ACCOUNT_AVAIL_VALUE).Value
-    Else
-        accountAvailability = ""
-    End If
-End Function
-'-------------------------------------------------
-Public Function accountCurrency(accountName As String) As String
-    If (accountExists(accountName)) Then
-        accountCurrency = Sheets(accountName).Range(ACCOUNT_CURRENCY_VALUE).Value
-    Else
-        accountCurrency = ""
-    End If
-End Function
-'-------------------------------------------------
-Public Function isAccountInBudget(accountName As String) As Boolean
-    isAccountInBudget = (accountExists(accountName) And Sheets(accountName).Range(IN_BUDGET_VALUE).Value = "Yes")
-End Function
-'-------------------------------------------------
-Public Function isOpen(accountName As String) As Boolean
-    isOpen = (accountStatus(accountName) = "Open")
+Public Function IsOpen(accountId As String) As Boolean
+    IsOpen = (AccountStatus(accountId) = "Open")
 End Function
 
-Public Function isClosed(accountName As String) As Boolean
-    isClosed = Not isOpen(accountName)
+Public Function IsClosed(accountId As String) As Boolean
+    IsClosed = Not IsOpen(accountId)
 End Function
-
 
 Public Sub AddSavingsRow()
     Call AddInvestmentRow(ActiveSheet.ListObjects(1))
@@ -512,54 +514,19 @@ Private Sub AddInvestmentRow(oTable)
 End Sub
 
 '-------------------------------------------------
-Public Function accountExists(accountName As String) As Boolean
-    accountExists = (sheetExists(accountName) And Sheets(accountName).Range(ACCOUNT_NAME_LABEL) = GetLabel("k.accountName"))
+Public Function AccountExists(accountId As String) As Boolean
+    AccountExists = (SheetExists(accountId) And Sheets(accountId).Range(ACCOUNT_NAME_LABEL) = GetLabel(ACCOUNT_NAME_KEY))
 End Function
 '-------------------------------------------------
-Public Function isAnAccountSheet(ByVal ws As Worksheet) As Boolean
-    isAnAccountSheet = (ws.Cells(1, 1).Value = getNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
+Public Function IsAnAccountSheet(ByVal ws As Worksheet) As Boolean
+    IsAnAccountSheet = (ws.Cells(1, 1).Value = GetNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
 End Function
 
-'-------------------------------------------------
-Public Sub showAllSheets()
-    For Each ws In Worksheets
-        ws.Visible = True
-    Next ws
-End Sub
-
-Public Sub GoToSolde()
-    Sheets(BALANCE_SHEET).Activate
-End Sub
-
-Public Function getSelectedAccount() As String
-    selectedNbr = getNamedVariableValue("selectedAccount")
-    getSelectedAccount = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
+Public Function AccountDepositHistory(accountId As String) As Variant
+    AccountDepositHistory = getDepositArray(accountId)
 End Function
 
-Private Function getAccountArray(accountName As String, tableType As String) As Variant
-    getAccountArray = Empty
-    For i = 1 To Sheets(accountName).ListObjects.Count
-        If Sheets(accountName).ListObjects(i).name Like tableType & "_*" Then
-            getAccountArray = getTableAsArray(Sheets(accountName).ListObjects(i))
-            Exit For
-        End If
-    Next i
-End Function
-
-Private Function getDepositArray(accountName As String) As Variant
-    getDepositArray = getAccountArray(accountName, "Deposits")
-End Function
-
-Private Function getTransactionArray(accountName As String) As Variant
-    getTransactionArray = getAccountArray(accountName, "Transactions")
-End Function
-
-
-Public Function getDepositHistory(accountName As String) As Variant
-    getDepositHistory = getDepositArray(accountName)
-End Function
-
-Public Function getBalanceHistory(accountName As String, Optional sampling As String = "Yearly") As Variant
+Public Function AccountBalanceHistory(accountId As String, Optional sampling As String = "Yearly") As Variant
     Dim histAll() As Variant
     Dim histSampled() As Variant
     Dim nbYears As Integer
@@ -569,7 +536,7 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
     Dim lastYear As Integer
     Dim lastBalance As Double
     Dim histSize As Integer
-    histAll = AccountBalanceArray(accountName)
+    histAll = AccountBalanceArray(accountId)
     histSize = UBound(histAll, 1)
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
     ReDim histSampled(1 To nbYears, 1 To 2)
@@ -605,54 +572,153 @@ Public Function getBalanceHistory(accountName As String, Optional sampling As St
         histSampled(j, 1) = histAll(histSize, 1)
         histSampled(j, 2) = lastBalance
     End If
-    getBalanceHistory = histSampled
+    AccountBalanceHistory = histSampled
 End Function
 
-Public Sub CalcAccountInterests()
-    Call CalcInterestForAccount(ActiveSheet.name)
+
+Public Sub CalcAccountInterests(accountId As String)
+    Dim deposits As Variant
+    Dim balances As Variant
+    deposits = AccountDepositHistory(accountId)
+    balances = AccountBalanceHistory(accountId, "Yearly")
+    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits))
 End Sub
 
-Public Function AccountTableIndexFromSuffix(accountName As String, suffix As String) As Integer
-    AccountTableIndex = 0
-    For i = 1 To Sheets(accountName).ListObjects.Count
-        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
+
+Public Sub CalcInterestForAllAccounts()
+    Dim accountId As String
+    Dim ws As Worksheet
+    FreezeDisplay
+    For Each ws In Worksheets
+        accountId = getAccountId(ws)
+        If IsAnAccountSheet(ws) And IsOpen(accountId) Then
+            Call CalcAccountInterests(accountId)
+        End If
+    Next i
+    UnfreezeDisplay
+End Sub
+
+Public Sub StoreAccountInterests(accountId As String, yields As Variant)
+    Dim nbrYields As Integer
+    Dim yieldIndex As Integer
+    Dim ws As Worksheet
+    nbrYields = UBound(yields)
+    yieldIndex = AccountYieldsTableIndex(accountId)
+    Set ws = getAccountSheet(accountId)
+    With ws
+        .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(1).Value = yields(nbrYields)
+        For k = 2 To 5
+         .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(k).Value = "-"
+        Next k
+        If nbrYields >= 2 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(2).Value = yields(nbrYields - 1)
+        End If
+        If nbrYields >= 4 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(3).Value = ArrayAverage(yields, nbrYields - 3, nbrYields - 1)
+        End If
+        If nbrYields >= 6 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(4).Value = ArrayAverage(yields, nbrYields - 5, nbrYields - 1)
+        End If
+        If nbrYields >= 2 Then
+            .ListObjects(yieldIndex).ListColumns(2).DataBodyRange.Rows(5).Value = ArrayAverage(yields, 1, nbrYields - 1)
+        End If
+    End With
+End Sub
+
+
+Private Function AccountTableIndexFromSuffix(accountId As String, suffix As String) As Integer
+    Dim ws As Worksheet
+    Dim i As Integer
+    Set ws = getAccountSheet(accountId)
+    For i = 1 To ws.ListObjects.Count
+        If LCase$(ws.ListObjects(i).name) Like suffix & "_*" Then
             AccountTableIndexFromSuffix = i
             Exit For
         End If
     Next i
 End Function
 
-Public Function AccountTableArrayFromSuffix(accountName As String, suffix As String) As Variant
+Public Function AccountTableArrayFromSuffix(accountId As String, suffix As String) As Variant
+    Dim ws As Worksheet
+    Dim i As Integer
+    Set ws = getAccountSheet(accountId)
     AccountTableArrayFromSuffix = Empty
-    For i = 1 To Sheets(accountName).ListObjects.Count
-        If LCase$(Sheets(accountName).ListObjects(i).name) Like suffix & "_*" Then
-            AccountTableArrayFromSuffix = getTableAsArray(Sheets(accountName).ListObjects(i))
+    For i = 1 To ws.ListObjects.Count
+        If LCase$(ws.ListObjects(i).name) Like suffix & "_*" Then
+            AccountTableArrayFromSuffix = getTableAsArray(ws.ListObjects(i))
             Exit For
         End If
     Next i
 End Function
 
-Public Function AccountBalanceTableIndex(accountName As String) As Integer
-    AccountBalanceTableIndex = AccountTableIndexFromSuffix(accountName, "balance")
+Public Function AccountBalanceTableIndex(accountId As String) As Integer
+    AccountBalanceTableIndex = AccountTableIndexFromSuffix(accountId, "balance")
 End Function
 
-Public Function AccountDepositsTableIndex(accountName As String) As Integer
-    AccountDepositsTableIndex = AccountTableIndexFromSuffix(accountName, "deposits")
+Public Function AccountDepositsTableIndex(accountId As String) As Integer
+    AccountDepositsTableIndex = AccountTableIndexFromSuffix(accountId, "deposits")
 End Function
 
-Public Function AccountYieldsTableIndex(accountName As String) As Integer
-    AccountYieldsTableIndex = AccountTableIndexFromSuffix(accountName, "yields")
+Public Function AccountYieldsTableIndex(accountId As String) As Integer
+    AccountYieldsTableIndex = AccountTableIndexFromSuffix(accountId, "yields")
 End Function
 
-Public Function AccountBalanceArray(accountName As String) As Variant
-    AccountBalanceArray = AccountTableArrayFromSuffix(accountName, "balance")
+Public Function AccountBalanceArray(accountId As String) As Variant
+    AccountBalanceArray = AccountTableArrayFromSuffix(accountId, "balance")
 End Function
 
-Public Function AccountDepositsArray(accountName As String) As Variant
-    AccountDepositsArray = AccountTableArrayFromSuffix(accountName, "deposits")
+Public Function AccountDepositsArray(accountId As String) As Variant
+    AccountDepositsArray = AccountTableArrayFromSuffix(accountId, "deposits")
 End Function
 
-Public Function AccountYieldsArray(accountName As String) As Variant
-    AccountYieldsArray = AccountTableArrayFromSuffix(accountName, "yields")
+Public Function AccountYieldsArray(accountId As String) As Variant
+    AccountYieldsArray = AccountTableArrayFromSuffix(accountId, "yields")
+End Function
+
+Public Function getSelectedAccount() As String
+    selectedNbr = GetNamedVariableValue("selectedAccount")
+    getSelectedAccount = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
+End Function
+
+
+'--------------------------------------------------------------------------
+' Button methods
+'--------------------------------------------------------------------------
+
+Public Sub BtnAccountInterests()
+    Call CalcAccountInterests(getAccountId(ActiveSheet))
+End Sub
+
+'--------------------------------------------------------------------------
+' Private methods
+'--------------------------------------------------------------------------
+
+Private Function getAccountArray(accountId As String, tableType As String) As Variant
+    Dim i As Integer
+    Dim ws As Worksheet
+    getAccountArray = Empty
+    Set ws = getAccountSheet(accountId)
+    For i = 1 To ws.ListObjects.Count
+        If ws.ListObjects(i).name Like tableType & "_*" Then
+            getAccountArray = getTableAsArray(ws.ListObjects(i))
+            Exit For
+        End If
+    Next i
+End Function
+
+Private Function getDepositArray(accountId As String) As Variant
+    getDepositArray = getAccountArray(accountId, "Deposits")
+End Function
+
+Private Function getTransactionArray(accountId As String) As Variant
+    getTransactionArray = getAccountArray(accountId, "Transactions")
+End Function
+
+Private Function getAccountId(ws As Worksheet) As String
+    getAccountId = ws.name
+End Function
+
+Private Function getAccountSheet(accountId As String) As Worksheet
+    Set getAccountSheet = ThisWorkbook.Sheets(accountId)
 End Function
 

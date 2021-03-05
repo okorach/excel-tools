@@ -18,7 +18,7 @@ End Sub
 Public Sub GoToAccount()
     Dim accountName As String
     accountName = getSelectedAccount()
-    If accountExists(accountName) Then
+    If AccountExists(accountName) Then
         Sheets(accountName).Activate
     End If
 End Sub
@@ -49,4 +49,8 @@ End Sub
 
 Public Sub GoFwd5()
     Call GoToSheet(5)
+End Sub
+
+Public Sub GoToSolde()
+    Sheets(BALANCE_SHEET).Activate
 End Sub
