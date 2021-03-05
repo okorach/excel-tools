@@ -17,19 +17,19 @@ Private Sub InterestsLoadData(balancesArray As Variant, depositsArray As Variant
         .Range("G1").Value = "Deposit history for " & accName
         .Range("L1").Value = "Balance history for " & accName
 
-        Call resizeTable(.ListObjects(1), UBound(balancesArray, 1))
-        Call resizeTable(.ListObjects(2), UBound(depositsArray, 1))
+        Call ResizeTable(.ListObjects(1), UBound(balancesArray, 1))
+        Call ResizeTable(.ListObjects(2), UBound(depositsArray, 1))
         
         ' Copy 2 first columns of the 2 tables with history of deposits (date/amount) and history of balance (date/amount)
-        Call SetTableColumn(.ListObjects(2), 1, getArrayColumn(depositsArray, 1, False))
-        Call SetTableColumn(.ListObjects(2), 2, getArrayColumn(depositsArray, 2, False))
-        Call SetTableColumn(.ListObjects(1), 1, getArrayColumn(balancesArray, 1, False))
-        Call SetTableColumn(.ListObjects(1), 2, getArrayColumn(balancesArray, 2, False))
+        Call SetTableColumn(.ListObjects(2), 1, GetArrayColumn(depositsArray, 1, False))
+        Call SetTableColumn(.ListObjects(2), 2, GetArrayColumn(depositsArray, 2, False))
+        Call SetTableColumn(.ListObjects(1), 1, GetArrayColumn(balancesArray, 1, False))
+        Call SetTableColumn(.ListObjects(1), 2, GetArrayColumn(balancesArray, 2, False))
         '.ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
         '.ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de périodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de périodes])"
         
         ' Clear old calculated interest rates
-        Call clearTableColumn(.ListObjects(1), 3)
+        Call ClearTableColumn(.ListObjects(1), 3)
     End With
 End Sub
 
@@ -49,7 +49,7 @@ Private Function InterestsCalcFromData(Optional calcPerPeriod As Boolean = True)
             .Range("B4").GoalSeek Goal:=.Range("C3").Value, ChangingCell:=.Range("B5")
             .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(3).DataBodyRange.Rows(i).Value = .Range("B5").Value
         Next i
-        InterestsCalcFromData = getTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), 3, False)
+        InterestsCalcFromData = GetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), 3)
     End With
 End Function
 
