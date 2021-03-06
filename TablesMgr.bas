@@ -26,7 +26,7 @@ Attribute VB_Name = "TablesMgr"
 '------------------------------------------------------------------------------
 ' Resize (extend or shrink) an Excel table object to a desired size
 '------------------------------------------------------------------------------
-Public Sub ResizeTable(oTable, targetSize As Long)
+Public Sub ResizeTable(oTable As ListObject, targetSize As Long)
     ' TODO: Test TargetSize >0, oTable exists
     Dim i As Long
     Dim nbRows As Long
@@ -44,8 +44,8 @@ Public Sub ResizeTable(oTable, targetSize As Long)
     End If
 
 End Sub
-
-Public Sub TruncateTable(oTable)
+'------------------------------------------------------------------------------
+Public Sub TruncateTable(oTable As ListObject)
     Call ResizeTable(oTable, 0)
 End Sub
 
@@ -60,7 +60,6 @@ End Sub
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
                      Optional sortCol2 As String = "", Optional sortOrder2 As XlSortOrder = xlDescending)
     oTable.Sort.SortFields.Clear
-    ' Sort table by date first, then by amount
     oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
         DataOption:=xlSortNormal
     If sortCol2 <> "" Then
@@ -88,8 +87,7 @@ Public Function GetTableAsArray(oTable As ListObject, Optional colList As Varian
     nbrRows = oTable.ListRows.Count
     Dim cList() As Variant
     cList = GetColList(oTable, colList)
-    Dim arr() As Variant
-    ReDim arr(1 To nbrRows, 1 To nbrCols)
+    ReDim arr(1 To nbrRows, 1 To nbrCols) As Variant
     i = 0
     For Each C In cList
         i = i + 1
@@ -103,14 +101,14 @@ End Function
 '------------------------------------------------------------------------------
 ' Set the values of a 2D array into a table object
 '------------------------------------------------------------------------------
-Public Sub SetTableFromArray(oTable As ListObject, tValues As Variant)
+Public Sub SetTableFromArray(oTable As ListObject, oArray As Variant)
     Call TruncateTable(oTable)
     nbrCols = oTable.ListColumns.Count
-    nbrRows = UBound(tValues, 1)
+    nbrRows = UBound(oArray, 1)
     For i = 1 To nbrRows
         oTable.ListRows.Add
         For j = 1 To nbrCols
-            oTable.ListColumns(j).DataBodyRange.Rows(i).Value = tValues(i, j)
+            oTable.ListColumns(j).DataBodyRange.Rows(i).Value = oArray(i, j)
         Next j
     Next i
 End Sub
@@ -179,8 +177,7 @@ End Sub
 Public Function GetTableColumn(oTable As ListObject, colNbrOrName, Optional twoD As Boolean = False) As Variant
     Dim nbrRows As Long
     nbrRows = oTable.ListRows.Count
-    Dim arr() As Variant
-    ReDim arr(1 To nbrRows)
+    ReDim arr(1 To nbrRows) As Variant
     arr = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
     If (twoD) Then
         GetTableColumn = arr
@@ -195,12 +192,12 @@ End Function
 ' col may be an long (Column Nbr) or a String (Column name)
 '------------------------------------------------------------------------------
 
-Public Sub SetTableColumn(oTable, colNbrOrName As Variant, tValues As Variant, Optional withResize As Boolean = True)
+Public Sub SetTableColumn(oTable, colNbrOrName As Variant, oArray As Variant, Optional withResize As Boolean = True)
     Dim arr() As Variant
-    If ArrayNbrDimensions(tValues) = 1 Then
-        arr = OneDtoTwoD(tValues)
+    If ArrayNbrDimensions(oArray) = 1 Then
+        arr = OneDtoTwoD(oArray)
     Else
-        arr = tValues
+        arr = oArray
     End If
     If (withResize) Then
         Call ResizeTable(oTable, UBound(arr, 1))
@@ -233,6 +230,7 @@ End Sub
 Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat As String)
     oTable.ListColumns(colNbr).DataBodyRange.NumberFormat = theFormat
 End Sub
+'------------------------------------------------------------------------------
 
 Public Function GetColumnNumberFromName(oTable As ListObject, columnName As String) As Long
     On Error GoTo Except
@@ -257,20 +255,20 @@ Private Function GetColList(oTable As ListObject, currentColList) As Variant
     End If
 End Function
 
-Public Function appendTableColToArray(oTable, colNbrOrName, oArray) As Variant
+Public Function AppendTableColToArray(oTable As ListObject, colNbrOrName As Variant, oArray As Variant) As Variant
+    Dim oldSize As Long, addSize As Long
     oldSize = UBound(oArray)
     addSize = oTable.ListRows.Count
-    newSize = oldSize + addSize
-    Dim arr() As Variant
-    ReDim arr(1 To newSize)
+    ReDim arr(1 To oldSize + addSize) As Variant
+    Dim appendArray() As Variant
     For i = 1 To oldSize
         arr(i) = oArray(i)
     Next i
-    aArray = GetTableColumn(oTable, colNbrOrName)
+    appendArray = GetTableColumn(oTable, colNbrOrName)
     For i = 1 To addSize
-        arr(i + oldSize) = aArray(i)
+        arr(i + oldSize) = appendArray(i)
     Next i
-    appendTableColToArray = arr
+    AppendTableColToArray = arr
 End Function
 
 
