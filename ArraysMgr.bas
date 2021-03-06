@@ -1,38 +1,36 @@
 Attribute VB_Name = "ArraysMgr"
-Public Function ArraySum(arr As Variant, Optional lb As Long = -1, Optional ub As Long = -1) As Double
+Public Function ArraySum(oArray As Variant, Optional lb As Long = -1, Optional ub As Long = -1) As Double
     ' Calculate the sum of an (1D) array
     If lb = -1 Then
-        lb = LBound(arr)
+        lb = LBound(oArray)
     End If
     If ub = -1 Then
-        ub = UBound(arr)
+        ub = UBound(oArray)
     End If
     Dim sum As Double
-    sum = 0
+    ArraySum = 0
     For i = lb To ub
-        sum = sum + arr(i)
+        ArraySum = ArraySum + oArray(i)
     Next i
-    ArraySum = sum
 End Function
 
-Public Function ArrayAverage(arr As Variant, Optional lb As Long = -1, Optional ub As Long = -1) As Double
+Public Function ArrayAverage(oArray As Variant, Optional lb As Long = -1, Optional ub As Long = -1) As Double
     ' Calculate the average of an (1D) array
     If lb = -1 Then
-        lb = LBound(arr)
+        lb = LBound(oArray)
     End If
     If ub = -1 Then
-        ub = UBound(arr)
+        ub = UBound(oArray)
     End If
-    ArrayAverage = ArraySum(arr, lb, ub) / (ub - lb + 1)
+    ArrayAverage = ArraySum(oArray, lb, ub) / (ub - lb + 1)
 End Function
 
-Public Function GetArrayColumn(matrix As Variant, colNbr As Long, Optional twoD As Boolean = True) As Variant
-    Dim nbrRows As Long
-    nbrRows = UBound(matrix, 1)
-    Dim arr(1 To nbrRows) As Variant
-    n = UBound(arr)
-    For i = 1 To n
-        arr(i) = matrix(i, colNbr)
+Public Function GetArrayColumn(oArray As Variant, colNbr As Long, Optional twoD As Boolean = True) As Variant
+    Dim nbrRows As Long, i As Long
+    nbrRows = UBound(oArray, 1)
+    ReDim arr(1 To nbrRows) As Variant
+    For i = 1 To nbrRows
+        arr(i) = oArray(i, colNbr)
     Next i
     If (twoD) Then
         GetArrayColumn = OneDtoTwoD(arr)
@@ -44,14 +42,13 @@ End Function
 '------------------------------------------------------------------------------
 ' Returns nbr of dimensions of array
 '------------------------------------------------------------------------------
-Public Function ArrayNbrDimensions(arr As Variant) As Long
-    Dim i As Long
-    Dim ub As Long
+Public Function ArrayNbrDimensions(oArray As Variant) As Long
+    Dim i As Long, ub As Long
     On Error Resume Next
     i = 0
     Do
         i = i + 1
-        ub = UBound(arr, i)
+        ub = UBound(oArray, i)
     Loop Until Err.Number <> 0
     ArrayNbrDimensions = i - 1
 End Function
@@ -60,8 +57,7 @@ End Function
 ' Converts 1D to 2D arrays and vice versa
 '------------------------------------------------------------------------------
 Public Function OneDtoTwoD(arr As Variant) As Variant
-    Dim lb As Long
-    Dim ub As Long
+    Dim lb As Long, ub As Long, i As Long
     lb = LBound(arr)
     ub = UBound(arr)
     Dim arr2d() As Variant
@@ -73,8 +69,7 @@ Public Function OneDtoTwoD(arr As Variant) As Variant
 End Function
 '------------------------------------------------------------------------------
 Public Function TwoDtoOneD(arr2d As Variant) As Variant
-    Dim lb As Long
-    Dim ub As Long
+    Dim lb As Long, ub As Long, i As Long
     lb = LBound(arr2d, 1)
     ub = UBound(arr2d, 1)
     Dim arr1d() As Variant
@@ -86,8 +81,7 @@ Public Function TwoDtoOneD(arr2d As Variant) As Variant
 End Function
 '------------------------------------------------------------------------------
 Public Function Create1DArray(arraySize As Long, elementValue As Variant) As Variant
-    Dim arr1d() As Variant
-    ReDim arr1d(1 To arraySize)
+    ReDim arr1d(1 To arraySize) As Variant
     For i = 1 To arraySize
         arr1d(i) = elementValue
     Next i

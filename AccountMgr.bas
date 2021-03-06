@@ -404,8 +404,7 @@ Public Sub refreshOpenAccountsList()
     Call UnfreezeDisplay
 End Sub
 
-Public Sub sortCurrentAccount()
-    Call sortAccount(ActiveSheet.ListObjects(1))
+Public Sub SortCurrentAccount()
     Call SortTable(ActiveSheet.ListObjects(1), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Call SetTableColumnFormat(ActiveSheet.ListObjects(1), 1, "m/d/yyyy")
 End Sub
@@ -468,7 +467,7 @@ Public Sub AddSavingsRow()
     Call AddInvestmentRow(ActiveSheet.ListObjects(1))
 End Sub
 
-Private Sub AddInvestmentRow(oTable)
+Private Sub AddInvestmentRow(oTable As ListObject)
     oTable.ListRows.Add
     nbRows = oTable.ListRows.Count
     
