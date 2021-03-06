@@ -535,7 +535,7 @@ Sub ExportING()
 End Sub
 
 
-Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
+Private Sub addTransactions(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
                             Optional amountColName As String = "")
     Dim dateCol As Long
     Dim amountCol As Long
@@ -559,10 +559,10 @@ Private Sub addTransactions(oTable As Variant, transDates As Variant, transAmoun
     End With
 End Sub
 
-Private Sub addTransactionsSortAndSelect(oTable As Variant, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
+Private Sub addTransactionsSortAndSelect(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
                             Optional amountColName As String = "")
     Call addTransactions(oTable, transDates, transAmounts, transDesc, amountColName)
-    Call sortAccount(oTable)
+    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
