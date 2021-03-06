@@ -247,7 +247,7 @@ End Function
 Private Function GetColList(oTable As ListObject, currentColList) As Variant
     If (IsNumeric(currentColList)) Then
         nbrCols = oTable.ListColumns.Count
-        Dim localColList(1 To nbrCols) As Variant
+        ReDim localColList(1 To nbrCols) As Variant
         For C = 1 To nbrCols
             localColList(C) = C
         Next C

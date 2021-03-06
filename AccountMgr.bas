@@ -89,7 +89,7 @@ Public Sub MergeAccounts()
         Erase totalColumn
     Next colKey
 
-    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), "Date", xlAscending, "Montant", xlDescending)
+    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Sheets(MERGE_SHEET).PivotTables(1).PivotCache.Refresh
 
 End Sub
