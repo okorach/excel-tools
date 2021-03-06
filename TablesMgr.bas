@@ -192,7 +192,7 @@ End Function
 ' col may be an long (Column Nbr) or a String (Column name)
 '------------------------------------------------------------------------------
 
-Public Sub SetTableColumn(oTable, colNbrOrName As Variant, oArray As Variant, Optional withResize As Boolean = True)
+Public Sub SetTableColumn(oTable As ListObject, colNbrOrName As Variant, oArray As Variant, Optional withResize As Boolean = True)
     Dim arr() As Variant
     If ArrayNbrDimensions(oArray) = 1 Then
         arr = OneDtoTwoD(oArray)
@@ -210,7 +210,7 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant)
     tableSize = oTable.ListRows.Count
-    Dim emptyArr(1 To tableSize) As String
+    ReDim emptyArr(1 To tableSize) As String
     For i = 1 To tableSize
         emptyArr(i) = ""
     Next i

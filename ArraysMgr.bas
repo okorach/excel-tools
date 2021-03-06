@@ -26,9 +26,9 @@ Public Function ArrayAverage(oArray As Variant, Optional lb As Long = -1, Option
 End Function
 
 Public Function GetArrayColumn(oArray As Variant, colNbr As Long, Optional twoD As Boolean = True) As Variant
-    Dim nbrRows As Long, nbrRows As Long, i As Long
+    Dim nbrRows As Long, i As Long
     nbrRows = UBound(oArray, 1)
-    Dim arr(1 To nbrRows) As Variant
+    ReDim arr(1 To nbrRows) As Variant
     For i = 1 To nbrRows
         arr(i) = oArray(i, colNbr)
     Next i
