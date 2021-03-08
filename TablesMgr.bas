@@ -208,7 +208,7 @@ End Sub
 '------------------------------------------------------------------------------
 ' Clears data in a table object
 '------------------------------------------------------------------------------
-Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant)
+Public Sub ClearTableColumnOld(oTable As ListObject, colNbrOrName As Variant)
     tableSize = oTable.ListRows.Count
     ReDim emptyArr(1 To tableSize) As String
     For i = 1 To tableSize
@@ -216,21 +216,34 @@ Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant)
     Next i
     Call SetTableColumn(oTable, colNbrOrName, emptyArr)
 End Sub
+Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant)
+    oTable.ListColumns(colNbrOrName).DataBodyRange.ClearContents
+End Sub
 '------------------------------------------------------------------------------
 ' Sets the formula in one column of a table
 ' col must be an long (Column Nbr)
 '------------------------------------------------------------------------------
 Public Sub SetTableColumnFormula(oTable As ListObject, colNbr As Long, theFormula As String)
-    oTable.ListRows(1).Range.Cells(1, colNbr).Formula = theFormula
+    If Not oTable Is Nothing Then
+        oTable.ListRows(1).Range.Cells(1, colNbr).Formula = theFormula
+    End If
 End Sub
 '------------------------------------------------------------------------------
 ' Sets the number format in one column of a table
 ' col must be an long (Column Nbr)
 '------------------------------------------------------------------------------
 Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat As String)
-    oTable.ListColumns(colNbr).DataBodyRange.NumberFormat = theFormat
+    If Not oTable Is Nothing Then
+        oTable.ListColumns(colNbr).Range.NumberFormat = theFormat
+    End If
 End Sub
 '------------------------------------------------------------------------------
+Public Sub SetTableStyle(oTable As ListObject, style As String)
+    If Not oTable Is Nothing Then
+        oTable.Range.ClearFormats
+        oTable.TableStyle = style
+    End If
+End Sub
 
 Public Function GetColumnNumberFromName(oTable As ListObject, columnName As String) As Long
     On Error GoTo Except
