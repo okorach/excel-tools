@@ -48,6 +48,7 @@ Public Function SheetExists(sheetToFind As String) As Boolean
 End Function
 
 Public Sub ShowAllSheets()
+    Dim ws As Worksheet
     For Each ws In Worksheets
         ws.Visible = True
     Next ws
@@ -135,7 +136,7 @@ End Sub
 
 Sub reformatAmount(colObject As ListColumn)
     With colObject.DataBodyRange
-        .Style = "Normal"
+        .style = "Normal"
         .NumberFormat = CHF_FORMAT
     End With
 End Sub
@@ -164,36 +165,36 @@ Sub SetColumnValidationRule(colObject As ListColumn, validationList As String)
 End Sub
 
 '-------------------------------------------------
-Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Variant = "")
-    If LenB(ws) = 0 Then
+Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
         Columns(colString & ":" & colString).ColumnWidth = width
     Else
-        Sheets(ws).Columns(colString & ":" & colString).ColumnWidth = width
+        ws.Columns(colString & ":" & colString).ColumnWidth = width
     End If
 End Sub
 '-------------------------------------------------
-Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Variant = "")
-    If LenB(ws) = 0 Then
+Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
         Rows(rowString & ":" & rowString).RowHeight = height
     Else
-        Sheets(ws).Rows(rowString & ":" & rowString).RowHeight = height
+        ws.Rows(rowString & ":" & rowString).RowHeight = height
     End If
 End Sub
 '-------------------------------------------------
-Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Variant = "")
-    If LenB(ws) = 0 Then
+Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
         Rows(rowString & ":" & rowString).Font.size = size
     Else
-        Sheets(ws).Rows(rowString & ":" & rowString).Font.size = size
+        ws.Rows(rowString & ":" & rowString).Font.size = size
     End If
 End Sub
 
 '-------------------------------------------------
-Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Variant = "")
-    If LenB(ws) = 0 Then
-        Range(rangeString).Style = aStyle
+Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) = 0 Then
+        Range(rangeString).style = aStyle
     Else
-        Sheets(ws).Range(rangeString).Style = aStyle
+        ws.Range(rangeString).style = aStyle
     End If
 End Sub
 '-------------------------------------------------
