@@ -122,7 +122,6 @@ End Function
 '------------------------------------------------------------------------------
 
 Public Sub ImportING(oTable As ListObject, fileToOpen As Variant)
-
     Dim iRow As Long, lastRow As Long
     Dim dateCol As Integer, amountCol As Integer, descCol As Integer
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
@@ -158,6 +157,9 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant)
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
     amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
     descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    Dim iRow As Long
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     iRow = 1
@@ -183,6 +185,7 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant)
     Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Range("A" & CStr(oTable.ListRows.Count)).Select
 End Sub
+
 
 Sub ImportRevolut(fileToOpen As Variant)
 
