@@ -50,11 +50,17 @@ Public Sub TruncateTable(oTable As ListObject)
 End Sub
 
 '------------------------------------------------------------------------------
-Public Sub ClearTable(oTable As ListObject)
+Public Sub ClearTableOld(oTable As ListObject)
     Dim tableSize As Long
     tableSize = oTable.ListRows.Count
     Call TruncateTable(oTable)
     Call ResizeTable(oTable, tableSize)
+End Sub
+
+Public Sub ClearTable(oTable As ListObject)
+    If Not oTable Is Nothing Then
+        oTable.DataBodyRange.ClearContents
+    End If
 End Sub
 
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
@@ -150,6 +156,27 @@ Public Sub AppendTableToTable(oSrcTable As ListObject, oTgtTable As ListObject, 
 End Sub
 
 
+Public Sub MergeTables(firstTable As ListObject, table As ListObject)
+    firstTable.Resize Union(firstTable.Range, table.Range)
+End Sub
+
+Public Sub MergeTablesLong(firstTable As ListObject, table As ListObject)
+
+    Dim headerRow As Range, tableRange As Range
+        
+    'Merge other tables in active sheet with first table
+    
+    For Each table In ActiveSheet.ListObjects
+        If table.Range.row <> firstTable.Range.row Then
+            Set headerRow = table.HeaderRowRange
+            Set tableRange = table.Range
+            table.Unlist
+            headerRow.Delete
+            firstTable.Resize Union(firstTable.Range, tableRange)
+        End If
+    Next
+End Sub
+
 Public Sub appendTableToTableFast(oSrcTable As ListObject, oTgtTable As ListObject, Optional colList As Variant = 0)
     sizeOffset = oTgtTable.ListRows.Count
     Call ResizeTable(oTgtTable, sizeOffset + oSrcTable.ListRows.Count)
@@ -208,6 +235,16 @@ End Sub
 '------------------------------------------------------------------------------
 ' Clears data in a table object
 '------------------------------------------------------------------------------
+Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant, Optional includeHeader As Boolean = False)
+    If Not oTable Is Nothing Then
+        If includeHeader Then
+            oTable.ListColumns(colNbrOrName).Range.ClearContents
+        Else
+            oTable.ListColumns(colNbrOrName).DataBodyRange.ClearContents
+        End If
+    End If
+End Sub
+
 Public Sub ClearTableColumnOld(oTable As ListObject, colNbrOrName As Variant)
     tableSize = oTable.ListRows.Count
     ReDim emptyArr(1 To tableSize) As String
@@ -216,9 +253,7 @@ Public Sub ClearTableColumnOld(oTable As ListObject, colNbrOrName As Variant)
     Next i
     Call SetTableColumn(oTable, colNbrOrName, emptyArr)
 End Sub
-Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant)
-    oTable.ListColumns(colNbrOrName).DataBodyRange.ClearContents
-End Sub
+
 '------------------------------------------------------------------------------
 ' Sets the formula in one column of a table
 ' col must be an long (Column Nbr)
@@ -232,10 +267,13 @@ End Sub
 ' Sets the number format in one column of a table
 ' col must be an long (Column Nbr)
 '------------------------------------------------------------------------------
-Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat As String)
+Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat As String, Optional includeHeader As Boolean = True)
     If Not oTable Is Nothing Then
-        oTable.ListColumns(colNbr).Range.NumberFormat = theFormat
-    End If
+        If includeHeader Then
+            oTable.ListColumns(colNbr).Range.NumberFormat = theFormat
+        Else
+            oTable.ListColumns(colNbrOrName).DataBodyRange.NumberFormat = theFormat
+        End If
 End Sub
 '------------------------------------------------------------------------------
 Public Sub SetTableStyle(oTable As ListObject, style As String)

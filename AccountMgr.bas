@@ -1,7 +1,7 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const EUR_FORMAT = "#,###,##0.00"" â‚¬ "";-#,###,##0.00"" â‚¬ "";0.00"" â‚¬ """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 
 Public Const NOT_AN_ACCOUNT As Long = 0
@@ -20,7 +20,7 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Const PARAMS_SHEET As String = "Paramètres"
+Public Const PARAMS_SHEET As String = "ParamÃ¨tres"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const BALANCE_SHEET As String = "Solde"
@@ -101,6 +101,25 @@ Public Sub MergeAccounts()
     Sheets(MERGE_SHEET).PivotTables(1).PivotCache.Refresh
 
 End Sub
+
+
+Public Sub MergeAccounts2()
+
+    Dim firstAccount As Boolean
+    Dim ws As Worksheet
+
+    Call FreezeDisplay
+
+    Call TruncateTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"))
+    For Each ws In Worksheets
+        If (IsAnAccountSheet(ws)) Then
+            Call MergeTables(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), ws.ListObjects(1))
+        End If
+    Next ws
+    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+
+End Sub
+
 
 Public Sub GenBudget()
 
