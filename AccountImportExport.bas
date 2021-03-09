@@ -67,7 +67,7 @@ Sub ImportAny()
         ElseIf (bank = "LCL") Then
             Call ImportLCL(ActiveSheet.ListObjects(1), fileToOpen)
         ElseIf (bank = "UBS") Then
-            Call ImportUBS(fileToOpen)
+            Call ImportUBS(ActiveSheet.ListObjects(1), fileToOpen)
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(ActiveSheet.ListObjects(1), fileToOpen)
         Else
@@ -280,7 +280,7 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
     Dim iRow As Long, lastRow As Long
     Dim dateCol As Integer, amountCol As Integer, descCol As Integer
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
     descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
@@ -319,7 +319,7 @@ Sub ImportUBScsv(oTable As ListObject, fileToOpen As Variant)
     Dim iRow As Long, lastRow As Long
     Dim dateCol As Integer, amountCol As Integer, descCol As Integer
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
     descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
@@ -546,38 +546,3 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
-
-Private Sub addTransactions(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
-                            Optional amountColName As String = "")
-    Dim dateCol As Long
-    Dim amountCol As Long
-    Dim descCol As Long
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    If amountColName = "" Then
-        amountColName = GetLabel(AMOUNT_KEY)
-    End If
-    amountCol = GetColumnNumberFromName(oTable, amountColName)
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
-    With oTable
-        totalrows = .ListRows.Count
-        For iRow = 1 To UBound(transDates)
-            .ListRows.Add
-            totalrows = totalrows + 1
-            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = transDates(iRow)
-            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = transAmounts(iRow)
-            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = transDesc(iRow)
-        Next iRow
-    End With
-End Sub
-
-Private Sub addTransactionsSortAndSelect(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
-                            Optional amountColName As String = "")
-    Call addTransactions(oTable, transDates, transAmounts, transDesc, amountColName)
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
-
-End Sub
-
-
