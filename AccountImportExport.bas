@@ -67,7 +67,7 @@ Sub ImportAny()
         ElseIf (bank = "LCL") Then
             Call ImportLCL(ActiveSheet.ListObjects(1), fileToOpen)
         ElseIf (bank = "UBS") Then
-            Call ImportUBS(fileToOpen)
+            Call ImportUBS(ActiveSheet.ListObjects(1), fileToOpen)
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(ActiveSheet.ListObjects(1), fileToOpen)
         Else
@@ -146,6 +146,7 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant)
     
     Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Range("A" & CStr(oTable.ListRows.Count)).Select
+
 End Sub
 
 '------------------------------------------------------------------------------
@@ -269,61 +270,61 @@ Sub ImportRevolutCSV(oTable As ListObject, fileToOpen As Variant)
 End Sub
 
 
-Private Function CountUBSrows() As Long
-    Dim i As Long
-    i = 1
-    Do While LenB(Cells(i, 1).Value) > 0
-        i = i + 1
-    Loop
-    CountUBSrows = i - 1
-End Function
 '------------------------------------------------------------------------------
-'
+' UBS
 '------------------------------------------------------------------------------
-Private Sub readUBSdata(ByRef tDates As Variant, ByRef tDesc As Variant, ByRef tAmounts As Variant, nbRows As Long)
-    Dim iRow As Long
-    For iRow = 2 To nbRows
-        If ws.Cells(iRow, 13) = "Solde prix prestations" Then
-            tAmounts(iRow - 1) = 0
-        ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
-        ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-            tAmounts(iRow - 1) = -toAmount(Cells(iRow, 19).Value) ' Debit column
-        ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-            tAmounts(iRow - 1) = toAmount(Cells(iRow, 20).Value) ' Credit column
-        Else
-            tAmounts(iRow - 1) = 0
-        End If
-        tDates(iRow - 1) = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-        tDesc(iRow - 1) = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
-    Next iRow
-End Sub
-Sub ImportUBS(fileToOpen As Variant)
 
+
+Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
+
+    Dim iRow As Long, lastRow As Long
+    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
+    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
+    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
+    iRow = 2
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-
-    Dim nbRows As Long
-    nbRows = CountUBSrows()
-    ReDim tDates(1 To nbRows - 1) As Variant
-    ReDim tDesc(1 To nbRows - 1) As String
-    ReDim tAmounts(1 To nbRows - 1) As Double
-    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
+    With oTable
+        Do While LenB(Cells(iRow, 1).Value) > 0
+            .ListRows.Add
+            lastRow = .ListRows.Count
+            If Cells(iRow, 13) = "Solde prix prestations" Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+            ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+            ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
+            Else
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+            End If
+            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
+            iRow = iRow + 1
+        Loop
+    End With
     ActiveWorkbook.Close
     
-    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
+    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
 
-'------------------------------------------------------------------------------
-'
-'------------------------------------------------------------------------------
-Sub ImportUBScsv(fileToOpen As Variant)
 
+Sub ImportUBScsv(oTable As ListObject, fileToOpen As Variant)
+
+    Dim iRow As Long, lastRow As Long
+    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
+    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
+    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
-    Workbooks.OpenText filename:="C:\Users\Olivier\Downloads\export.csv", Origin _
+    iRow = 2
+    Workbooks.OpenText filename:=fileToOpen, Origin _
         :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
         xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=True, _
         Comma:=False, Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), _
@@ -333,15 +334,30 @@ Sub ImportUBScsv(fileToOpen As Variant)
         TrailingMinusNumbers:=True
         'ReadOnly:=True
     
-    Dim nbRows As Long
-    nbRows = CountUBSrows()
-    ReDim tDates(1 To nbRows - 1) As Variant
-    ReDim tDesc(1 To nbRows - 1) As String
-    ReDim tAmounts(1 To nbRows - 1) As Double
-    Call readUBSdata(tDates, tDesc, tAmounts, nbRows)
+    With oTable
+        Do While LenB(Cells(iRow, 1).Value) > 0
+            .ListRows.Add
+            lastRow = .ListRows.Count
+            If Cells(iRow, 13) = "Solde prix prestations" Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+            ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+            ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
+            ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
+            Else
+                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+            End If
+            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
+            iRow = iRow + 1
+        Loop
+    End With
     ActiveWorkbook.Close
     
-    Call addTransactionsSortAndSelect(ActiveSheet.ListObjects(1), tDates, tAmounts, tDesc, "Montant CHF")
+    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    Range("A" & CStr(oTable.ListRows.Count)).Select
 
 End Sub
 
@@ -530,38 +546,3 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
-
-Private Sub addTransactions(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
-                            Optional amountColName As String = "")
-    Dim dateCol As Long
-    Dim amountCol As Long
-    Dim descCol As Long
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    If amountColName = "" Then
-        amountColName = GetLabel(AMOUNT_KEY)
-    End If
-    amountCol = GetColumnNumberFromName(oTable, amountColName)
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
-    With oTable
-        totalrows = .ListRows.Count
-        For iRow = 1 To UBound(transDates)
-            .ListRows.Add
-            totalrows = totalrows + 1
-            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = transDates(iRow)
-            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = transAmounts(iRow)
-            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = transDesc(iRow)
-        Next iRow
-    End With
-End Sub
-
-Private Sub addTransactionsSortAndSelect(oTable As ListObject, transDates As Variant, transAmounts As Variant, transDesc As Variant, _
-                            Optional amountColName As String = "")
-    Call addTransactions(oTable, transDates, transAmounts, transDesc, amountColName)
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
-
-End Sub
-
-
