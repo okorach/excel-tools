@@ -118,7 +118,7 @@ Private Function simplifyDescription(desc As String, subsTable As Variant) As St
 End Function
 
 '------------------------------------------------------------------------------
-' LCL
+' ING
 '------------------------------------------------------------------------------
 
 Public Sub ImportING(oTable As ListObject, fileToOpen As Variant)
