@@ -244,16 +244,6 @@ Public Sub ClearTableColumn(oTable As ListObject, colNbrOrName As Variant, Optio
         End If
     End If
 End Sub
-
-Public Sub ClearTableColumnOld(oTable As ListObject, colNbrOrName As Variant)
-    tableSize = oTable.ListRows.Count
-    ReDim emptyArr(1 To tableSize) As String
-    For i = 1 To tableSize
-        emptyArr(i) = ""
-    Next i
-    Call SetTableColumn(oTable, colNbrOrName, emptyArr)
-End Sub
-
 '------------------------------------------------------------------------------
 ' Sets the formula in one column of a table
 ' col must be an long (Column Nbr)
@@ -274,9 +264,11 @@ Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat 
         Else
             oTable.ListColumns(colNbrOrName).DataBodyRange.NumberFormat = theFormat
         End If
+    End If
 End Sub
 '------------------------------------------------------------------------------
 Public Sub SetTableStyle(oTable As ListObject, style As String)
+
     If Not oTable Is Nothing Then
         oTable.Range.ClearFormats
         oTable.TableStyle = style
