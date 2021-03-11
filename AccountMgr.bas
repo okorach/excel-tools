@@ -471,7 +471,7 @@ Public Sub CalcAccountInterests(accountId As String)
     Dim balances As Variant
     deposits = AccountDepositHistory(accountId)
     balances = AccountBalanceHistory(accountId, "Yearly")
-    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits))
+    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId))
 End Sub
 
 
@@ -491,29 +491,40 @@ End Sub
 
 Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
     Dim nbrYears As Long
+    Dim lastYear As Variant, last3years As Variant, last5year As Variant, allTime As Variant
     Dim interestsTable As ListObject
     Dim ws As Worksheet
     nbrYears = UBound(interestsArray)
-    interestTable = AccountInterestsTable(accountId)
-    With interestsTable.ListColumns(2)
+    Set interestTable = accountInterestTable(accountId)
+    lastYear = "-"
+    last3years = "-"
+    last5years = "-"
+    allTime = "-"
+    With interestTable.ListColumns(2)
         .DataBodyRange.Rows(1).Value = interestsArray(nbrYears)
         For k = 2 To 5
             .DataBodyRange.Rows(k).Value = "-"
         Next k
         If nbrYears >= 2 Then
-            .DataBodyRange.Rows(2).Value = interestsArray(nbrYears - 1)
+            lastYear = interestsArray(nbrYears - 1)
+            .DataBodyRange.Rows(2).Value = lastYear
+            
         End If
         If nbrYears >= 4 Then
-            .DataBodyRange.Rows(3).Value = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
+            last3years = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
+            .DataBodyRange.Rows(3).Value = last3years
         End If
         If nbrYears >= 6 Then
-            .DataBodyRange.Rows(4).Value = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
+            last5years = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
+            .DataBodyRange.Rows(4).Value = last5years
         End If
         If nbrYears >= 2 Then
-            .DataBodyRange.Rows(5).Value = ArrayAverage(interestsArray, 1, nbrYears - 1)
+            allTime = ArrayAverage(interestsArray, 1, nbrYears - 1)
+            .DataBodyRange.Rows(5).Value = allTime
         End If
         .DataBodyRange.NumberFormat = "0.00%"
     End With
+    Call InterestsStore(accountId, interestsArray(nbrYears), lastYear, last3years, last5years, allTime)
 End Sub
 
 
@@ -607,7 +618,7 @@ End Function
 Private Function accountArray(accountId As String, accountSection As String) As Variant
     Dim i As Long
     Dim ws As Worksheet
-    Set accountArray = Empty
+    Set accountArray = Nothing
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
         If LCase$(ws.ListObjects(i).name) Like accountSection & "*" Then
