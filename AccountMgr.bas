@@ -54,8 +54,11 @@ Public Const ACCOUNTS_TABLE = "tblAccounts"
 Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
 Private Const BALANCE_TABLE_NAME As String = "balance"
+Private Const OLD_BALANCE_TABLE_NAME As String = "transactions"
+
 Private Const DEPOSIT_TABLE_NAME As String = "deposit"
 Private Const INTEREST_TABLE_NAME As String = "interest"
+Private Const OLD_INTEREST_TABLE_NAME As String = "yield"
 
 Private Const BTN_HOME_X As Integer = 200
 Private Const BTN_HOME_Y As Integer = 10
@@ -64,6 +67,7 @@ Private Const BTN_HEIGHT As Integer = 22
 Public Sub MergeAccounts()
 
     Dim firstAccount As Boolean
+    Dim balanceNdx As Integer
     Dim ws As Worksheet
 
     Call FreezeDisplay
@@ -76,14 +80,17 @@ Public Sub MergeAccounts()
         For Each ws In Worksheets
            ' Make sure the sheet is not a template or anything else than an account
            If (IsAnAccountSheet(ws)) Then
-                'MsgBox (ws + " " + colNbr)
+                balanceNdx = accountBalanceTableIndex(ws.name)
+                If balanceNdx = 0 Then
+                    balanceNdx = 1
+                End If
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
-                    arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, ws.Cells(1, 2).Value)
+                    arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, ws.Cells(1, 2).Value)
                 ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.name)) Then
-                    arr1d = Create1DArray(ws.ListObjects(1).ListRows.Count, 0)
+                    arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, 0)
                 Else
-                    arr1d = GetTableColumn(ws.ListObjects(1), col)
+                    arr1d = GetTableColumn(ws.ListObjects(balanceNdx), col)
                 End If
                 If (firstAccount) Then
                    totalColumn = arr1d
@@ -471,7 +478,7 @@ Public Sub CalcAccountInterests(accountId As String)
     Dim balances As Variant
     deposits = AccountDepositHistory(accountId)
     balances = AccountBalanceHistory(accountId, "Yearly")
-    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits))
+    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId))
 End Sub
 
 
@@ -491,29 +498,40 @@ End Sub
 
 Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
     Dim nbrYears As Long
+    Dim lastYear As Variant, last3years As Variant, last5year As Variant, allTime As Variant
     Dim interestsTable As ListObject
     Dim ws As Worksheet
     nbrYears = UBound(interestsArray)
-    interestTable = AccountInterestsTable(accountId)
-    With interestsTable.ListColumns(2)
+    Set interestTable = accountInterestTable(accountId)
+    lastYear = "-"
+    last3years = "-"
+    last5years = "-"
+    allTime = "-"
+    With interestTable.ListColumns(2)
         .DataBodyRange.Rows(1).Value = interestsArray(nbrYears)
         For k = 2 To 5
             .DataBodyRange.Rows(k).Value = "-"
         Next k
         If nbrYears >= 2 Then
-            .DataBodyRange.Rows(2).Value = interestsArray(nbrYears - 1)
+            lastYear = interestsArray(nbrYears - 1)
+            .DataBodyRange.Rows(2).Value = lastYear
+            
         End If
         If nbrYears >= 4 Then
-            .DataBodyRange.Rows(3).Value = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
+            last3years = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
+            .DataBodyRange.Rows(3).Value = last3years
         End If
         If nbrYears >= 6 Then
-            .DataBodyRange.Rows(4).Value = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
+            last5years = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
+            .DataBodyRange.Rows(4).Value = last5years
         End If
         If nbrYears >= 2 Then
-            .DataBodyRange.Rows(5).Value = ArrayAverage(interestsArray, 1, nbrYears - 1)
+            allTime = ArrayAverage(interestsArray, 1, nbrYears - 1)
+            .DataBodyRange.Rows(5).Value = allTime
         End If
         .DataBodyRange.NumberFormat = "0.00%"
     End With
+    Call InterestsStore(accountId, interestsArray(nbrYears), lastYear, last3years, last5years, allTime)
 End Sub
 
 
@@ -585,18 +603,23 @@ Private Function accountTableIndex(accountId As String, accountSection As String
     Next i
 End Function
 
-Private Function AccountBalanceTableIndex(accountId As String) As Long
-    AccountBalanceTableIndex = accountTableIndex(accountId, BALANCE_TABLE_NAME)
+Private Function accountBalanceTableIndex(accountId As String) As Long
+    accountBalanceTableIndex = accountTableIndex(accountId, BALANCE_TABLE_NAME)
+    ' TODO: Remove old table names
+    If accountBalanceTableIndex = 0 Then
+        accountBalanceTableIndex = accountTableIndex(accountId, OLD_BALANCE_TABLE_NAME)
+    End If
 End Function
 
-Private Function AccountDepositTableIndex(accountId As String) As Long
-    AccountDepositTableIndex = accountTableIndex(accountId, DEPOSIT_TABLE_NAME)
+Private Function accountDepositTableIndex(accountId As String) As Long
+    accountDepositTableIndex = accountTableIndex(accountId, DEPOSIT_TABLE_NAME)
 End Function
 
-Private Function AccountInterestTableIndex(accountId As String) As Long
-    AccountInterestTableIndex = accountTableIndex(accountId, INTEREST_TABLE_NAME)
-    If AccountInterestTableIndex = 0 Then
-        AccountInterestTableIndex = accountTableIndex(accountId, "yield")
+Private Function accountInterestTableIndex(accountId As String) As Long
+    accountInterestTableIndex = accountTableIndex(accountId, INTEREST_TABLE_NAME)
+    ' TODO: Remove old table names
+    If accountInterestTableIndex = 0 Then
+        accountInterestTableIndex = accountTableIndex(accountId, INTEREST_TABLE_NAME)
     End If
 End Function
 
@@ -607,7 +630,7 @@ End Function
 Private Function accountArray(accountId As String, accountSection As String) As Variant
     Dim i As Long
     Dim ws As Worksheet
-    Set accountArray = Empty
+    Set accountArray = Nothing
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
         If LCase$(ws.ListObjects(i).name) Like accountSection & "*" Then
