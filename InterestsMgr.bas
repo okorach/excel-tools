@@ -71,7 +71,7 @@ Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True)
                 .Range(INTEREST_DATE_START_CELL).Value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(DATE_COL).DataBodyRange.Rows(1).Value
             End If
             .Range(INTEREST_DATE_STOP_CELL).Value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(DATE_COL).DataBodyRange.Rows(i).Value
-            .Range(INTEREST_RATE_CELL).Value = 0.1
+            .Range(INTEREST_RATE_CELL).Value = 0
             .Range(INTEREST_GOAL_SEEK_CELL).GoalSeek Goal:=.Range(BALANCE_END_CELL).Value, ChangingCell:=.Range(INTEREST_RATE_CELL)
             .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(INTEREST_COL).DataBodyRange.Rows(i).Value = .Range(INTEREST_RATE_CELL).Value
         Next i
