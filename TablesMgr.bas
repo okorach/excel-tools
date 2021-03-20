@@ -204,8 +204,12 @@ End Sub
 Public Function GetTableColumn(oTable As ListObject, colNbrOrName, Optional twoD As Boolean = False) As Variant
     Dim nbrRows As Long
     nbrRows = oTable.ListRows.Count
-    ReDim arr(1 To nbrRows) As Variant
-    arr = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
+    ReDim arr(1 To nbrRows, 1 To 1) As Variant
+    If nbrRows = 1 Then
+        arr(1, 1) = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
+    Else
+        arr = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
+    End If
     If (twoD) Then
         GetTableColumn = arr
     Else
@@ -323,8 +327,5 @@ Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
         oTable.ListRows(rowNbr).DataBodyRange.Columns(j).Value = ""
     Next j
 End Sub
-
-
-
 
 

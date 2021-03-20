@@ -81,15 +81,18 @@ Public Function TwoDtoOneD(arr2d As Variant) As Variant
 End Function
 '------------------------------------------------------------------------------
 Public Function Create1DArray(arraySize As Long, elementValue As Variant) As Variant
-    ReDim arr1d(1 To arraySize) As Variant
+    ReDim tmpArr(1 To arraySize) As Variant
     For i = 1 To arraySize
-        arr1d(i) = elementValue
+        tmpArr(i) = elementValue
     Next i
-    Create1DArray = arr1d
+    Create1DArray = tmpArr
 End Function
-
 '------------------------------------------------------------------------------
 Public Function Create2DArray(arraySize As Long, elementValue As Variant) As Variant
-    Create2DArray = OneDtoTwoD(Create1DArray(arraySize, elementValue))
+    ReDim tmpArr(1 To arraySize, 1 To 1) As Variant
+    For i = 1 To arraySize
+        tmpArr(i, 1) = elementValue
+    Next i
+    Create2DArray = tmpArr
 End Function
 

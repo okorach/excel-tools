@@ -1,8 +1,9 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" â‚¬ "";-#,###,##0.00"" â‚¬ "";0.00"" â‚¬ """
+Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
+Public Const DATE_FORMAT = "m/d/yyyy"
 
 Public Const NOT_AN_ACCOUNT As Long = 0
 Public Const DOMESTIC_ACCOUNT As Long = 1
@@ -20,42 +21,43 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Const PARAMS_SHEET As String = "ParamÃ¨tres"
+Public Const PARAMS_SHEET As String = "Paramètres"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
-Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const BALANCE_SHEET As String = "Solde"
+
+Public Const ACCOUNT_TYPE_STANDARD As String = "Standard"
+Public Const ACCOUNT_TYPE_SAVINGS As String = "Savings"
+Public Const ACCOUNT_TYPE_INVESTMENT As String = "Investment"
 
 Public Const ACCOUNT_CLOSED As Long = 0
 Public Const ACCOUNT_OPEN As Long = 1
 
-Const ACCOUNT_NAME_LABEL = "A1"
-Const ACCOUNT_NAME_VALUE = "B1"
-Const ACCOUNT_NBR_LABEL = "A2"
-Const ACCOUNT_NBR_VALUE = "B2"
-Const ACCOUNT_BANK_LABEL = "A3"
-Const ACCOUNT_BANK_VALUE = "B3"
-Const ACCOUNT_STATUS_LABEL = "A4"
-Const ACCOUNT_STATUS_VALUE = "B4"
-Const ACCOUNT_AVAIL_LABEL = "A5"
-Const ACCOUNT_AVAIL_VALUE = "B5"
-Const ACCOUNT_CURRENCY_LABEL = "A6"
-Const ACCOUNT_CURRENCY_VALUE = "B6"
-Const ACCOUNT_TYPE_LABEL = "A7"
-Const ACCOUNT_TYPE_VALUE = "B7"
-Const IN_BUDGET_LABEL = "A8"
-Const IN_BUDGET_VALUE = "B8"
+Private Const MAX_MERGE_SIZE As Long = 100000
 
-Const DATE_COL = "A"
-Const AMOUNT_COL = "B"
-Const BALANCE_COL = "C"
+Private Const ACCOUNTS_TABLE As String = "tblAccounts"
 
-Public Const OPEN_ACCOUNTS_TABLE = "tblOpenAccounts"
-Public Const ACCOUNTS_TABLE = "tblAccounts"
-Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
+Private Const ACCOUNT_NAME_LABEL As String = "A1"
+Private Const ACCOUNT_NAME_VALUE As String = "B1"
+Private Const ACCOUNT_NBR_LABEL As String = "A2"
+Private Const ACCOUNT_NBR_VALUE As String = "B2"
+Private Const ACCOUNT_BANK_LABEL As String = "A3"
+Private Const ACCOUNT_BANK_VALUE As String = "B3"
+Private Const ACCOUNT_STATUS_LABEL As String = "A4"
+Private Const ACCOUNT_STATUS_VALUE As String = "B4"
+Private Const ACCOUNT_AVAIL_LABEL As String = "A5"
+Private Const ACCOUNT_AVAIL_VALUE As String = "B5"
+Private Const ACCOUNT_CURRENCY_LABEL As String = "A6"
+Private Const ACCOUNT_CURRENCY_VALUE As String = "B6"
+Private Const ACCOUNT_TYPE_LABEL As String = "A7"
+Private Const ACCOUNT_TYPE_VALUE As String = "B7"
+Private Const IN_BUDGET_LABEL As String = "A8"
+Private Const IN_BUDGET_VALUE As String = "B8"
+
+Private Const MERGE_SHEET As String = "Comptes Merge"
+Private Const ACCOUNT_MERGE_TABLE As String = "AccountsMerge"
 
 Private Const BALANCE_TABLE_NAME As String = "balance"
 Private Const OLD_BALANCE_TABLE_NAME As String = "transactions"
-
 Private Const DEPOSIT_TABLE_NAME As String = "deposit"
 Private Const INTEREST_TABLE_NAME As String = "interest"
 Private Const OLD_INTEREST_TABLE_NAME As String = "yield"
@@ -64,7 +66,7 @@ Private Const BTN_HOME_X As Integer = 200
 Private Const BTN_HOME_Y As Integer = 10
 Private Const BTN_HEIGHT As Integer = 22
 
-Public Sub MergeAccounts()
+Public Sub MergeAccounts(columnKeys As Variant)
 
     Dim firstAccount As Boolean
     Dim balanceNdx As Integer
@@ -72,7 +74,8 @@ Public Sub MergeAccounts()
 
     Call FreezeDisplay
 
-    For Each colKey In Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY)
+'    For Each colKey In Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY)
+    For Each colKey In columnKeys
         Dim col As String
         col = GetColName(colKey)
         firstAccount = True
@@ -100,31 +103,12 @@ Public Sub MergeAccounts()
                 End If
             End If
         Next ws
-        Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(1), col, totalColumn)
+        Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), col, totalColumn)
         Erase totalColumn
     Next colKey
 
-    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Sheets(MERGE_SHEET).PivotTables(1).PivotCache.Refresh
-
-End Sub
-
-
-Public Sub MergeAccounts2()
-
-    Dim firstAccount As Boolean
-    Dim ws As Worksheet
-
-    Call FreezeDisplay
-
-    Call TruncateTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"))
-    For Each ws In Worksheets
-        If (IsAnAccountSheet(ws)) Then
-            Call MergeTables(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), ws.ListObjects(1))
-        End If
-    Next ws
-    Call SortTable(Sheets(MERGE_SHEET).ListObjects("AccountsMerge"), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-
+    ' Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    
 End Sub
 
 
@@ -133,7 +117,7 @@ Public Sub GenBudget()
     Dim i As Long
     Dim newSize As Long
     Dim nbRows As Long
-    nbRows = Sheets(MERGE_SHEET).ListObjects(1).ListRows.Count
+    nbRows = Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE).ListRows.Count
     newSize = nbRows
 
     Dim dateCol() As Variant
@@ -143,13 +127,15 @@ Public Sub GenBudget()
     Dim categCol() As Variant
     Dim spreadCol() As Variant
 
+    startTime = Now
+
     With Sheets(MERGE_SHEET)
-        dateCol = GetTableColumn(.ListObjects(1), GetColName(DATE_KEY))
-        accountCol = GetTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY))
-        amountCol = GetTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY))
-        descCol = GetTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY))
-        categCol = GetTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY))
-        spreadCol = GetTableColumn(.ListObjects(1), GetColName(IN_BUDGET_KEY))
+        dateCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DATE_KEY))
+        accountCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(ACCOUNT_NAME_KEY))
+        amountCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(AMOUNT_KEY))
+        descCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DESCRIPTION_KEY))
+        categCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SUBCATEGORY_KEY))
+        spreadCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(IN_BUDGET_KEY))
     End With
 
     Dim moreRows As Long
@@ -197,24 +183,37 @@ Public Sub GenBudget()
     Next i
 
     With Sheets(MERGE_SHEET)
-        Call ResizeTable(.ListObjects(1), nbRows + moreRows)
-        Call SetTableColumn(.ListObjects(1), GetColName(DATE_KEY), dateCol)
-        Call SetTableColumn(.ListObjects(1), GetColName(ACCOUNT_NAME_KEY), accountCol)
-        Call SetTableColumn(.ListObjects(1), GetColName(AMOUNT_KEY), amountCol)
-        Call SetTableColumn(.ListObjects(1), GetColName(DESCRIPTION_KEY), descCol)
-        Call SetTableColumn(.ListObjects(1), GetColName(SUBCATEGORY_KEY), categCol)
-        Call SetTableColumn(.ListObjects(1), GetColName(SPREAD_KEY), spreadCol)
-        Call ResizeTable(.ListObjects(1), newSize)
+        Call ResizeTable(.ListObjects(ACCOUNT_MERGE_TABLE), nbRows + moreRows)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DATE_KEY), dateCol)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(ACCOUNT_NAME_KEY), accountCol)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(AMOUNT_KEY), amountCol)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DESCRIPTION_KEY), descCol)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SUBCATEGORY_KEY), categCol)
+        Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SPREAD_KEY), spreadCol)
         .PivotTables(1).PivotCache.Refresh
     End With
 
 End Sub
 
-Public Sub RefreshAllAccounts()
+Public Sub AccountsQuickRefresh()
+    ' startTime = Now
     Call FreezeDisplay
-    Call MergeAccounts
+    Call ResizeTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), 1)
+    Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY))
     Call GenBudget
     Call UnfreezeDisplay
+    ' MsgBox ("Quick refresh duration = " & CStr(DateDiff("s", startTime, Now)))
+End Sub
+
+Public Sub AccountsFullRefresh()
+    ' startTime = Now
+    Call FreezeDisplay
+    Call ResizeTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), 1)
+    Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY))
+    Call GenBudget
+    Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    Call UnfreezeDisplay
+    ' MsgBox ("Full refresh duration = " & CStr(DateDiff("s", startTime, Now)))
 End Sub
 
 Sub CreateAccount()
@@ -337,11 +336,11 @@ Public Function AccountType(accountId As String) As String
     Dim ws As Worksheet
     Set ws = getAccountSheet(accountId)
     If (accountId = "Account Template") Then
-        AccountType = "Standard"
+        AccountType = ACCOUNT_TYPE_STANDARD
     ElseIf (Not AccountExists(accountId)) Then
         AccountType = "ERROR: Not an account"
     ElseIf (wsRange("B6").Value = "EUR") Then
-        AccountType = ws.Range("B7").Value
+        AccountType = ws.Range(ACCOUNT_TYPE_VALUE).Value
     End If
 End Function
 '-------------------------------------------------
@@ -717,7 +716,7 @@ Private Sub formatBalanceTable(accountId As String)
     col = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
-        Call SetTableColumnFormat(oTable, col, "m/d/yyyy")
+        Call SetTableColumnFormat(oTable, col, DATE_FORMAT)
     End If
     col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
     If col <> 0 Then
@@ -772,7 +771,7 @@ Private Sub formatDepositTable(accountId As String)
     Dim oTable As ListObject
     Set oTable = accountDepositTable(accountId)
     Call SetTableStyle(oTable, "TableStyleMedium4")
-    Call SetTableColumnFormat(oTable, 1, "m/d/yyyy")
+    Call SetTableColumnFormat(oTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oTable, 2, EUR_FORMAT)
 End Sub
 

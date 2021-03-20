@@ -246,7 +246,7 @@ End Function
 
 
 
-Public Function ConcatenateArrays(ResultArray As Variant, ArrayToAppend As Variant, _
+Public Function ConcatenateArrays(ResultArray As Variant, arrayToAppend As Variant, _
         Optional NoCompatabilityCheck As Boolean = False) As Boolean
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' ConcatenateArrays
@@ -292,7 +292,7 @@ End If
 ''''''''''''''''''''''''''''''''''
 ' Ensure ArrayToAppend is an array.
 ''''''''''''''''''''''''''''''''''
-If IsArray(ArrayToAppend) = False Then
+If IsArray(arrayToAppend) = False Then
     Exit Function
 End If
 
@@ -303,7 +303,7 @@ End If
 If NumberOfArrayDimensions(ResultArray) > 1 Then
     Exit Function
 End If
-If NumberOfArrayDimensions(ArrayToAppend) > 1 Then
+If NumberOfArrayDimensions(arrayToAppend) > 1 Then
     Exit Function
 End If
 '''''''''''''''''''''''''''''''''''
@@ -319,7 +319,7 @@ End If
 ' we have nothing to append, so
 ' exit with a True result.
 ''''''''''''''''''''''''''''''''''''
-If IsArrayAllocated(arr:=ArrayToAppend) = False Then
+If IsArrayAllocated(arr:=arrayToAppend) = False Then
     ConcatenateArrays = True
     Exit Function
 End If
@@ -330,7 +330,7 @@ If NoCompatabilityCheck = False Then
     ' Ensure the array are compatible
     ' data types.
     ''''''''''''''''''''''''''''''''''''''
-    If AreDataTypesCompatible(DestVar:=ResultArray, SourceVar:=ArrayToAppend) = False Then
+    If AreDataTypesCompatible(DestVar:=ResultArray, SourceVar:=arrayToAppend) = False Then
         '''''''''''''''''''''''''''''''''''''''''''
         ' The arrays are not compatible data types.
         '''''''''''''''''''''''''''''''''''''''''''
@@ -343,9 +343,9 @@ If NoCompatabilityCheck = False Then
     ' all objects (or Nothing)
     ''''''''''''''''''''''''''''''''''''
     If VarType(ResultArray) - vbArray = vbObject Then
-        If IsArrayAllocated(ArrayToAppend) = True Then
-            For Ndx = LBound(ArrayToAppend) To UBound(ArrayToAppend)
-                If IsObject(ArrayToAppend(Ndx)) = False Then
+        If IsArrayAllocated(arrayToAppend) = True Then
+            For Ndx = LBound(arrayToAppend) To UBound(arrayToAppend)
+                If IsObject(arrayToAppend(Ndx)) = False Then
                     Exit Function
                 End If
             Next Ndx
@@ -358,7 +358,7 @@ End If
 ' Get the number of elements in
 ' ArrrayToAppend
 '''''''''''''''''''''''''''''''''''''''
-NumElementsToAdd = UBound(ArrayToAppend) - LBound(ArrayToAppend) + 1
+NumElementsToAdd = UBound(arrayToAppend) - LBound(arrayToAppend) + 1
 ''''''''''''''''''''''''''''''''''''''''
 ' Get the bounds for resizing the
 ' ResultArray. If ResultArray is allocated
@@ -374,9 +374,9 @@ If IsArrayAllocated(arr:=ResultArray) = True Then
     ResultWasAllocated = True
     ReDim Preserve ResultArray(ResultLB To ResultUB + NumElementsToAdd)
 Else
-    ResultUB = UBound(ArrayToAppend)
+    ResultUB = UBound(arrayToAppend)
     ResultWasAllocated = False
-    ReDim ResultArray(LBound(ArrayToAppend) To UBound(ArrayToAppend))
+    ReDim ResultArray(LBound(arrayToAppend) To UBound(arrayToAppend))
 End If
 
 ''''''''''''''''''''''''''''''''''''''''
@@ -389,15 +389,15 @@ If ResultWasAllocated = True Then
     ' have to put the data from ArrayToAppend
     ' at the end of the ResultArray.
     ''''''''''''''''''''''''''''''''''''''''''
-    AppendNdx = LBound(ArrayToAppend)
+    AppendNdx = LBound(arrayToAppend)
     For Ndx = ResultUB + 1 To UBound(ResultArray)
-        If IsObject(ArrayToAppend(AppendNdx)) = True Then
-            Set ResultArray(Ndx) = ArrayToAppend(AppendNdx)
+        If IsObject(arrayToAppend(AppendNdx)) = True Then
+            Set ResultArray(Ndx) = arrayToAppend(AppendNdx)
         Else
-            ResultArray(Ndx) = ArrayToAppend(AppendNdx)
+            ResultArray(Ndx) = arrayToAppend(AppendNdx)
         End If
         AppendNdx = AppendNdx + 1
-        If AppendNdx > UBound(ArrayToAppend) Then
+        If AppendNdx > UBound(arrayToAppend) Then
             Exit For
         End If
     Next Ndx
@@ -408,10 +408,10 @@ Else
     ' to ResultArray.
     ''''''''''''''''''''''''''''''''''''''''''''''
     For Ndx = LBound(ResultArray) To UBound(ResultArray)
-        If IsObject(ArrayToAppend(Ndx)) = True Then
-            Set ResultArray(Ndx) = ArrayToAppend(Ndx)
+        If IsObject(arrayToAppend(Ndx)) = True Then
+            Set ResultArray(Ndx) = arrayToAppend(Ndx)
         Else
-            ResultArray(Ndx) = ArrayToAppend(Ndx)
+            ResultArray(Ndx) = arrayToAppend(Ndx)
         End If
     Next Ndx
 
@@ -2698,9 +2698,9 @@ Public Function TransposeArray(InputArr As Variant, OutputArr As Variant) As Boo
 
 Dim RowNdx As Long
 Dim ColNdx As Long
-Dim LB1 As Long
+Dim lb1 As Long
 Dim LB2 As Long
-Dim UB1 As Long
+Dim ub1 As Long
 Dim UB2 As Long
 
 '''''''''''''''''''''''''''''''''''
@@ -2734,9 +2734,9 @@ End If
 ' Get the Lower and Upper bounds of
 ' InputArr.
 '''''''''''''''''''''''''''''''''''''''
-LB1 = LBound(InputArr, 1)
+lb1 = LBound(InputArr, 1)
 LB2 = LBound(InputArr, 2)
-UB1 = UBound(InputArr, 1)
+ub1 = UBound(InputArr, 1)
 UB2 = UBound(InputArr, 2)
 
 '''''''''''''''''''''''''''''''''''''''''
@@ -2747,7 +2747,7 @@ Erase OutputArr
 ' Redim the Output array. Not the that the LBound and UBound
 ' values are preserved.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-ReDim OutputArr(LB2 To LB2 + UB2 - LB2, LB1 To LB1 + UB1 - LB1)
+ReDim OutputArr(LB2 To LB2 + UB2 - LB2, lb1 To lb1 + ub1 - lb1)
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' Loop through the elemetns of InputArr and put each value
 ' in the proper element of the tranposed array.

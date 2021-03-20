@@ -1,6 +1,8 @@
 Attribute VB_Name = "AccountImportExport"
 Const MAX_IMPORT = 30000
 
+Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
+
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
         str = Replace(Replace(str, ",", "."), "'", "")
