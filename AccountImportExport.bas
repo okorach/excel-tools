@@ -287,7 +287,13 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     iRow = 2
-    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    If LCase$(Right(fileToOpen, 4)) = ".csv" Then
+        xlsFile = convertCsvToXls(fileToOpen)
+        Workbooks.Open filename:=xlsFile, ReadOnly:=True
+    Else
+        Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    End If
+    
     With oTable
         Do While LenB(Cells(iRow, 1).Value) > 0
             .ListRows.Add
@@ -315,53 +321,24 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
 
 End Sub
 
-
-Sub ImportUBScsv(oTable As ListObject, fileToOpen As Variant)
-
-    Dim iRow As Long, lastRow As Long
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
-    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    iRow = 2
-    Workbooks.OpenText filename:=fileToOpen, Origin _
-        :=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
+Private Function convertCsvToXls(fileToOpen As Variant) As Variant
+    ' Converts a CSV file in XLS to solve Unicode characters problems
+    Dim xlsFile As Variant
+    Workbooks.OpenText filename:=fileToOpen, _
+        Origin:=65001, StartRow:=1, DataType:=xlDelimited, TextQualifier:= _
         xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=True, _
         Comma:=False, Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), _
         Array(2, 1), Array(3, 1), Array(4, 1), Array(5, 1), Array(6, 1), Array(7, 1), Array(8, 1), _
         Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
         , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
         TrailingMinusNumbers:=True
-        'ReadOnly:=True
-    
-    With oTable
-        Do While LenB(Cells(iRow, 1).Value) > 0
-            .ListRows.Add
-            lastRow = .ListRows.Count
-            If Cells(iRow, 13) = "Solde prix prestations" Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
-            ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
-            ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
-            Else
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
-            End If
-            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
-            iRow = iRow + 1
-        Loop
-    End With
+    xlsFile = Left(fileToOpen, Len(fileToOpen) - 4) & format(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
+    ActiveWorkbook.SaveAs filename:=xlsFile, _
+        fileformat:=xlExcel8, Password:="", WriteResPassword:="", _
+        ReadOnlyRecommended:=False, CreateBackup:=False
     ActiveWorkbook.Close
-    
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
-
-End Sub
+    convertCsvToXls = xlsFile
+End Function
 
 '------------------------------------------------------------------------------
 '
