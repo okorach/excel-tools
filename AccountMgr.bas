@@ -1,7 +1,7 @@
 Attribute VB_Name = "AccountMgr"
 
 Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const EUR_FORMAT = "#,###,##0.00"" ¤ "";-#,###,##0.00"" ¤ "";0.00"" ¤ """
 Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 Public Const DATE_FORMAT = "m/d/yyyy"
 
@@ -35,6 +35,7 @@ Public Const ACCOUNT_OPEN As Long = 1
 Private Const MAX_MERGE_SIZE As Long = 100000
 
 Private Const ACCOUNTS_TABLE As String = "tblAccounts"
+Private Const ACCOUNT_TYPES_TABLE As String = "tblAccountTypes"
 
 Private Const ACCOUNT_NAME_LABEL As String = "A1"
 Private Const ACCOUNT_NAME_VALUE As String = "B1"
@@ -332,16 +333,21 @@ Public Sub SortCurrentAccount()
 End Sub
 
 '-------------------------------------------------
-Public Function AccountType(accountId As String) As String
+Public Function accountType(accountId As String) As String
     Dim ws As Worksheet
     Set ws = getAccountSheet(accountId)
     If (accountId = "Account Template") Then
-        AccountType = ACCOUNT_TYPE_STANDARD
+        accountType = ACCOUNT_TYPE_STANDARD
     ElseIf (Not AccountExists(accountId)) Then
-        AccountType = "ERROR: Not an account"
-    ElseIf (wsRange("B6").Value = "EUR") Then
-        AccountType = ws.Range(ACCOUNT_TYPE_VALUE).Value
+        accountType = "ERROR: Not an account"
+    Else
+        accountType = ws.Range(ACCOUNT_TYPE_VALUE).Value
     End If
+End Function
+Public Function IsInterestAccount(accountId As String) As Boolean
+    Dim accType As String
+    accType = accountType(accountId)
+    IsInterestAccount = Not (accType = "Courant" Or accType = "Autres")
 End Function
 '-------------------------------------------------
 Private Function AccountAttribute(accountId As String, attributeCell As String) As String
@@ -371,6 +377,11 @@ End Function
 Public Function AccountCurrency(accountId As String) As String
     AccountCurrency = AccountAttribute(accountId, ACCOUNT_CURRENCY_VALUE)
 End Function
+
+Public Function accountInterestPeriod(accountType) As Integer
+    accountInterestPeriod = CInt(Application.WorksheetFunction.VLookup(accountType, Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE).DataBodyRange, 2, False))
+End Function
+
 
 '-------------------------------------------------
 Public Function IsAccountInBudget(accountId As String) As Boolean
@@ -460,6 +471,7 @@ Public Function AccountBalanceHistory(accountId As String, Optional sampling As 
                 lastYear = lastYear + 1
             Wend
         End If
+        firstEntry = False
         lastMonth = m
         lastBalance = histAll(i, 3)
         lastYear = y
@@ -475,9 +487,13 @@ End Function
 Public Sub CalcAccountInterests(accountId As String)
     Dim deposits As Variant
     Dim balances As Variant
+    Dim interestPeriod As Integer
     deposits = AccountDepositHistory(accountId)
     balances = AccountBalanceHistory(accountId, "Yearly")
-    Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId))
+    interestPeriod = accountInterestPeriod(accountType(accountId))
+    If interestPeriod > 0 Then
+        Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod))
+    End If
 End Sub
 
 
@@ -487,10 +503,10 @@ Public Sub CalcInterestForAllAccounts()
     FreezeDisplay
     For Each ws In Worksheets
         accountId = getAccountId(ws)
-        If IsAnAccountSheet(ws) And IsOpen(accountId) Then
+        If IsAnAccountSheet(ws) And IsOpen(accountId) And IsInterestAccount(accountId) Then
             Call CalcAccountInterests(accountId)
         End If
-    Next i
+    Next ws
     UnfreezeDisplay
 End Sub
 
@@ -511,21 +527,21 @@ Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
         For k = 2 To 5
             .DataBodyRange.Rows(k).Value = "-"
         Next k
-        If nbrYears >= 2 Then
+        If nbrYears >= 3 Then
             lastYear = interestsArray(nbrYears - 1)
             .DataBodyRange.Rows(2).Value = lastYear
             
         End If
-        If nbrYears >= 4 Then
+        If nbrYears >= 5 Then
             last3years = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
             .DataBodyRange.Rows(3).Value = last3years
         End If
-        If nbrYears >= 6 Then
+        If nbrYears >= 7 Then
             last5years = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
             .DataBodyRange.Rows(4).Value = last5years
         End If
-        If nbrYears >= 2 Then
-            allTime = ArrayAverage(interestsArray, 1, nbrYears - 1)
+        If nbrYears >= 3 Then
+            allTime = ArrayAverage(interestsArray, 2, nbrYears - 1)
             .DataBodyRange.Rows(5).Value = allTime
         End If
         .DataBodyRange.NumberFormat = "0.00%"

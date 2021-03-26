@@ -7,17 +7,19 @@ Private Const INTEREST_TABLE As String = "AccountsInterests"
 
 Private Const INTEREST_DATE_START_CELL As String = "I2"
 Private Const INTEREST_DATE_STOP_CELL As String = "I3"
-Private Const INTEREST_GOAL_SEEK_CELL As String = "I7"
-Private Const INTEREST_RATE_CELL As String = "I8"
+Private Const INTEREST_PERIOD_CELL As String = "I4"
+Private Const INTEREST_GOAL_SEEK_CELL As String = "I8"
+Private Const INTEREST_RATE_CELL As String = "I9"
 Private Const BALANCE_END_CELL As String = "J3"
 
 Private Const DATE_COL = 1
 Private Const BALANCE_COL = 2
 Private Const INTEREST_COL = 3
 
-Public Function InterestsCalc(balanceArray As Variant, depositsArray As Variant, Optional account As String = "account", Optional calcPerPeriod As Boolean = True)
+Public Function InterestsCalc(balanceArray As Variant, depositsArray As Variant, Optional account As String = "account", _
+                              Optional interestPeriod As Integer = 1, Optional calcPerPeriod As Boolean = True)
     FreezeDisplay
-    Call interestsLoadData(balanceArray, depositsArray, account)
+    Call interestsLoadData(balanceArray, depositsArray, account, interestPeriod)
     InterestsCalc = interestsCalcFromData(calcPerPeriod)
     UnfreezeDisplay
 End Function
@@ -37,13 +39,15 @@ Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, 
     Call interestsRecord(oTable.ListRows(oTable.ListRows.Count), thisYear, lastYear, last3years, last5years, allTime)
 End Sub
 
-Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant, Optional accName As String = "account")
+Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant, Optional accName As String = "account", Optional interestPeriod As Integer = 1)
     ' Loads data need for interests calculation in the calculation sheet
     With Sheets(INTEREST_CALC_SHEET)
         .Range("I1").Value = accName
-        .Range("H10").Value = "Deposit history for " & accName
-        .Range("M10").Value = "Balance history for " & accName
+        .Range("H11").Value = "Deposit history for " & accName
+        .Range("M11").Value = "Balance history for " & accName
 
+        .Range(INTEREST_PERIOD_CELL).Value = interestPeriod
+        
         Call ResizeTable(.ListObjects(BALANCE_HISTORY_TABLE), UBound(balancesArray, 1))
         Call ResizeTable(.ListObjects(DEPOSITS_HISTORY_TABLE), UBound(depositsArray, 1))
         
