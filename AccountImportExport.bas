@@ -139,8 +139,8 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     Dim iRow As Long
     iRow = 1
     Do While LenB(Cells(iRow, 1).Value) > 0
-        .ListRows.Add
-        With oTable.ListRows(.ListRows.Count)
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
             .Range(1, dateCol).Value = Cells(iRow, 1).Value
             .Range(1, amountCol).Value = toAmount(Cells(iRow, 4).Value)
             .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 2).Value, subsTable)
@@ -163,7 +163,7 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     iRow = 1
     Do While LenB(Cells(iRow + 1, 1).Value) > 0
         oTable.ListRows.Add
-        With oTable.ListRows(.ListRows.Count)
+        With oTable.ListRows(oTable.ListRows.Count)
             .Range(1, dateCol).Value = DateValue(Cells(iRow, 1).Value)
             .Range(1, amountCol).Value = toAmount(Cells(iRow, 2).Value)
             If (Cells(iRow, 3).Value Like "Ch?que") Then
@@ -199,7 +199,7 @@ Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCo
     Dim iRow As Long
     iRow = 2
     Do While LenB(Cells(iRow, 1).Value) > 0
-        .ListRows.Add
+        oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             On Error GoTo ErrDate
             .Range(1, dateCol).Value = DateValue(Trim$(Cells(iRow, 1).Value))
@@ -517,5 +517,4 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
 
