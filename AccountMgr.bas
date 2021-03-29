@@ -84,14 +84,14 @@ Public Sub MergeAccounts(columnKeys As Variant)
         For Each ws In Worksheets
            ' Make sure the sheet is not a template or anything else than an account
            If (IsAnAccountSheet(ws)) Then
-                balanceNdx = accountBalanceTableIndex(ws.name)
+                balanceNdx = accountBalanceTableIndex(ws.Name)
                 If balanceNdx = 0 Then
                     balanceNdx = 1
                 End If
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
                     arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, ws.Cells(1, 2).Value)
-                ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.name)) Then
+                ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.Name)) Then
                     arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, 0)
                 Else
                     arr1d = GetTableColumn(ws.ListObjects(balanceNdx), col)
@@ -224,7 +224,7 @@ Sub CreateAccount()
     Sheets("Account Template").Copy Before:=Sheets(1)
     Sheets("Account Template").Visible = False
     With Sheets(1)
-        .name = accountName
+        .Name = accountName
         ' .Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
         .Range(ACCOUNT_NAME_VALUE).Value = accountName
         formulaRoot = "=VLOOKUP(B$1," & ACCOUNTS_TABLE
@@ -255,7 +255,7 @@ Public Sub FormatAllAccountSheets()
     Call ShowAllSheets
     For Each ws In Worksheets
        'Call FormatAccountSheet(ws)
-       Call FormatAccount(ws.name)
+       Call FormatAccount(ws.Name)
     Next ws
     Call HideClosedAccounts
     Call hideTemplateAccounts
@@ -270,7 +270,7 @@ End Function
 Private Sub setClosedAccountsVisibility(visibility As XlSheetVisibility)
     Dim ws As Worksheet
     For Each ws In Worksheets
-        If IsClosed(ws.name) Then
+        If IsClosed(ws.Name) Then
             ws.Visible = visibility
         End If
     Next ws
@@ -580,7 +580,7 @@ Private Function accountTable(accountId As String, accountSection As String) As 
     Dim i As Long
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
             Set accountTable = ws.ListObjects(i)
             Exit For
         End If
@@ -611,7 +611,7 @@ Private Function accountTableIndex(accountId As String, accountSection As String
     Set ws = getAccountSheet(accountId)
     accountTableIndex = 0
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
             accountTableIndex = i
             Exit For
         End If
@@ -648,7 +648,7 @@ Private Function accountArray(accountId As String, accountSection As String) As 
     Set accountArray = Nothing
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
             accountArray = GetTableAsArray(ws.ListObjects(i))
             Exit For
         End If
@@ -664,7 +664,7 @@ Private Function AccountBalanceArray(accountId As String) As Variant
 End Function
 
 Private Function getAccountId(ws As Worksheet) As String
-    getAccountId = ws.name
+    getAccountId = ws.Name
 End Function
 
 Private Function getAccountSheet(accountId As String) As Worksheet
@@ -684,29 +684,29 @@ Private Sub formatAccountButtons(ws As Worksheet)
     i = 0
     Dim s As Shape
     For Each s In ws.Shapes
-        If s.name = "BtnPrev5" Then
+        If s.Name = "BtnPrev5" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y, BTN_HOME_X + 29, BTN_HOME_Y + BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnPrev" Then
+        ElseIf s.Name = "BtnPrev" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 30, BTN_HOME_Y, BTN_HOME_X + 59, BTN_HOME_Y + BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnHome" Then
+        ElseIf s.Name = "BtnHome" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 60, BTN_HOME_Y, BTN_HOME_X + 129, BTN_HOME_Y + BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnNext" Then
+        ElseIf s.Name = "BtnNext" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 130, BTN_HOME_Y, BTN_HOME_X + 159, BTN_HOME_Y + BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnNext5" Then
+        ElseIf s.Name = "BtnNext5" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 160, BTN_HOME_Y, BTN_HOME_X + 189, BTN_HOME_Y + BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnTop" Then
+        ElseIf s.Name = "BtnTop" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 99, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnBottom" Then
+        ElseIf s.Name = "BtnBottom" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + 2 * BTN_HEIGHT, BTN_HOME_X + 99, BTN_HOME_Y + 3 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnSort" Then
+        ElseIf s.Name = "BtnSort" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + 3 * BTN_HEIGHT, BTN_HOME_X + 99, BTN_HOME_Y + 4 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnInterests" Then
+        ElseIf s.Name = "BtnInterests" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 100, BTN_HOME_Y + 3 * BTN_HEIGHT, BTN_HOME_X + 199, BTN_HOME_Y + 4 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnImport" Then
+        ElseIf s.Name = "BtnImport" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 100, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 199, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnAddEntry" Then
+        ElseIf s.Name = "BtnAddEntry" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 100, BTN_HOME_Y + 2 * BTN_HEIGHT, BTN_HOME_X + 199, BTN_HOME_Y + 3 * BTN_HEIGHT - 1)
-        ElseIf s.name = "BtnFormat" Then
+        ElseIf s.Name = "BtnFormat" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 200, BTN_HOME_Y, BTN_HOME_X + 299, BTN_HOME_Y + BTN_HEIGHT - 1)
 
         ElseIf (s.Type = msoFormControl) Then
