@@ -22,9 +22,9 @@ Private Function toMonth(str) As Long
         toMonth = 2
     ElseIf s Like "mar*" Then
         toMonth = 3
-    ElseIf s Like "a*" Then
+    ElseIf s Like "a[vp]r*" Then
         toMonth = 4
-    ElseIf s Like "mai*" Or s Like "may*" Then
+    ElseIf s Like "ma[iy]*" Then
         toMonth = 5
     ElseIf s Like "juin*" Or s Like "jun*" Then
         toMonth = 6
@@ -193,6 +193,14 @@ End Sub
 '------------------------------------------------------------------------------
 
 Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant)
+    If LCase$(Right(fileToOpen, 4)) = ".csv" Then
+        Call importRevolutCsv(oTable, fileToOpen)
+    Else
+        Call importRevolutXls(oTable, fileToOpen)
+    End If
+End Sub
+
+Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant)
 
     Dim iRow As Long, lastRow As Long
     Dim desc As String
@@ -203,7 +211,6 @@ Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant)
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     iRow = 2
-    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     With oTable
         Do While LenB(Cells(iRow, 1).Value) > 0
             .ListRows.Add
@@ -239,38 +246,73 @@ CheckAmount:
 End Sub
 
 
-Sub ImportRevolutCSV(oTable As ListObject, fileToOpen As Variant)
-
+Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant)
+    ' Open file a first time to replace " , " and " ," by ";"
+    Dim iRow As Long
     Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    Dim lastRow As Long
+    Dim desc As String, comment As String
+    Dim amount As Double
     dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
     amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
     descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    
-    Open fileToOpen For Input As #1
-    Line Input #1, textline
-    Do Until EOF(1)
-        Line Input #1, textline
-        A = Split(textline, ";", -1, vbTextCompare)
+    Workbooks.Add
+    With ActiveSheet.QueryTables.Add(Connection:= _
+        "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
+        .Name = "import"
+        .FieldNames = True
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .SaveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .TextFilePromptOnRefresh = False
+        .TextFilePlatform = 65001
+        .TextFileStartRow = 1
+        .TextFileParseType = xlDelimited
+        .TextFileTextQualifier = xlTextQualifierDoubleQuote
+        .TextFileConsecutiveDelimiter = False
+        .TextFileTabDelimiter = False
+        .TextFileSemicolonDelimiter = True
+        .TextFileCommaDelimiter = False
+        .TextFileSpaceDelimiter = False
+        .TextFileColumnDataTypes = Array(1)
+        .TextFileTrailingMinusNumbers = True
+        .Refresh BackgroundQuery:=False
+    End With
+    Cells.Replace What:=" , ", Replacement:=";", LookAt:=xlPart
+    Cells.Replace What:=", ", Replacement:=";", LookAt:=xlPart
+
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        A = Split(Cells(iRow, 1).Value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
         lastRow = oTable.ListRows.Count
-        tbl.ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = toDate(Trim$(A(0)))
+        oTable.ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = toDate(Trim$(A(0)))
+        desc = Trim$(A(1))
         If LenB(Trim$(A(2))) = 0 Then
-            oTable.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = CDbl(Trim$(A(3)))
-            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Trim$(A(1)) & " --> " & Trim$(A(5)), subsTable)
+            amount = CDbl(Trim$(A(3)))
+            comment = Trim$(A(5))
         Else
-            oTable.ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = -CDbl(Trim$(A(2)))
-            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Trim$(A(1)) & " --> " & Trim$(A(4)), subsTable)
+            amount = -CDbl(Trim$(A(2)))
+            comment = Trim$(A(4))
         End If
+        oTable.ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = amount
+        If comment <> "" Then
+            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(desc & " --> " & comment, subsTable)
+        Else
+            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(desc, subsTable)
+        End If
+        iRow = iRow + 1
     Loop
-    Close #1
+    ActiveWorkbook.Close SaveChanges:=False
     Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     Range("A" & CStr(oTable.ListRows.Count)).Select
-
 End Sub
-
 
 '------------------------------------------------------------------------------
 ' UBS
@@ -444,7 +486,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim sFolder As String
-    exportFrom = ActiveWorkbook.name
+    exportFrom = ActiveWorkbook.Name
 
     Sheets(ws).Select
     Range("A1:B8").Select
@@ -453,7 +495,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
 
     ' Create blank workbook and copy data on that workbook
     Workbooks.Add
-    exportTo = ActiveWorkbook.name
+    exportTo = ActiveWorkbook.Name
     Range("A1").Select
     ActiveSheet.Paste
     Range("A9").Value = "Exporter version"
@@ -510,8 +552,8 @@ Sub ExportAll()
         Call FreezeDisplay
         For Each ws In Worksheets
             If ws.Cells(1, 1).Value = "Nom Compte" Then
-                filename = sFolder & "\" & ws.name & ".csv"
-                Call ExportGeneric(ws.name, filename, True)
+                filename = sFolder & "\" & ws.Name & ".csv"
+                Call ExportGeneric(ws.Name, filename, True)
             End If
         Next ws
         Call UnfreezeDisplay
@@ -525,3 +567,5 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
+
+
