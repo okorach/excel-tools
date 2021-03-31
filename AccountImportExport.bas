@@ -62,20 +62,28 @@ Sub ImportAny()
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
         Call FreezeDisplay
+        Dim oTable As ListObject
+        Set oTable = ActiveSheet.ListObjects(1)
+        Dim dateCol As Integer, amountCol As Integer, descCol As Integer
+        dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+        amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+        descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
         Dim bank As String
         bank = Cells(3, 2).Value
         If (bank = "ING Direct") Then
-            Call ImportING(ActiveSheet.ListObjects(1), fileToOpen)
+            Call ImportING(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "LCL") Then
-            Call ImportLCL(ActiveSheet.ListObjects(1), fileToOpen)
+            Call ImportLCL(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "UBS") Then
-            Call ImportUBS(ActiveSheet.ListObjects(1), fileToOpen)
+            Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "Revolut") Then
-            Call ImportRevolut(ActiveSheet.ListObjects(1), fileToOpen)
+            Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
         Else
             Call UnfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
         End If
+        Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+        Range("A" & CStr(oTable.ListRows.Count)).Select
         Call UnfreezeDisplay
     Else
         Call ErrorMessage("k.warningImportCancelled")
@@ -123,139 +131,108 @@ End Function
 ' ING
 '------------------------------------------------------------------------------
 
-Public Sub ImportING(oTable As ListObject, fileToOpen As Variant)
+Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
-    Dim iRow As Long, lastRow As Long
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    iRow = 1
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    With oTable
-        Do While LenB(Cells(iRow, 1).Value) > 0
-            .ListRows.Add
-            lastRow = .ListRows.Count
-            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = Cells(iRow, 1).Value
-            .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 4).Value)
-            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 2).Value, subsTable)
-            iRow = iRow + 1
-        Loop
-    End With
-    ActiveWorkbook.Close
-    
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
 
+    Dim iRow As Long
+    iRow = 1
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
+            .Range(1, dateCol).Value = Cells(iRow, 1).Value
+            .Range(1, amountCol).Value = toAmount(Cells(iRow, 4).Value)
+            .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 2).Value, subsTable)
+        End With
+        iRow = iRow + 1
+    Loop
+    ActiveWorkbook.Close
 End Sub
 
 '------------------------------------------------------------------------------
 ' LCL
 '------------------------------------------------------------------------------
 
-Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant)
+Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
-    Dim iRow As Long, lastRow As Long
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    iRow = 1
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    With oTable
-        Do While LenB(Cells(iRow + 1, 1).Value) > 0
-            .ListRows.Add
-            lastRow = .ListRows.Count
-            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = DateValue(Cells(iRow, 1).Value)
-            .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 2).Value)
+
+    Dim iRow As Long
+    iRow = 1
+    Do While LenB(Cells(iRow + 1, 1).Value) > 0
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
+            .Range(1, dateCol).Value = DateValue(Cells(iRow, 1).Value)
+            .Range(1, amountCol).Value = toAmount(Cells(iRow, 2).Value)
             If (Cells(iRow, 3).Value Like "Ch?que") Then
-                .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value), subsTable)
+                .Range(1, descCol).Value = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value), subsTable)
             ElseIf (Cells(iRow, 3).Value = "Virement") Then
-                .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = "Virement " & simplifyDescription(Cells(iRow, 5).Value, subsTable)
+                .Range(1, descCol).Value = "Virement " & simplifyDescription(Cells(iRow, 5).Value, subsTable)
             Else
-                .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value, subsTable)
+                .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value, subsTable)
             End If
-            iRow = iRow + 1
-        Loop
-    End With
+        End With
+        iRow = iRow + 1
+    Loop
     ActiveWorkbook.Close
-    
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
 End Sub
 
 '------------------------------------------------------------------------------
 ' Revolut
 '------------------------------------------------------------------------------
 
-Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant)
+Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     If LCase$(Right(fileToOpen, 4)) = ".csv" Then
-        Call importRevolutCsv(oTable, fileToOpen)
+        Call importRevolutCsv(oTable, fileToOpen, dateCol, amountCol, descCol)
     Else
-        Call importRevolutXls(oTable, fileToOpen)
+        Call importRevolutXls(oTable, fileToOpen, dateCol, amountCol, descCol)
     End If
 End Sub
 
-Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant)
+Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
-    Dim iRow As Long, lastRow As Long
-    Dim desc As String
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True
+    
+    Dim iRow As Long
     iRow = 2
-    With oTable
-        Do While LenB(Cells(iRow, 1).Value) > 0
-            .ListRows.Add
-            lastRow = .ListRows.Count
-            
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
             On Error GoTo ErrDate
-                .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = DateValue(Trim$(Cells(iRow, 1).Value))
-                GoTo CheckAmount
+            .Range(1, dateCol).Value = DateValue(Trim$(Cells(iRow, 1).Value))
+            GoTo CheckAmount
 ErrDate:
-                .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = toDate(Trim$(Cells(iRow, 1).Value))
+            .Range(1, dateCol).Value = toDate(Trim$(Cells(iRow, 1).Value))
 CheckAmount:
+            Dim desc As String
             desc = ""
             If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Trim$(Cells(iRow, 4).Value))
+                .Range(1, amountCol).Value = toAmount(Trim$(Cells(iRow, 4).Value))
                 If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
                     desc = simplifyDescription(Trim$(Cells(iRow, 6).Value) & " : ", subsTable)
                 End If
             Else
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = -toAmount(Trim$(Cells(iRow, 3).Value))
+                .Range(1, amountCol).Value = -toAmount(Trim$(Cells(iRow, 3).Value))
                 If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
                     desc = simplifyDescription(Trim$(Cells(iRow, 5).Value) & " : ", subsTable)
                 End If
             End If
-            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = desc & Trim$(Cells(iRow, 2).Value)
-            iRow = iRow + 1
-        Loop
-    End With
+            .Range(1, descCol).Value = desc & Trim$(Cells(iRow, 2).Value)
+        End With
+        iRow = iRow + 1
+    Loop
     ActiveWorkbook.Close
-    
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
-
 End Sub
 
 
-Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant)
+Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     ' Open file a first time to replace " , " and " ," by ";"
-    Dim iRow As Long
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    Dim desc As String, comment As String
-    Dim amount As Double
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+
     Workbooks.Add
     With ActiveSheet.QueryTables.Add(Connection:= _
         "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
@@ -287,31 +264,32 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant)
     Cells.Replace What:=" , ", Replacement:=";", LookAt:=xlPart
     Cells.Replace What:=", ", Replacement:=";", LookAt:=xlPart
 
+    Dim iRow As Long
     iRow = 2
     Do While LenB(Cells(iRow, 1).Value) > 0
         A = Split(Cells(iRow, 1).Value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
-        lastRow = oTable.ListRows.Count
-        oTable.ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = toDate(Trim$(A(0)))
-        desc = Trim$(A(1))
-        If LenB(Trim$(A(2))) = 0 Then
-            amount = CDbl(Trim$(A(3)))
-            comment = Trim$(A(5))
-        Else
-            amount = -CDbl(Trim$(A(2)))
-            comment = Trim$(A(4))
-        End If
-        oTable.ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = amount
-        If comment <> "" Then
-            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(desc & " --> " & comment, subsTable)
-        Else
-            oTable.ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(desc, subsTable)
-        End If
+        With oTable.ListRows(oTable.ListRows.Count)
+            Dim desc As String, comment As String
+            Dim amount As Double
+            .Range(1, dateCol).Value = toDate(Trim$(A(0)))
+            desc = Trim$(A(1))
+            If LenB(Trim$(A(2))) = 0 Then
+                amount = CDbl(Trim$(A(3)))
+                comment = Trim$(A(5))
+            Else
+                amount = -CDbl(Trim$(A(2)))
+                comment = Trim$(A(4))
+            End If
+            .Range(1, amountCol).Value = amount
+            If comment <> "" Then
+                .Range(1, descCol).Value = simplifyDescription(desc & " --> " & comment, subsTable)
+            Else
+                .Range(1, descCol).Value = simplifyDescription(desc, subsTable)
+            End If
         iRow = iRow + 1
     Loop
     ActiveWorkbook.Close SaveChanges:=False
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
 End Sub
 
 '------------------------------------------------------------------------------
@@ -319,16 +297,9 @@ End Sub
 '------------------------------------------------------------------------------
 
 
-Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
+Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
-    Dim iRow As Long, lastRow As Long
-    Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-    dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    iRow = 2
     If LCase$(Right(fileToOpen, 4)) = ".csv" Then
         xlsFile = convertCsvToXls(fileToOpen)
         Workbooks.Open filename:=xlsFile, ReadOnly:=True
@@ -336,31 +307,28 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant)
         Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     End If
     
-    With oTable
-        Do While LenB(Cells(iRow, 1).Value) > 0
-            .ListRows.Add
-            lastRow = .ListRows.Count
+    Dim iRow As Long
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).Value) > 0
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
             If Cells(iRow, 13) = "Solde prix prestations" Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+                .Range(1, amountCol).Value = 0
             ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
+                .Range(1, amountCol).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
             ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
+                .Range(1, amountCol).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
             ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
+                .Range(1, amountCol).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
             Else
-                .ListColumns(amountCol).DataBodyRange.Rows(lastRow).Value = 0
+                .Range(1, amountCol).Value = 0
             End If
-            .ListColumns(dateCol).DataBodyRange.Rows(lastRow).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            .ListColumns(descCol).DataBodyRange.Rows(lastRow).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
-            iRow = iRow + 1
-        Loop
-    End With
+            .Range(1, dateCol).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
+            .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
+        End With
+        iRow = iRow + 1
+    Loop
     ActiveWorkbook.Close
-    
-    Call SortTable(oTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    Range("A" & CStr(oTable.ListRows.Count)).Select
-
 End Sub
 
 Private Function convertCsvToXls(fileToOpen As Variant) As Variant
@@ -375,8 +343,7 @@ Private Function convertCsvToXls(fileToOpen As Variant) As Variant
         , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
         TrailingMinusNumbers:=True
     xlsFile = Left(fileToOpen, Len(fileToOpen) - 4) & format(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
-    ActiveWorkbook.SaveAs filename:=xlsFile, _
-        fileformat:=xlExcel8, Password:="", WriteResPassword:="", _
+    ActiveWorkbook.SaveAs filename:=xlsFile, fileformat:=xlExcel8, Password:="", WriteResPassword:="", _
         ReadOnlyRecommended:=False, CreateBackup:=False
     ActiveWorkbook.Close
     convertCsvToXls = xlsFile
@@ -385,21 +352,19 @@ End Function
 '------------------------------------------------------------------------------
 '
 '------------------------------------------------------------------------------
-Sub ImportGeneric(fileToOpen As Variant)
+Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-    'Workbooks.Open filename:="C:\Users\Olivier\Desktop\Test LCL.csv"
-    Dim iRow As Long
+
     Dim tDates() As Variant
     Dim tDesc() As String
     Dim tSubCateg() As String
     Dim tBudgetSpread() As Variant
     Dim tAmounts() As Double
     
+    Dim iRow As Long
     iRow = 1
-    
     ' Read Header part
     Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
         iRow = iRow + 1
@@ -450,35 +415,20 @@ Sub ImportGeneric(fileToOpen As Variant)
     ActiveSheet.Cells(3, 2).Value = bank
     ActiveSheet.Cells(4, 2).Value = accStatus
     ActiveSheet.Cells(5, 2).Value = availability
-    
-    Dim tbl As Variant
-    Dim dateCol As Long
-    Dim amountCol As Long
-    Dim descCol As Long
-    Dim subcatCol As Long
-    Dim budgetCol As Long
-    tbl = ActiveSheet.ListObjects(1)
-    dateCol = GetColumnNumberFromName(tbl, GetLabel(DATE_KEY))
-    amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
-    descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+
+    Dim subcatCol As Long, budgetCol As Long
     subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
     budgetCol = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
-    With tbl
-        totalrows = .ListRows.Count
-        For iRow = 1 To nbRows
-            .ListRows.Add
-            totalrows = totalrows + 1
-            .ListColumns(dateCol).DataBodyRange.Rows(totalrows).Value = tDates(iRow)
-            .ListColumns(amountCol).DataBodyRange.Rows(totalrows).Value = tAmounts(iRow)
-            .ListColumns(descCol).DataBodyRange.Rows(totalrows).Value = tDesc(iRow)
-            .ListColumns(subcatCol).DataBodyRange.Rows(totalrows).Value = tSubCateg(iRow)
-            .ListColumns(budgetCol).DataBodyRange.Rows(totalrows).Value = tBudgetSpread(iRow)
-        Next iRow
-    End With
-    
-    Call sortAccount(tbl)
-    Range("A" & CStr(tbl.ListRows.Count)).Select
-
+    For iRow = 1 To nbRows
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
+            .Range(1, dateCol).Value = tDates(iRow)
+            .Range(1, amountCol).Value = tAmounts(iRow)
+            .Range(1, descCol).Value = tDesc(iRow)
+            .Range(1, subcatCol).Value = tSubCateg(iRow)
+            .Range(1, budgetCol).Value = tBudgetSpread(iRow)
+        End With
+    Next iRow
 End Sub
 
 Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolean = False)
