@@ -66,7 +66,15 @@ Sub ImportAny()
         Set oTable = ActiveSheet.ListObjects(1)
         Dim dateCol As Integer, amountCol As Integer, descCol As Integer
         dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
-        amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+        
+        Dim defaultCurrency As String, accCurrency As String
+        defaultCurrency = GetParam("Default currency")
+        accCurrency = AccountCurrency(ActiveSheet.Name)
+        If accCurrency = defaultCurrency Then
+            amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+        Else
+            amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY) & " " & accCurrency)
+        End If
         descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
         Dim bank As String
         bank = Cells(3, 2).value
@@ -75,7 +83,6 @@ Sub ImportAny()
         ElseIf (bank = "LCL") Then
             Call ImportLCL(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "UBS") Then
-            amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
             Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
