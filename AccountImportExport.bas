@@ -69,7 +69,7 @@ Sub ImportAny()
         amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
         descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
         Dim bank As String
-        bank = Cells(3, 2).Value
+        bank = Cells(3, 2).value
         If (bank = "ING Direct") Then
             Call ImportING(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "LCL") Then
@@ -138,12 +138,12 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 
     Dim iRow As Long
     iRow = 1
-    Do While LenB(Cells(iRow, 1).Value) > 0
+    Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).Value = Cells(iRow, 1).Value
-            .Range(1, amountCol).Value = toAmount(Cells(iRow, 4).Value)
-            .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 2).Value, subsTable)
+            .Range(1, dateCol).value = Cells(iRow, 1).value
+            .Range(1, amountCol).value = toAmount(Cells(iRow, 4).value)
+            .Range(1, descCol).value = simplifyDescription(Cells(iRow, 2).value, subsTable)
         End With
         iRow = iRow + 1
     Loop
@@ -161,17 +161,17 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 
     Dim iRow As Long
     iRow = 1
-    Do While LenB(Cells(iRow + 1, 1).Value) > 0
+    Do While LenB(Cells(iRow + 1, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).Value = DateValue(Cells(iRow, 1).Value)
-            .Range(1, amountCol).Value = toAmount(Cells(iRow, 2).Value)
-            If (Cells(iRow, 3).Value Like "Ch?que") Then
-                .Range(1, descCol).Value = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).Value), subsTable)
-            ElseIf (Cells(iRow, 3).Value = "Virement") Then
-                .Range(1, descCol).Value = "Virement " & simplifyDescription(Cells(iRow, 5).Value, subsTable)
+            .Range(1, dateCol).value = DateValue(Cells(iRow, 1).value)
+            .Range(1, amountCol).value = toAmount(Cells(iRow, 2).value)
+            If (Cells(iRow, 3).value Like "Ch?que") Then
+                .Range(1, descCol).value = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).value), subsTable)
+            ElseIf (Cells(iRow, 3).value = "Virement") Then
+                .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(iRow, 5).value, subsTable)
             Else
-                .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 3).Value & " " & Cells(iRow, 5).Value & " " & Cells(iRow, 6).Value, subsTable)
+                .Range(1, descCol).value = simplifyDescription(Cells(iRow, 3).value & " " & Cells(iRow, 5).value & " " & Cells(iRow, 6).value, subsTable)
             End If
         End With
         iRow = iRow + 1
@@ -198,29 +198,29 @@ Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCo
     
     Dim iRow As Long
     iRow = 2
-    Do While LenB(Cells(iRow, 1).Value) > 0
+    Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             On Error GoTo ErrDate
-            .Range(1, dateCol).Value = DateValue(Trim$(Cells(iRow, 1).Value))
+            .Range(1, dateCol).value = DateValue(Trim$(Cells(iRow, 1).value))
             GoTo CheckAmount
 ErrDate:
-            .Range(1, dateCol).Value = toDate(Trim$(Cells(iRow, 1).Value))
+            .Range(1, dateCol).value = toDate(Trim$(Cells(iRow, 1).value))
 CheckAmount:
             Dim desc As String
             desc = ""
-            If LenB(Trim$(Cells(iRow, 3).Value)) = 0 Then
-                .Range(1, amountCol).Value = toAmount(Trim$(Cells(iRow, 4).Value))
-                If LenB(Trim$(Cells(iRow, 6).Value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(iRow, 6).Value) & " : ", subsTable)
+            If LenB(Trim$(Cells(iRow, 3).value)) = 0 Then
+                .Range(1, amountCol).value = toAmount(Trim$(Cells(iRow, 4).value))
+                If LenB(Trim$(Cells(iRow, 6).value)) > 0 Then
+                    desc = simplifyDescription(Trim$(Cells(iRow, 6).value) & " : ", subsTable)
                 End If
             Else
-                .Range(1, amountCol).Value = -toAmount(Trim$(Cells(iRow, 3).Value))
-                If LenB(Trim$(Cells(iRow, 5).Value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(iRow, 5).Value) & " : ", subsTable)
+                .Range(1, amountCol).value = -toAmount(Trim$(Cells(iRow, 3).value))
+                If LenB(Trim$(Cells(iRow, 5).value)) > 0 Then
+                    desc = simplifyDescription(Trim$(Cells(iRow, 5).value) & " : ", subsTable)
                 End If
             End If
-            .Range(1, descCol).Value = desc & Trim$(Cells(iRow, 2).Value)
+            .Range(1, descCol).value = desc & Trim$(Cells(iRow, 2).value)
         End With
         iRow = iRow + 1
     Loop
@@ -266,13 +266,13 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
 
     Dim iRow As Long
     iRow = 2
-    Do While LenB(Cells(iRow, 1).Value) > 0
-        A = Split(Cells(iRow, 1).Value, ";", -1, vbTextCompare)
+    Do While LenB(Cells(iRow, 1).value) > 0
+        A = Split(Cells(iRow, 1).value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             Dim desc As String, comment As String
             Dim amount As Double
-            .Range(1, dateCol).Value = toDate(Trim$(A(0)))
+            .Range(1, dateCol).value = toDate(Trim$(A(0)))
             desc = Trim$(A(1))
             If LenB(Trim$(A(2))) = 0 Then
                 amount = CDbl(Trim$(A(3)))
@@ -281,11 +281,11 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
                 amount = -CDbl(Trim$(A(2)))
                 comment = Trim$(A(4))
             End If
-            .Range(1, amountCol).Value = amount
+            .Range(1, amountCol).value = amount
             If comment <> "" Then
-                .Range(1, descCol).Value = simplifyDescription(desc & " --> " & comment, subsTable)
+                .Range(1, descCol).value = simplifyDescription(desc & " --> " & comment, subsTable)
             Else
-                .Range(1, descCol).Value = simplifyDescription(desc, subsTable)
+                .Range(1, descCol).value = simplifyDescription(desc, subsTable)
             End If
         iRow = iRow + 1
     Loop
@@ -309,22 +309,22 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
     
     Dim iRow As Long
     iRow = 2
-    Do While LenB(Cells(iRow, 1).Value) > 0
+    Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             If Cells(iRow, 13) = "Solde prix prestations" Then
-                .Range(1, amountCol).Value = 0
-            ElseIf LenB(Cells(iRow, 18).Value) > 0 Then
-                .Range(1, amountCol).Value = toAmount(Cells(iRow, 18).Value) ' Sous-montant column
-            ElseIf LenB(Cells(iRow, 19).Value) > 0 Then
-                .Range(1, amountCol).Value = -toAmount(Cells(iRow, 19).Value) ' Debit column
-            ElseIf LenB(Cells(iRow, 20).Value) > 0 Then
-                .Range(1, amountCol).Value = toAmount(Cells(iRow, 20).Value) ' Credit column
+                .Range(1, amountCol).value = 0
+            ElseIf LenB(Cells(iRow, 18).value) > 0 Then
+                .Range(1, amountCol).value = toAmount(Cells(iRow, 18).value) ' Sous-montant column
+            ElseIf LenB(Cells(iRow, 19).value) > 0 Then
+                .Range(1, amountCol).value = -toAmount(Cells(iRow, 19).value) ' Debit column
+            ElseIf LenB(Cells(iRow, 20).value) > 0 Then
+                .Range(1, amountCol).value = toAmount(Cells(iRow, 20).value) ' Credit column
             Else
-                .Range(1, amountCol).Value = 0
+                .Range(1, amountCol).value = 0
             End If
-            .Range(1, dateCol).Value = CDate(DateValue(Replace(Cells(iRow, 12).Value, ".", "/")))
-            .Range(1, descCol).Value = simplifyDescription(Cells(iRow, 13).Value & " " & Cells(iRow, 14).Value & " " & Cells(iRow, 15).Value, subsTable)
+            .Range(1, dateCol).value = CDate(DateValue(Replace(Cells(iRow, 12).value, ".", "/")))
+            .Range(1, descCol).value = simplifyDescription(Cells(iRow, 13).value & " " & Cells(iRow, 14).value & " " & Cells(iRow, 15).value, subsTable)
         End With
         iRow = iRow + 1
     Loop
@@ -366,20 +366,20 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     Dim iRow As Long
     iRow = 1
     ' Read Header part
-    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+    Do While LenB(Cells(iRow, 1).value) > 0 And iRow < MAX_IMPORT
         iRow = iRow + 1
         If Cells(iRow, 1) = "Korach Exporter version" Then
-            exporterVersion = Cells(iRow, 2).Value
+            exporterVersion = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "No Compte" Then
-            accountNbr = Cells(iRow, 2).Value
+            accountNbr = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Nom Compte" Then
-            accountName = Cells(iRow, 2).Value
+            accountName = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Banque" Then
-            bank = Cells(iRow, 2).Value
+            bank = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Status" Then
-            accStatus = Cells(iRow, 2).Value
+            accStatus = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) Like "Disponibilit?" Then
-            availability = Cells(iRow, 2).Value
+            availability = Cells(iRow, 2).value
         Else
             ' Do nothing
         End If
@@ -388,7 +388,7 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     iRow = iRow + 1
     transactionStart = iRow
     ' Count nbr of transaction
-    Do While LenB(Cells(iRow, 1).Value) > 0 And iRow < MAX_IMPORT
+    Do While LenB(Cells(iRow, 1).value) > 0 And iRow < MAX_IMPORT
         iRow = iRow + 1
     Loop
     ' Read transaction part
@@ -402,19 +402,19 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     
     For iRow = transactionStart To transactionStop
         i = iRow - transactionStart + 1
-        tDates(i) = Cells(iRow, 1).Value
-        tDesc(i) = simplyDescription(Cells(iRow, 4).Value, subsTable)
-        tAmounts(i) = toAmount(Cells(iRow, 3).Value)
-        tSubCateg(i) = Cells(iRow, 5).Value
-        tBudgetSpread(i) = Cells(iRow, 7).Value
+        tDates(i) = Cells(iRow, 1).value
+        tDesc(i) = simplyDescription(Cells(iRow, 4).value, subsTable)
+        tAmounts(i) = toAmount(Cells(iRow, 3).value)
+        tSubCateg(i) = Cells(iRow, 5).value
+        tBudgetSpread(i) = Cells(iRow, 7).value
     Next iRow
     ActiveWorkbook.Close
     
-    ActiveSheet.Cells(1, 2).Value = accountName
-    ActiveSheet.Cells(2, 2).Value = accountNbr
-    ActiveSheet.Cells(3, 2).Value = bank
-    ActiveSheet.Cells(4, 2).Value = accStatus
-    ActiveSheet.Cells(5, 2).Value = availability
+    ActiveSheet.Cells(1, 2).value = accountName
+    ActiveSheet.Cells(2, 2).value = accountNbr
+    ActiveSheet.Cells(3, 2).value = bank
+    ActiveSheet.Cells(4, 2).value = accStatus
+    ActiveSheet.Cells(5, 2).value = availability
 
     Dim subcatCol As Long, budgetCol As Long
     subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
@@ -422,11 +422,11 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     For iRow = 1 To nbRows
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).Value = tDates(iRow)
-            .Range(1, amountCol).Value = tAmounts(iRow)
-            .Range(1, descCol).Value = tDesc(iRow)
-            .Range(1, subcatCol).Value = tSubCateg(iRow)
-            .Range(1, budgetCol).Value = tBudgetSpread(iRow)
+            .Range(1, dateCol).value = tDates(iRow)
+            .Range(1, amountCol).value = tAmounts(iRow)
+            .Range(1, descCol).value = tDesc(iRow)
+            .Range(1, subcatCol).value = tSubCateg(iRow)
+            .Range(1, budgetCol).value = tBudgetSpread(iRow)
         End With
     Next iRow
 End Sub
@@ -448,8 +448,8 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     exportTo = ActiveWorkbook.Name
     Range("A1").Select
     ActiveSheet.Paste
-    Range("A9").Value = "Exporter version"
-    Range("B9").Value = 1.2
+    Range("A9").value = "Exporter version"
+    Range("B9").value = 1.2
 
     Workbooks(exportFrom).Activate
     Sheets(ws).ListObjects(1).DataBodyRange.Select
@@ -501,7 +501,7 @@ Sub ExportAll()
     If LenB(sFolder) > 0 Then ' if a file was chosen
         Call FreezeDisplay
         For Each ws In Worksheets
-            If ws.Cells(1, 1).Value = "Nom Compte" Then
+            If ws.Cells(1, 1).value = "Nom Compte" Then
                 filename = sFolder & "\" & ws.Name & ".csv"
                 Call ExportGeneric(ws.Name, filename, True)
             End If
@@ -517,4 +517,5 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
+
 

@@ -1178,7 +1178,7 @@ End Function
 
 
 Public Function InsertElementIntoArray(InputArray As Variant, index As Long, _
-    Value As Variant) As Boolean
+    value As Variant) As Boolean
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' InsertElementIntoArray
 ' This function inserts an element with a value of Value into InputArray at locatation Index.
@@ -1250,7 +1250,7 @@ ReDim Preserve InputArray(LBound(InputArray) To UBound(InputArray) + 1)
 '''''''''''''''''''''''''''''''''''''''''''''''
 On Error Resume Next
 Err.Clear
-InputArray(UBound(InputArray)) = Value
+InputArray(UBound(InputArray)) = value
 If Err.Number <> 0 Then
     ''''''''''''''''''''''''''''''''''''''
     ' An error occurred, most likely
@@ -1271,7 +1271,7 @@ Next Ndx
 '''''''''''''''''''''''''''''''''''''''''''''
 ' Insert Value at Index
 '''''''''''''''''''''''''''''''''''''''''''''
-InputArray(index) = Value
+InputArray(index) = value
 
     
 InsertElementIntoArray = True
