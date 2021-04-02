@@ -75,6 +75,7 @@ Sub ImportAny()
         ElseIf (bank = "LCL") Then
             Call ImportLCL(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "UBS") Then
+            amountCol = GetColumnNumberFromName(oTable, "Montant CHF")
             Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
@@ -306,7 +307,6 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
     Else
         Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     End If
-    
     Dim iRow As Long
     iRow = 2
     Do While LenB(Cells(iRow, 1).value) > 0
