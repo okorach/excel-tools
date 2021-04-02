@@ -98,7 +98,7 @@ Public Function GetTableAsArray(oTable As ListObject, Optional colList As Varian
     For Each C In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(j, i) = oTable.ListColumns(C).DataBodyRange.Rows(j).Value
+            arr(j, i) = oTable.ListColumns(C).DataBodyRange.Rows(j).value
         Next j
     Next C
     GetTableAsArray = arr
@@ -114,7 +114,7 @@ Public Sub SetTableFromArray(oTable As ListObject, oArray As Variant)
     For i = 1 To nbrRows
         oTable.ListRows.Add
         For j = 1 To nbrCols
-            oTable.ListColumns(j).DataBodyRange.Rows(i).Value = oArray(i, j)
+            oTable.ListColumns(j).DataBodyRange.Rows(i).value = oArray(i, j)
         Next j
     Next i
 End Sub
@@ -129,11 +129,11 @@ Public Function CopyTable(oSrcTable As ListObject, oTgtTable As ListObject, Opti
     Call ResizeTable(oTgtTable, oSrcTable.ListRows.Count)
     If (IsNumeric(colList)) Then
         For i = 1 To oSrcTable.ListColumns.Count
-           oTgtTable.ListColumns(i).DataBodyRange.Value = oSrcTable.ListColumns(i).DataBodyRange.Value
+           oTgtTable.ListColumns(i).DataBodyRange.value = oSrcTable.ListColumns(i).DataBodyRange.value
         Next i
     Else
         For Each col In colList
-           oTgtTable.ListColumns(col).DataBodyRange.Value = oSrcTable.ListColumns(col).DataBodyRange.Value
+           oTgtTable.ListColumns(col).DataBodyRange.value = oSrcTable.ListColumns(col).DataBodyRange.value
         Next col
     End If
     CopyTable = True
@@ -150,7 +150,7 @@ Public Sub AppendTableToTable(oSrcTable As ListObject, oTgtTable As ListObject, 
     cList = GetColList(oSrcTable, colList)
     For Each col In cList
         For j = 1 To oSrcTable.ListColumns(col).DataBodyRange.Rows.Count
-            oTgtTable.ListColumns(col).DataBodyRange.Rows(j + offset).Value = oSrcTable.ListColumns(col).DataBodyRange.Rows(j).Value
+            oTgtTable.ListColumns(col).DataBodyRange.Rows(j + offset).value = oSrcTable.ListColumns(col).DataBodyRange.Rows(j).value
         Next j
     Next col
 End Sub
@@ -206,9 +206,9 @@ Public Function GetTableColumn(oTable As ListObject, colNbrOrName, Optional twoD
     nbrRows = oTable.ListRows.Count
     ReDim arr(1 To nbrRows, 1 To 1) As Variant
     If nbrRows = 1 Then
-        arr(1, 1) = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
+        arr(1, 1) = oTable.ListColumns(colNbrOrName).DataBodyRange.value
     Else
-        arr = oTable.ListColumns(colNbrOrName).DataBodyRange.Value
+        arr = oTable.ListColumns(colNbrOrName).DataBodyRange.value
     End If
     If (twoD) Then
         GetTableColumn = arr
@@ -233,7 +233,7 @@ Public Sub SetTableColumn(oTable As ListObject, colNbrOrName As Variant, oArray 
     If (withResize) Then
         Call ResizeTable(oTable, UBound(arr, 1))
     End If
-    oTable.ListColumns(colNbrOrName).DataBodyRange.Value = arr
+    oTable.ListColumns(colNbrOrName).DataBodyRange.value = arr
 End Sub
 
 '------------------------------------------------------------------------------
@@ -324,7 +324,7 @@ End Function
 '------------------------------------------------------------------------------
 Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
     For j = 1 To oTable.ListColumns.Count
-        oTable.ListRows(rowNbr).DataBodyRange.Columns(j).Value = ""
+        oTable.ListRows(rowNbr).DataBodyRange.Columns(j).value = ""
     Next j
 End Sub
 
