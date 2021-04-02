@@ -705,18 +705,19 @@ End Function
 ' Private formatting functions
 '----------------------------------------------------------------------------
 
-Private Sub setBtnAttributes(oBtn As Shape, Optional font As String = "", Optional text As String = "", Optional fontStyle As String = "", Optional size As Integer = 0)
+Private Sub setBtnAttributes(oBtn As Shape, Optional font As String = vbNullString, Optional text As String = vbNullString, _
+                             Optional fontStyle As String = vbNullString, Optional size As Integer = 0)
     oBtn.Select
-    If text <> "" Then
+    If text <> vbNullString Then
         Selection.Characters.text = text
     End If
-    If font <> "" Then
+    If font <> vbNullString Then
         Selection.Characters.font.Name = font
     End If
     If size <> 0 Then
         Selection.Characters.font.size = size
     End If
-    If fontStyle <> "" Then
+    If fontStyle <> vbNullString Then
         Selection.Characters.font.fontStyle = style
     End If
     'With Selection.Characters().font
@@ -781,7 +782,7 @@ Private Sub formatAccountButtons(ws As Worksheet)
             Call setBtnAttributes(s, text:="~", font:="Webdings", size:=18)
         ElseIf s.Name = "BtnImport" Then
             Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:=Chr(71), font:="Webdings", size:=18)
+            Call setBtnAttributes(s, text:=Chr$(71), font:="Webdings", size:=18)
         ElseIf s.Name = "BtnAddEntry" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
             Call setBtnAttributes(s, text:="+1", font:="Arial", size:=14)
