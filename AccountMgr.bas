@@ -22,6 +22,7 @@ Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
 Public Const PARAMS_SHEET As String = "Paramètres"
+
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const BALANCE_SHEET As String = "Solde"
 
@@ -36,6 +37,7 @@ Private Const MAX_MERGE_SIZE As Long = 100000
 
 Private Const ACCOUNTS_TABLE As String = "tblAccounts"
 Private Const ACCOUNT_TYPES_TABLE As String = "tblAccountTypes"
+Public Const PARAMS_TABLE As String = "TblParams"
 
 Private Const ACCOUNT_NAME_LABEL As String = "A1"
 Private Const ACCOUNT_NAME_VALUE As String = "B1"
