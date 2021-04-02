@@ -83,7 +83,7 @@ Public Sub MergeAccounts(columnKeys As Variant)
         Dim array1d() As Variant
         For Each ws In Worksheets
            ' Make sure the sheet is not a template or anything else than an account
-           If (IsAnAccountSheet(ws)) Then
+           If (IsAnAccount(ws)) Then
                 balanceNdx = accountBalanceTableIndex(ws.Name)
                 If balanceNdx = 0 Then
                     balanceNdx = 1
@@ -258,16 +258,17 @@ Public Sub FormatAllAccountSheets()
     Dim ws As Worksheet
     Call ShowAllSheets
     For Each ws In Worksheets
-       'Call FormatAccountSheet(ws)
-       Call FormatAccount(ws.Name)
+       If IsAnAccount(ws) Then
+           Call FormatAccount(ws.Name)
+        End If
     Next ws
     Call HideClosedAccounts
-    Call hideTemplateAccounts
+    Call hideTemplateAccountsamountCio
 End Sub
 
 '-------------------------------------------------
 Public Function isTemplate(ws As Worksheet) As Boolean
-    isTemplate = (ws.Cells(1, 2).value = "TEMPLATE")
+    isTemplate = (ws.Name Like "*TEMPLATE*")
 End Function
 
 '-------------------------------------------------
@@ -399,7 +400,7 @@ Public Function IsAccountInBudget(accountId As String) As Boolean
 End Function
 '-------------------------------------------------
 Public Function IsOpen(accountId As String) As Boolean
-    IsOpen = (AccountStatus(accountId) = "Open")
+    IsOpen = (IsAnAccount(accountId) And AccountStatus(accountId) = "Open")
 End Function
 
 Public Function IsClosed(accountId As String) As Boolean
@@ -435,8 +436,19 @@ Public Function AccountExists(accountId As String) As Boolean
     AccountExists = (SheetExists(accountId) And Sheets(accountId).Range(ACCOUNT_NAME_LABEL) = GetLabel(ACCOUNT_NAME_KEY))
 End Function
 '-------------------------------------------------
-Public Function IsAnAccountSheet(ByVal ws As Worksheet) As Boolean
-    IsAnAccountSheet = (ws.Cells(1, 1).value = GetNamedVariableValue("accountIdentifier") And Not isTemplate(ws))
+Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
+    IsAnAccount = True
+    If VarType(accountIdOrWs) = vbString Then
+        accountId = accountIdOrWs
+    Else
+        accountId = accountIdOrWs.Name
+    End If
+    On Error Resume Next
+    x = Application.WorksheetFunction.VLookup(accountId, Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).DataBodyRange, 1, False)
+    If Err.Number <> 0 Then
+        IsAnAccount = False
+    End If
+    On Error GoTo 0
 End Function
 
 Public Function AccountDepositHistory(accountId As String) As Variant
@@ -513,7 +525,7 @@ Public Sub CalcInterestForAllAccounts()
     FreezeDisplay
     For Each ws In Worksheets
         accountId = getAccountId(ws)
-        If IsAnAccountSheet(ws) And IsOpen(accountId) And IsInterestAccount(accountId) Then
+        If IsAnAccount(ws) And IsOpen(accountId) And IsInterestAccount(accountId) Then
             Call CalcAccountInterests(accountId)
         End If
     Next ws
