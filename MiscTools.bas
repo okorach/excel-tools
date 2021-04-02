@@ -30,17 +30,34 @@ Public Sub UnfreezeDisplay()
 End Sub
 
 Public Sub ScrollToBottom()
-    ActiveWindow.ScrollRow = ActiveSheet.ListObjects(1).ListRows.Count - 10
+    If ActiveSheet.ListObjects(1).ListRows.Count > 10 Then
+        ActiveWindow.ScrollRow = ActiveSheet.ListObjects(1).ListRows.Count - 10
+    End If
 End Sub
 
 Public Sub ScrollToTop()
     ActiveWindow.ScrollRow = 10
 End Sub
 
+Public Function max(ByVal val1 As Double, ByVal val2 As Double) As Double
+    If val1 > val2 Then
+        max = val1
+    Else
+        max = val2
+    End If
+End Function
+Public Function min(ByVal val1 As Double, ByVal val2 As Double) As Double
+    If val1 < val2 Then
+        min = val1
+    Else
+        min = val2
+    End If
+End Function
+
 Public Function SheetExists(sheetToFind As String) As Boolean
     SheetExists = False
     For Each Sheet In Worksheets
-        If sheetToFind = Sheet.name Then
+        If sheetToFind = Sheet.Name Then
             SheetExists = True
             Exit Function
         End If
@@ -55,7 +72,7 @@ Public Sub ShowAllSheets()
 End Sub
 
 Public Function GetNamedVariableValue(varName As String)
-    GetNamedVariableValue = Names(varName).RefersToRange.Value
+    GetNamedVariableValue = Names(varName).RefersToRange.value
 End Function
 
 
@@ -72,7 +89,7 @@ Public Sub ErrorMessage(key1 As String, Optional key2 As String = "")
     MsgBox (msg)
 End Sub
 
-Public Sub FreezeCell(R As String, Optional wsName As String = "")
+Public Sub FreezeCell(r As String, Optional wsName As String = "")
     ' Replaces a cell that may contain a formula by the result of this formula
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
@@ -82,19 +99,19 @@ Public Sub FreezeCell(R As String, Optional wsName As String = "")
     Else
         Set ws = Worksheets(wsName)
     End If
-        If (IsError(ws.Range(R).Value)) Then
-            ws.Range(R).Value = 0
+        If (IsError(ws.Range(r).value)) Then
+            ws.Range(r).value = 0
         Else
-            ws.Range(R).Formula = Range(R).Value
+            ws.Range(r).Formula = Range(r).value
         End If
 End Sub
 
 '------------------------------------------------------
 Public Sub SwapCells(cell1 As String, cell2 As String)
     Dim Temp As Variant
-    Temp = Range(cell1).Value
-    Range(cell1).Value = Range(cell2).Value
-    Range(cell2).Value = Temp
+    Temp = Range(cell1).value
+    Range(cell1).value = Range(cell2).value
+    Range(cell2).value = Temp
 End Sub
 
 '------------------------------------------------------
@@ -106,16 +123,16 @@ Public Sub SwapCellsXY(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Lon
     Else
         Set ws = Sheets(wsName)
     End If
-    Temp = ws.Cells(Row1, Col1).Value
-    ws.Cells(Row1, Col1).Value = ws.Cells(Row2, Col2).Value
-    ws.Cells(Row2, Col2).Value = Temp
+    Temp = ws.Cells(Row1, Col1).value
+    ws.Cells(Row1, Col1).value = ws.Cells(Row2, Col2).value
+    ws.Cells(Row2, Col2).value = Temp
 End Sub
 
 Public Sub FreezeCellXY(row As Long, col As Long, Optional wsName As String = "")
     Call FreezeCell(Cells(row, col).Address(False, False), wsName)
 End Sub
 
-Public Sub FreezeRegion(R As String, Optional wsName As String = "")
+Public Sub FreezeRegion(r As String, Optional wsName As String = "")
     ' Replaces a cell that may contain a formula by the result of this formula
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
@@ -124,14 +141,14 @@ Public Sub FreezeRegion(R As String, Optional wsName As String = "")
     Else
         Set ws = Sheets(wsName)
     End If
-    ws.Range(R).Copy
-    ws.Range(R).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+    ws.Range(r).Copy
+    ws.Range(r).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
 End Sub
 
 Public Sub FreezeRegionXY(x1 As Long, y1 As Long, x2 As Long, y2 As Long, Optional wsName As String = "")
-    Dim R As String
-    R = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
-    Call FreezeRegion(R, wsName)
+    Dim r As String
+    r = Cells(x1, y1).Address(False, False) & ":" & Cells(x2, y2).Address(False, False)
+    Call FreezeRegion(r, wsName)
 End Sub
 
 Sub reformatAmount(colObject As ListColumn)
@@ -183,9 +200,9 @@ End Sub
 '-------------------------------------------------
 Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Worksheet = Empty)
     If IsEmpty(ws) Then
-        Rows(rowString & ":" & rowString).Font.size = size
+        Rows(rowString & ":" & rowString).font.size = size
     Else
-        ws.Rows(rowString & ":" & rowString).Font.size = size
+        ws.Rows(rowString & ":" & rowString).font.size = size
     End If
 End Sub
 
@@ -355,7 +372,7 @@ On Error GoTo MyErr
 
 'Identify PivotTable and capture source Range
     'ActiveCell.PivotTable.Name
-    Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.name)
+    Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.Name)
     Set oSourceRange = Range(Application.ConvertFormula(oPivotTable.SourceData, xlR1C1, xlA1))
 
 'Refresh PivotTable to synch with latest data
@@ -365,7 +382,7 @@ On Error GoTo MyErr
     For i = 1 To oSourceRange.Columns.Count
 
     'Trap the column name and number format for first row of the column
-        strLabel = oSourceRange.Cells(1, i).Value
+        strLabel = oSourceRange.Cells(1, i).value
         strFormat = oSourceRange.Cells(2, i).NumberFormat
 
         'Now loop through the fields PivotTable data area
