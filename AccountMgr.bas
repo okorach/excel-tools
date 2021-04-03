@@ -21,8 +21,6 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Const PARAMS_SHEET As String = "Paramètres"
-
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const BALANCE_SHEET As String = "Solde"
 
@@ -37,24 +35,13 @@ Private Const MAX_MERGE_SIZE As Long = 100000
 
 Private Const ACCOUNTS_TABLE As String = "tblAccounts"
 Private Const ACCOUNT_TYPES_TABLE As String = "tblAccountTypes"
-Public Const PARAMS_TABLE As String = "TblParams"
 
-Private Const ACCOUNT_NAME_LABEL As String = "A1"
 Private Const ACCOUNT_NAME_VALUE As String = "B1"
-Private Const ACCOUNT_NBR_LABEL As String = "A2"
 Private Const ACCOUNT_NBR_VALUE As String = "B2"
-Private Const ACCOUNT_BANK_LABEL As String = "A3"
 Private Const ACCOUNT_BANK_VALUE As String = "B3"
-Private Const ACCOUNT_STATUS_LABEL As String = "A4"
 Private Const ACCOUNT_STATUS_VALUE As String = "B4"
-Private Const ACCOUNT_AVAIL_LABEL As String = "A5"
 Private Const ACCOUNT_AVAIL_VALUE As String = "B5"
-Private Const ACCOUNT_CURRENCY_LABEL As String = "A6"
 Private Const ACCOUNT_CURRENCY_VALUE As String = "B6"
-Private Const ACCOUNT_TYPE_LABEL As String = "A7"
-Private Const ACCOUNT_TYPE_VALUE As String = "B7"
-Private Const IN_BUDGET_LABEL As String = "A8"
-Private Const IN_BUDGET_VALUE As String = "B8"
 
 Private Const MERGE_SHEET As String = "Comptes Merge"
 Private Const ACCOUNT_MERGE_TABLE As String = "AccountsMerge"
@@ -93,7 +80,7 @@ Public Sub MergeAccounts(columnKeys As Variant)
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
                     arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, ws.Cells(1, 2).value)
-                ElseIf (colKey = IN_BUDGET_KEY And Not IsAccountInBudget(ws.Name)) Then
+                ElseIf (colKey = IN_BUDGET_KEY And Not AccountIsInBudget(ws.Name)) Then
                     arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, 0)
                 Else
                     arr1d = GetTableColumn(ws.ListObjects(balanceNdx), col)
@@ -219,16 +206,17 @@ Public Sub AccountsFullRefresh()
     ' MsgBox ("Full refresh duration = " & CStr(DateDiff("s", startTime, Now)))
 End Sub
 
-Sub CreateAccount()
-    accountNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
-    accountName = InputBox("Account name ?", "Account Name", "<accountName>")
+Sub AccountCreate()
+    Dim accNbr As String, accName As String
+    accNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
+    accName = InputBox("Account name ?", "Account Name", "<accountName>")
     Sheets("Account Template").Visible = True
     Sheets("Account Template").Copy Before:=Sheets(1)
     Sheets("Account Template").Visible = False
     With Sheets(1)
-        .Name = accountName
+        .Name = accName
         ' .Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
-        .Range(ACCOUNT_NAME_VALUE).value = accountName
+        .Range(ACCOUNT_NAME_VALUE).value = accName
         formulaRoot = "=VLOOKUP(B$1," & ACCOUNTS_TABLE
         .Range(ACCOUNT_NBR_VALUE).Formula = formulaRoot & ",2,FALSE)"
         .Range(ACCOUNT_BANK_VALUE).Formula = formulaRoot & ",4,FALSE)"
@@ -237,10 +225,10 @@ Sub CreateAccount()
     End With
 End Sub
 
-Public Sub FormatCurrentAccount()
-    Call FormatAccount(ActiveSheet.Name)
+Public Sub AccountFormatCurrent()
+    Call AccountFormat(ActiveSheet.Name)
 End Sub
-Public Sub FormatAccount(accountId As String)
+Public Sub AccountFormat(accountId As String)
     Dim ws As Worksheet
     Set ws = getAccountSheet(accountId)
     ws.Cells.RowHeight = 13
@@ -253,7 +241,7 @@ Public Sub FormatAccount(accountId As String)
 End Sub
 
 
-Public Sub FormatAllAccountSheets()
+Public Sub AccountFormatAllSheets()
 '
 '  Reformat all account sheets
 '
@@ -261,11 +249,11 @@ Public Sub FormatAllAccountSheets()
     Call ShowAllSheets
     For Each ws In Worksheets
        If IsAnAccount(ws) Then
-           Call FormatAccount(ws.Name)
+           Call AccountFormat(ws.Name)
         End If
     Next ws
-    Call HideClosedAccounts
-    Call hideTemplateAccountsamountCio
+    Call AccountHideClosed
+    Call AccountHideTemplates
 End Sub
 
 '-------------------------------------------------
@@ -274,29 +262,25 @@ Public Function isTemplate(ws As Worksheet) As Boolean
 End Function
 
 '-------------------------------------------------
-Private Sub setClosedAccountsVisibility(visibility As XlSheetVisibility)
+Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
     Dim ws As Worksheet
     For Each ws In Worksheets
-        If IsClosed(ws.Name) Then
+        If AccountExists(ws.Name) And AccountIsClosed(ws.Name) Then
             ws.Visible = visibility
         End If
     Next ws
 End Sub
-
-'-------------------------------------------------
-Public Sub HideClosedAccounts()
-    If GetNamedVariableValue("hideClosedAccounts") = 1 Then
-        Call setClosedAccountsVisibility(xlSheetHidden)
+Public Sub AccountHideClosed()
+    If GetGlobalParam("hideClosedAccounts") = 1 Then
+        Call accountSetClosedVisibility(xlSheetHidden)
     End If
 End Sub
 
-'-------------------------------------------------
-Public Sub showClosedAccounts()
-    Call setClosedAccountsVisibility(xlSheetVisible)
+Public Sub AccountShowClosed()
+    Call accountSetClosedVisibility(xlSheetVisible)
 End Sub
-
 '-------------------------------------------------
-Private Sub setTemplateAccountsVisibility(visibility As XlSheetVisibility)
+Private Sub accountSetTemplatesVisibility(visibility As XlSheetVisibility)
     Dim ws As Worksheet
     For Each ws In Worksheets
         If isTemplate(ws) Then
@@ -304,14 +288,15 @@ Private Sub setTemplateAccountsVisibility(visibility As XlSheetVisibility)
         End If
     Next ws
 End Sub
-'-------------------------------------------------
-Public Sub hideTemplateAccounts()
-    Call setTemplateAccountsVisibility(xlSheetHidden)
+
+Public Sub AccountHideTemplates()
+    Call accountSetTemplatesVisibility(xlSheetHidden)
 End Sub
-'-------------------------------------------------
-Public Sub showTemplateAccounts()
-    Call setTemplateAccountsVisibility(xlSheetVisible)
+
+Public Sub AccountShowTemplates()
+    Call accountSetTemplatesVisibility(xlSheetVisible)
 End Sub
+
 Public Sub refreshOpenAccountsList()
     Dim i As Long, nbrAccounts As Long
     Call FreezeDisplay
@@ -338,75 +323,52 @@ End Sub
 Public Sub SortCurrentAccount()
     Call SortTable(ActiveSheet.ListObjects(1), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
 End Sub
-
-'-------------------------------------------------
-Public Function accountType(accountId As String) As String
-    Dim ws As Worksheet
-    Set ws = getAccountSheet(accountId)
-    If (accountId = "Account Template") Then
-        accountType = ACCOUNT_TYPE_STANDARD
-    ElseIf (Not AccountExists(accountId)) Then
-        accountType = "ERROR: Not an account"
-    Else
-        accountType = ws.Range(ACCOUNT_TYPE_VALUE).value
-    End If
-End Function
 Public Function IsInterestAccount(accountId As String) As Boolean
     Dim accType As String
-    accType = accountType(accountId)
+    accType = AccountType(accountId)
     IsInterestAccount = Not (accType = "Courant" Or accType = "Autres")
 End Function
+Public Function AccountInterestPeriod(AccountType) As Integer
+    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE).DataBodyRange, AccountType, 2))
+End Function
+
+
 '-------------------------------------------------
-Private Function AccountAttribute(accountId As String, attributeCell As String) As String
-    AccountAttribute = ""
-    If (AccountExists(accountId)) Then
-        Dim ws As Worksheet
-        Set ws = getAccountSheet(accountId)
-        AccountAttribute = ws.Range(attributeCell).value
-    End If
+Public Function AccountExists(accountId As String) As Boolean
+    AccountExists = (SheetExists(accountId) And KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2) <> vbNull)
 End Function
 Public Function AccountNumber(accountId As String) As String
-    AccountNumber = AccountAttribute(accountId, ACCOUNT_NBR_VALUE)
+    AccountNumber = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2))
 End Function
-
+Public Function AccountName(accountId As String) As String
+    AccountName = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 3))
+End Function
 Public Function AccountBank(accountId As String) As String
-    AccountBank = AccountAttribute(accountId, ACCOUNT_BANK_VALUE)
+    AccountBank = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 4))
 End Function
-
-Public Function AccountStatus(accountId As String) As String
-    AccountStatus = AccountAttribute(accountId, ACCOUNT_STATUS_VALUE)
-End Function
-
 Public Function AccountAvailability(accountId As String) As String
-    AccountAvailability = AccountAttribute(accountId, ACCOUNT_AVAIL_VALUE)
+    AccountAvailability = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 5))
 End Function
-
+Public Function AccountStatus(accountId As String) As String
+    AccountStatus = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 6))
+End Function
+Public Function AccountIsOpen(accountId As String) As Boolean
+    AccountIsOpen = (AccountStatus(accountId) = "Open")
+End Function
+Public Function AccountIsClosed(accountId As String) As Boolean
+    AccountIsClosed = Not AccountIsOpen(accountId)
+End Function
 Public Function AccountCurrency(accountId As String) As String
-    AccountCurrency = AccountAttribute(accountId, ACCOUNT_CURRENCY_VALUE)
+    AccountCurrency = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 7))
 End Function
-
-
-Public Function AccountTax(accountId) As Double
-    AccountTax = CDbl(Application.WorksheetFunction.VLookup(accountId, Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).DataBodyRange, 10, False))
+Public Function AccountType(accountId As String) As String
+    AccountType = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 8))
 End Function
-
-
-Public Function AccountInterestPeriod(accountType) As Integer
-    AccountInterestPeriod = CInt(Application.WorksheetFunction.VLookup(accountType, Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE).DataBodyRange, 2, False))
+Public Function AccountIsInBudget(accountId As String) As Boolean
+    AccountInBudget = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 9) = 1)
 End Function
-
-
-'-------------------------------------------------
-Public Function IsAccountInBudget(accountId As String) As Boolean
-    IsAccountInBudget = (AccountExists(accountId) And Sheets(accountId).Range(IN_BUDGET_VALUE).value = "Yes")
-End Function
-'-------------------------------------------------
-Public Function IsOpen(accountId As String) As Boolean
-    IsOpen = (IsAnAccount(accountId) And AccountStatus(accountId) = "Open")
-End Function
-
-Public Function IsClosed(accountId As String) As Boolean
-    IsClosed = Not IsOpen(accountId)
+Public Function AccountTaxRate(accountId As String) As Double
+    AccountTaxRate = CDbl(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 10))
 End Function
 
 Public Sub AddSavingsRow()
@@ -417,26 +379,23 @@ Private Sub AddInvestmentRow(oTable As ListObject)
     oTable.ListRows.Add
     nbRows = oTable.ListRows.Count
     
-    col = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = Date
     
-    col = GetColumnNumberFromName(oTable, GetLabel(BALANCE_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(BALANCE_KEY))
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
     
-    col = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(SUBCATEGORY_KEY))
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
     
-    col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
     
-    col = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
     oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
 End Sub
 
-'-------------------------------------------------
-Public Function AccountExists(accountId As String) As Boolean
-    AccountExists = (SheetExists(accountId) And Sheets(accountId).Range(ACCOUNT_NAME_LABEL) = GetLabel(ACCOUNT_NAME_KEY))
-End Function
+
 '-------------------------------------------------
 Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     IsAnAccount = True
@@ -445,12 +404,7 @@ Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     Else
         accountId = accountIdOrWs.Name
     End If
-    On Error Resume Next
-    x = Application.WorksheetFunction.VLookup(accountId, Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).DataBodyRange, 1, False)
-    If Err.Number <> 0 Then
-        IsAnAccount = False
-    End If
-    On Error GoTo 0
+    IsAnAccount = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2) <> vbNull)
 End Function
 
 Public Function AccountDepositHistory(accountId As String) As Variant
@@ -514,7 +468,7 @@ Public Sub CalcAccountInterests(accountId As String)
     Dim interestPeriod As Integer
     deposits = AccountDepositHistory(accountId)
     balances = AccountBalanceHistory(accountId, "Yearly")
-    interestPeriod = AccountInterestPeriod(accountType(accountId))
+    interestPeriod = AccountInterestPeriod(AccountType(accountId))
     If interestPeriod > 0 Then
         Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod))
     End If
@@ -527,7 +481,7 @@ Public Sub CalcInterestForAllAccounts()
     FreezeDisplay
     For Each ws In Worksheets
         accountId = getAccountId(ws)
-        If IsAnAccount(ws) And IsOpen(accountId) And IsInterestAccount(accountId) Then
+        If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
             Call CalcAccountInterests(accountId)
         End If
     Next ws
@@ -584,8 +538,8 @@ Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
             End If
         End With
     Next i
-    interestTable.ListColumns(2).DataBodyRange.NumberFormat = "0.0%"
-    interestTable.ListColumns(3).DataBodyRange.NumberFormat = "0.0%"
+    interestTable.ListColumns(2).DataBodyRange.NumberFormat = INTEREST_FORMAT
+    interestTable.ListColumns(3).DataBodyRange.NumberFormat = INTEREST_FORMAT
     
     With interestTable.ListColumns(3).DataBodyRange
         Call InterestsStore(accountId, .Rows(1).value, .Rows(2).value, .Rows(3).value, .Rows(4).value, .Rows(5).value)
@@ -631,18 +585,15 @@ Private Function accountTable(accountId As String, accountSection As String) As 
 End Function
 
 Private Function accountDepositTable(accountId As String) As ListObject
-    Set accountDepositTable = accountTable(accountId, "deposit")
+    Set accountDepositTable = accountTable(accountId, DEPOSIT_TABLE_NAME)
 End Function
 
 Private Function accountBalanceTable(accountId As String) As ListObject
-    Set accountBalanceTable = accountTable(accountId, "balance")
+    Set accountBalanceTable = accountTable(accountId, BALANCE_TABLE_NAME)
 End Function
 
 Private Function accountInterestTable(accountId As String) As ListObject
-    Set accountInterestTable = accountTable(accountId, "interest")
-    If accountInterestTable Is Nothing Then
-        Set accountInterestTable = accountTable(accountId, "yield")
-    End If
+    Set accountInterestTable = accountTable(accountId, INTEREST_TABLE_NAME)
 End Function
 
 '----------------------------------------------------------------------------
@@ -663,10 +614,6 @@ End Function
 
 Private Function accountBalanceTableIndex(accountId As String) As Long
     accountBalanceTableIndex = accountTableIndex(accountId, BALANCE_TABLE_NAME)
-    ' TODO: Remove old table names
-    If accountBalanceTableIndex = 0 Then
-        accountBalanceTableIndex = accountTableIndex(accountId, OLD_BALANCE_TABLE_NAME)
-    End If
 End Function
 
 Private Function accountDepositTableIndex(accountId As String) As Long
@@ -675,10 +622,6 @@ End Function
 
 Private Function accountInterestTableIndex(accountId As String) As Long
     accountInterestTableIndex = accountTableIndex(accountId, INTEREST_TABLE_NAME)
-    ' TODO: Remove old table names
-    If accountInterestTableIndex = 0 Then
-        accountInterestTableIndex = accountTableIndex(accountId, INTEREST_TABLE_NAME)
-    End If
 End Function
 
 
@@ -815,6 +758,7 @@ Private Sub formatAccountButtons(ws As Worksheet)
             i = i + 1
         End If
     Next s
+    ws.Range("A1").Select
 End Sub
 
 Private Sub formatBalanceTable(accountId As String)
@@ -822,59 +766,60 @@ Private Sub formatBalanceTable(accountId As String)
     Dim ws As Worksheet
     Set ws = getAccountSheet(accountId)
     Set oTable = accountBalanceTable(accountId)
-    If IsEmpty(oTable) Then
+    If oTable Is Nothing Then
         Exit Sub
     End If
+    oTable.Name = accountId & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium2")
     Dim col As Long
-    col = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
         Call SetTableColumnFormat(oTable, col, DATE_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
         Call SetTableColumnFormat(oTable, col, EUR_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, "Montant CHF")
+    col = TableColNbrFromName(oTable, "Montant CHF")
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 17, ws)
         Call SetTableColumnFormat(oTable, col, CHF_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, "Montant USD")
+    col = TableColNbrFromName(oTable, "Montant USD")
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
         Call SetTableColumnFormat(oTable, col, USD_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(BALANCE_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(BALANCE_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 18, ws)
         Call SetTableColumnFormat(oTable, col, EUR_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, "Solde CHF")
+    col = TableColNbrFromName(oTable, "Solde CHF")
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 18, ws)
         Call SetTableColumnFormat(oTable, col, CHF_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, "Solde USD")
+    col = TableColNbrFromName(oTable, "Solde USD")
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 18, ws)
         Call SetTableColumnFormat(oTable, col, USD_FORMAT)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 70, ws)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(SUBCATEGORY_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(CATEGORY_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(CATEGORY_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 15, ws)
     End If
-    col = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
+    col = TableColNbrFromName(oTable, GetLabel(IN_BUDGET_KEY))
     If col <> 0 Then
         Call SetColumnWidth(Chr$(col + 64), 5, ws)
         Call SetColumnWidth(Chr$(col + 65), 5, ws)
@@ -884,6 +829,10 @@ End Sub
 Private Sub formatDepositTable(accountId As String)
     Dim oTable As ListObject
     Set oTable = accountDepositTable(accountId)
+    If oTable Is Nothing Then
+        Exit Sub
+    End If
+    oTable.Name = accountId & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oTable, 2, EUR_FORMAT)
@@ -892,6 +841,11 @@ End Sub
 Private Sub formatInterestTable(accountId As String)
     Dim oTable As ListObject
     Set oTable = accountInterestTable(accountId)
+    If oTable Is Nothing Then
+        Exit Sub
+    End If
+    oTable.Name = accountId & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium5")
-    Call SetTableColumnFormat(oTable, 2, "0.00%")
+    Call SetTableColumnFormat(oTable, 2, INTEREST_FORMAT)
+    Call SetTableColumnFormat(oTable, 3, INTEREST_FORMAT)
 End Sub

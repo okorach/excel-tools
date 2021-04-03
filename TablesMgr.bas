@@ -95,12 +95,12 @@ Public Function GetTableAsArray(oTable As ListObject, Optional colList As Varian
     cList = GetColList(oTable, colList)
     ReDim arr(1 To nbrRows, 1 To nbrCols) As Variant
     i = 0
-    For Each C In cList
+    For Each c In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(j, i) = oTable.ListColumns(C).DataBodyRange.Rows(j).value
+            arr(j, i) = oTable.ListColumns(c).DataBodyRange.Rows(j).value
         Next j
-    Next C
+    Next c
     GetTableAsArray = arr
 End Function
 
@@ -279,28 +279,38 @@ Public Sub SetTableStyle(oTable As ListObject, style As String)
     End If
 End Sub
 
-Public Function GetColumnNumberFromName(oTable As ListObject, columnName As String) As Long
+Public Function TableColNbrFromName(oTable As ListObject, columnName As String) As Integer
     On Error GoTo Except
-    GetColumnNumberFromName = oTable.ListColumns(columnName).index
+    TableColNbrFromName = oTable.ListColumns(columnName).index
     GoTo ThisIsTheEnd
 Except:
-    GetColumnNumberFromName = 0
+    TableColNbrFromName = 0
 ThisIsTheEnd:
     
+End Function
+
+Public Function TableColNbr(oTable As ListObject, colNameOrNumber As Variant) As Integer
+    If VarType(colNameOrNumber) = vbString Then
+        TableColNbr = TableColNbrFromName(oTable, CStr(colNameOrNumber))
+    Else
+        TableColNbr = colNameOrNumber
+    End If
 End Function
 
 Private Function GetColList(oTable As ListObject, currentColList) As Variant
     If (IsNumeric(currentColList)) Then
         nbrCols = oTable.ListColumns.Count
         ReDim localColList(1 To nbrCols) As Variant
-        For C = 1 To nbrCols
-            localColList(C) = C
-        Next C
+        For c = 1 To nbrCols
+            localColList(c) = c
+        Next c
         GetColList = localColList
     Else
         GetColList = currentColList
     End If
 End Function
+
+
 
 Public Function AppendTableColToArray(oTable As ListObject, colNbrOrName As Variant, oArray As Variant) As Variant
     Dim oldSize As Long, addSize As Long

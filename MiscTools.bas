@@ -64,15 +64,6 @@ Public Function SheetExists(sheetToFind As String) As Boolean
     Next Sheet
 End Function
 
-Public Function GetParam(paramId As String) As Variant
-    On Error Resume Next
-    GetParam = Application.WorksheetFunction.VLookup(paramId, Sheets(PARAMS_SHEET).ListObjects(PARAMS_TABLE).DataBodyRange, 2, False)
-    If Err.Number <> 0 Then
-        GetParam = vbNull
-    End If
-    On Error GoTo 0
-End Function
-
 Public Sub ShowAllSheets()
     Dim ws As Worksheet
     For Each ws In Worksheets
