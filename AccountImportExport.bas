@@ -65,17 +65,17 @@ Sub ImportAny()
         Dim oTable As ListObject
         Set oTable = ActiveSheet.ListObjects(1)
         Dim dateCol As Integer, amountCol As Integer, descCol As Integer
-        dateCol = GetColumnNumberFromName(oTable, GetLabel(DATE_KEY))
+        dateCol = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
         
         Dim defaultCurrency As String, accCurrency As String
-        defaultCurrency = GetParam("Default currency")
+        defaultCurrency = GetGlobalParam("Default currency")
         accCurrency = AccountCurrency(ActiveSheet.Name)
         If accCurrency = defaultCurrency Then
-            amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY))
+            amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
         Else
-            amountCol = GetColumnNumberFromName(oTable, GetLabel(AMOUNT_KEY) & " " & accCurrency)
+            amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY) & " " & accCurrency)
         End If
-        descCol = GetColumnNumberFromName(oTable, GetLabel(DESCRIPTION_KEY))
+        descCol = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
         Dim bank As String
         bank = Cells(3, 2).value
         If (bank = "ING Direct") Then
@@ -378,9 +378,9 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
         If Cells(iRow, 1) = "Korach Exporter version" Then
             exporterVersion = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "No Compte" Then
-            accountNbr = Cells(iRow, 2).value
+            accNumber = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Nom Compte" Then
-            accountName = Cells(iRow, 2).value
+            accName = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Banque" Then
             bank = Cells(iRow, 2).value
         ElseIf Cells(iRow, 1) = "Status" Then
@@ -417,15 +417,15 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     Next iRow
     ActiveWorkbook.Close
     
-    ActiveSheet.Cells(1, 2).value = accountName
-    ActiveSheet.Cells(2, 2).value = accountNbr
+    ActiveSheet.Cells(1, 2).value = accName
+    ActiveSheet.Cells(2, 2).value = accNumber
     ActiveSheet.Cells(3, 2).value = bank
     ActiveSheet.Cells(4, 2).value = accStatus
     ActiveSheet.Cells(5, 2).value = availability
 
     Dim subcatCol As Long, budgetCol As Long
-    subcatCol = GetColumnNumberFromName(oTable, GetLabel(SUBCATEGORY_KEY))
-    budgetCol = GetColumnNumberFromName(oTable, GetLabel(IN_BUDGET_KEY))
+    subcatCol = TableColNbrFromName(oTable, GetLabel(SUBCATEGORY_KEY))
+    budgetCol = TableColNbrFromName(oTable, GetLabel(IN_BUDGET_KEY))
     For iRow = 1 To nbRows
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
