@@ -1,6 +1,8 @@
 Attribute VB_Name = "InterestsMgr"
 Public Const INTEREST_CALC_SHEET As String = "Interests"
 
+Public Const INTEREST_FORMAT As String = "0.0%"
+
 Private Const BALANCE_HISTORY_TABLE As String = "TableBalanceHistory"
 Private Const DEPOSITS_HISTORY_TABLE As String = "TableDepositHistory"
 Private Const INTEREST_TABLE As String = "AccountsInterests"
