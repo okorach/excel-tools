@@ -813,4 +813,3 @@ Private Sub formatInterestTable(accountId As String)
     Call SetTableColumnFormat(oTable, 3, INTEREST_FORMAT)
 End Sub
 
-
