@@ -34,7 +34,7 @@ Public Const ACCOUNT_OPEN As Long = 1
 Private Const MAX_MERGE_SIZE As Long = 100000
 
 Private Const ACCOUNTS_TABLE As String = "tblAccounts"
-Private Const ACCOUNT_TYPES_TABLE As String = "tblAccountTypes"
+Private Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
 
 Private Const ACCOUNT_NAME_VALUE As String = "B1"
 Private Const ACCOUNT_NBR_VALUE As String = "B2"
@@ -46,15 +46,13 @@ Private Const ACCOUNT_CURRENCY_VALUE As String = "B6"
 Private Const MERGE_SHEET As String = "Comptes Merge"
 Private Const ACCOUNT_MERGE_TABLE As String = "AccountsMerge"
 
-Private Const BALANCE_TABLE_NAME As String = "balance"
-Private Const OLD_BALANCE_TABLE_NAME As String = "transactions"
-Private Const DEPOSIT_TABLE_NAME As String = "deposit"
-Private Const INTEREST_TABLE_NAME As String = "interest"
-Private Const OLD_INTEREST_TABLE_NAME As String = "yield"
+Public Const BALANCE_TABLE_NAME As String = "balance"
+Public Const DEPOSIT_TABLE_NAME As String = "deposit"
+Public Const INTEREST_TABLE_NAME As String = "interest"
 
-Private Const BTN_HOME_X As Integer = 200
-Private Const BTN_HOME_Y As Integer = 10
-Private Const BTN_HEIGHT As Integer = 30
+Public Const BTN_HOME_X As Integer = 200
+Public Const BTN_HOME_Y As Integer = 10
+Public Const BTN_HEIGHT As Integer = 30
 
 Public Sub MergeAccounts(columnKeys As Variant)
 
@@ -64,7 +62,6 @@ Public Sub MergeAccounts(columnKeys As Variant)
 
     Call FreezeDisplay
 
-'    For Each colKey In Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY)
     For Each colKey In columnKeys
         Dim col As String
         col = GetColName(colKey)
@@ -73,14 +70,14 @@ Public Sub MergeAccounts(columnKeys As Variant)
         For Each ws In Worksheets
            ' Make sure the sheet is not a template or anything else than an account
            If (IsAnAccount(ws)) Then
-                balanceNdx = accountBalanceTableIndex(ws.Name)
+                balanceNdx = accountBalanceTableIndex(ws.name)
                 If balanceNdx = 0 Then
                     balanceNdx = 1
                 End If
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
-                    arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, ws.Cells(1, 2).value)
-                ElseIf (colKey = IN_BUDGET_KEY And Not AccountIsInBudget(ws.Name)) Then
+                    arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, ws.name)
+                ElseIf (colKey = IN_BUDGET_KEY And Not AccountIsInBudget(ws.name)) Then
                     arr1d = Create1DArray(ws.ListObjects(balanceNdx).ListRows.Count, 0)
                 Else
                     arr1d = GetTableColumn(ws.ListObjects(balanceNdx), col)
@@ -214,7 +211,7 @@ Sub AccountCreate()
     Sheets("Account Template").Copy Before:=Sheets(1)
     Sheets("Account Template").Visible = False
     With Sheets(1)
-        .Name = accName
+        .name = accName
         ' .Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
         .Range(ACCOUNT_NAME_VALUE).value = accName
         formulaRoot = "=VLOOKUP(B$1," & ACCOUNTS_TABLE
@@ -226,7 +223,7 @@ Sub AccountCreate()
 End Sub
 
 Public Sub AccountFormatCurrent()
-    Call AccountFormat(ActiveSheet.Name)
+    Call AccountFormat(ActiveSheet.name)
 End Sub
 Public Sub AccountFormat(accountId As String)
     Dim ws As Worksheet
@@ -249,7 +246,7 @@ Public Sub AccountFormatAllSheets()
     Call ShowAllSheets
     For Each ws In Worksheets
        If IsAnAccount(ws) Then
-           Call AccountFormat(ws.Name)
+           Call AccountFormat(ws.name)
         End If
     Next ws
     Call AccountHideClosed
@@ -258,14 +255,14 @@ End Sub
 
 '-------------------------------------------------
 Public Function isTemplate(ws As Worksheet) As Boolean
-    isTemplate = (ws.Name Like "*TEMPLATE*")
+    isTemplate = (ws.name Like "*TEMPLATE*")
 End Function
 
 '-------------------------------------------------
 Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
     Dim ws As Worksheet
     For Each ws In Worksheets
-        If AccountExists(ws.Name) And AccountIsClosed(ws.Name) Then
+        If AccountExists(ws.name) And AccountIsClosed(ws.name) Then
             ws.Visible = visibility
         End If
     Next ws
@@ -329,7 +326,7 @@ Public Function IsInterestAccount(accountId As String) As Boolean
     IsInterestAccount = Not (accType = "Courant" Or accType = "Autres")
 End Function
 Public Function AccountInterestPeriod(AccountType) As Integer
-    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE).DataBodyRange, AccountType, 2))
+    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), AccountType, 2))
 End Function
 
 
@@ -402,7 +399,7 @@ Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     If VarType(accountIdOrWs) = vbString Then
         accountId = accountIdOrWs
     Else
-        accountId = accountIdOrWs.Name
+        accountId = accountIdOrWs.name
     End If
     IsAnAccount = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2) <> vbNull)
 End Function
@@ -505,19 +502,15 @@ Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
     Dim tax As Double
     nbrYears = UBound(interestsArray)
     Set interestTable = accountInterestTable(accountId)
-    thisYear = "-"
-    lastYear = "-"
-    last3years = "-"
-    last5years = "-"
-    allTime = "-"
     If interestTable.ListColumns.Count <= 2 Then
         interestTable.ListColumns.Add
-        interestTable.ListColumns(3).Name = "Rend. Net"
+        interestTable.ListColumns(3).name = "Rend. Net"
     End If
-    tax = AccountTax(accountId)
+    tax = AccountTaxRate(accountId)
     
     For i = 1 To interestTable.ListRows.Count
         With interestTable.ListRows(i)
+            Dim interest As Variant
             interest = "-"
             If i = 1 Then
                 interest = interestsArray(nbrYears)
@@ -549,7 +542,7 @@ End Sub
 
 Public Function getSelectedAccount() As String
     selectedNbr = GetNamedVariableValue("selectedAccount")
-    getSelectedAccount = Sheets(PARAMS_SHEET).Range("L" & CStr(selectedNbr + 1))
+    getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects("TblOpenAccounts").ListRows(selectedNbr).Range(1, 1)
 End Function
 
 
@@ -577,7 +570,7 @@ Private Function accountTable(accountId As String, accountSection As String) As 
     Dim i As Long
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
             Set accountTable = ws.ListObjects(i)
             Exit For
         End If
@@ -605,7 +598,7 @@ Private Function accountTableIndex(accountId As String, accountSection As String
     Set ws = getAccountSheet(accountId)
     accountTableIndex = 0
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
             accountTableIndex = i
             Exit For
         End If
@@ -634,7 +627,7 @@ Private Function accountArray(accountId As String, accountSection As String) As 
     Set accountArray = Nothing
     Set ws = getAccountSheet(accountId)
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like accountSection & "*" Then
+        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
             accountArray = GetTableAsArray(ws.ListObjects(i))
             Exit For
         End If
@@ -650,7 +643,7 @@ Private Function AccountBalanceArray(accountId As String) As Variant
 End Function
 
 Private Function getAccountId(ws As Worksheet) As String
-    getAccountId = ws.Name
+    getAccountId = ws.name
 End Function
 
 Private Function getAccountSheet(accountId As String) As Worksheet
@@ -662,36 +655,6 @@ End Function
 ' Private formatting functions
 '----------------------------------------------------------------------------
 
-Private Sub setBtnAttributes(oBtn As Shape, Optional font As String = vbNullString, Optional text As String = vbNullString, _
-                             Optional fontStyle As String = vbNullString, Optional size As Integer = 0)
-    oBtn.Select
-    If text <> vbNullString Then
-        Selection.Characters.text = text
-    End If
-    If font <> vbNullString Then
-        Selection.Characters.font.Name = font
-    End If
-    If size <> 0 Then
-        Selection.Characters.font.size = size
-    End If
-    If fontStyle <> vbNullString Then
-        Selection.Characters.font.fontStyle = style
-    End If
-    'With Selection.Characters().font
-    '    .Name = font
-    '    .fontStyle = "Normal"
-    '    .size = 18
-        '.Strikethrough = False
-        '.Superscript = False
-        '.Subscript = False
-        '.OutlineFont = False
-        '.Shadow = False
-        '.Underline = xlUnderlineStyleNone
-        '.ColorIndex = xlAutomatic
-        '.TintAndShade = 0
-        '.ThemeFont = xlThemeFontNone
-    'End With
-End Sub
 
 Private Sub setBtnTextAndFont(oBtn, text As String, font As String)
     oBtn.Select
@@ -713,42 +676,42 @@ Private Sub formatAccountButtons(ws As Worksheet)
         ' For Each btnName In Array("BtnPrev", "BtnNext5", "BtnBottom", "BtnHome", "BtnPrev5", "BtnTop", "BtnNext")
 
     For Each s In ws.Shapes
-        If s.Name = "BtnHome" Then
+        If s.name = "BtnHome" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y, BTN_HOME_X + sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="9", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnPrev5" Then
+            Call SetBtnAttributes(s, text:="9", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnPrev5" Then
             Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="7", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnPrev" Then
+            Call SetBtnAttributes(s, text:="7", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnPrev" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="3", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnNext" Then
+            Call SetBtnAttributes(s, text:="3", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnNext" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="4", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnNext5" Then
+            Call SetBtnAttributes(s, text:="4", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnNext5" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y, BTN_HOME_X + 5 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="8", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnTop" Then
+            Call SetBtnAttributes(s, text:="8", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnTop" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 5 * sbw, BTN_HOME_Y, BTN_HOME_X + 6 * sbw, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="5", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnBottom" Then
+            Call SetBtnAttributes(s, text:="5", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnBottom" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 6 * sbw, BTN_HOME_Y, BTN_HOME_X + 7 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="6", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnSort" Then
+            Call SetBtnAttributes(s, text:="6", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnSort" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="~", font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnImport" Then
+            Call SetBtnAttributes(s, text:="~", font:="Webdings", size:=18)
+        ElseIf s.name = "BtnImport" Then
             Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:=Chr$(71), font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnAddEntry" Then
+            Call SetBtnAttributes(s, text:=Chr$(71), font:="Webdings", size:=18)
+        ElseIf s.name = "BtnAddEntry" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="+1", font:="Arial", size:=14)
-        ElseIf s.Name = "BtnInterests" Then
+            Call SetBtnAttributes(s, text:="+1", font:="Arial", size:=14)
+        ElseIf s.name = "BtnInterests" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:=Chr(143), font:="Webdings", size:=18)
-        ElseIf s.Name = "BtnFormat" Then
+            Call SetBtnAttributes(s, text:=Chr(143), font:="Webdings", size:=18)
+        ElseIf s.name = "BtnFormat" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 6 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call setBtnAttributes(s, text:="Format", font:="Arial", size:=12)
+            Call SetBtnAttributes(s, text:="Format", font:="Arial", size:=12)
 
         ElseIf (s.Type = msoFormControl) Then
             ' This is a button, move it to right place
@@ -769,7 +732,7 @@ Private Sub formatBalanceTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.Name = accountId & "_" & BALANCE_TABLE_NAME
+    oTable.name = accountId & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium2")
     Dim col As Long
     col = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
@@ -832,7 +795,7 @@ Private Sub formatDepositTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.Name = accountId & "_" & DEPOSIT_TABLE_NAME
+    oTable.name = accountId & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oTable, 2, EUR_FORMAT)
@@ -844,8 +807,10 @@ Private Sub formatInterestTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.Name = accountId & "_" & INTEREST_TABLE_NAME
+    oTable.name = accountId & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium5")
     Call SetTableColumnFormat(oTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oTable, 3, INTEREST_FORMAT)
 End Sub
+
+
