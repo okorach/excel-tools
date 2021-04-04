@@ -66,10 +66,10 @@ End Sub
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
                      Optional sortCol2 As String = "", Optional sortOrder2 As XlSortOrder = xlDescending)
     oTable.Sort.SortFields.Clear
-    oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
         DataOption:=xlSortNormal
     If sortCol2 <> "" Then
-        oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
+        oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
              DataOption:=xlSortNormal
     End If
     With oTable.Sort
@@ -337,5 +337,4 @@ Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
         oTable.ListRows(rowNbr).DataBodyRange.Columns(j).value = ""
     Next j
 End Sub
-
 

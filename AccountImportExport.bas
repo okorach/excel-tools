@@ -68,8 +68,8 @@ Sub ImportAny()
         dateCol = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
         
         Dim defaultCurrency As String, accCurrency As String
-        defaultCurrency = GetGlobalParam("Default currency")
-        accCurrency = AccountCurrency(ActiveSheet.Name)
+        defaultCurrency = GetGlobalParam("DefaultCurrency")
+        accCurrency = AccountCurrency(ActiveSheet.name)
         If accCurrency = defaultCurrency Then
             amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
         Else
@@ -244,7 +244,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     Workbooks.Add
     With ActiveSheet.QueryTables.Add(Connection:= _
         "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
-        .Name = "import"
+        .name = "import"
         .FieldNames = True
         .RowNumbers = False
         .FillAdjacentFormulas = False
@@ -295,6 +295,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
             Else
                 .Range(1, descCol).value = simplifyDescription(desc, subsTable)
             End If
+        End With
         iRow = iRow + 1
     Loop
     ActiveWorkbook.Close SaveChanges:=False
@@ -443,7 +444,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Dim sFolder As String
-    exportFrom = ActiveWorkbook.Name
+    exportFrom = ActiveWorkbook.name
 
     Sheets(ws).Select
     Range("A1:B8").Select
@@ -452,7 +453,7 @@ Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolea
 
     ' Create blank workbook and copy data on that workbook
     Workbooks.Add
-    exportTo = ActiveWorkbook.Name
+    exportTo = ActiveWorkbook.name
     Range("A1").Select
     ActiveSheet.Paste
     Range("A9").value = "Exporter version"
@@ -509,8 +510,8 @@ Sub ExportAll()
         Call FreezeDisplay
         For Each ws In Worksheets
             If ws.Cells(1, 1).value = "Nom Compte" Then
-                filename = sFolder & "\" & ws.Name & ".csv"
-                Call ExportGeneric(ws.Name, filename, True)
+                filename = sFolder & "\" & ws.name & ".csv"
+                Call ExportGeneric(ws.name, filename, True)
             End If
         Next ws
         Call UnfreezeDisplay
@@ -524,5 +525,4 @@ End Sub
 Sub ExportING()
     Call ExportGeneric("ING CC")
 End Sub
-
 
