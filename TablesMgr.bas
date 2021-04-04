@@ -338,4 +338,3 @@ Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
     Next j
 End Sub
 
-
