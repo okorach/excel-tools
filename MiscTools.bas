@@ -57,7 +57,7 @@ End Function
 Public Function SheetExists(sheetToFind As String) As Boolean
     SheetExists = False
     For Each Sheet In Worksheets
-        If sheetToFind = Sheet.Name Then
+        If sheetToFind = Sheet.name Then
             SheetExists = True
             Exit Function
         End If
@@ -372,7 +372,7 @@ On Error GoTo MyErr
 
 'Identify PivotTable and capture source Range
     'ActiveCell.PivotTable.Name
-    Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.Name)
+    Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.name)
     Set oSourceRange = Range(Application.ConvertFormula(oPivotTable.SourceData, xlR1C1, xlA1))
 
 'Refresh PivotTable to synch with latest data
@@ -412,4 +412,3 @@ Else
 MsgBox Err.Number & vbCrLf & Err.Description
 End If
 End Sub
-
