@@ -54,6 +54,20 @@ Public Const BTN_HOME_X As Integer = 200
 Public Const BTN_HOME_Y As Integer = 10
 Public Const BTN_HEIGHT As Integer = 30
 
+
+Private Const BTN_HOME_TEXT As String = "9"
+Private Const BTN_PREV_5_TEXT As String = "7"
+Private Const BTN_PREV_TEXT As String = "3"
+Private Const BTN_NEXT_TEXT As String = "4"
+Private Const BTN_NEXT_5_TEXT As String = "8"
+Private Const BTN_BOTTOM_TEXT As String = "5"
+Private Const BTN_TOP_TEXT As String = "6"
+Private Const BTN_SORT_TEXT As String = "~"
+Private Const BTN_ADD_ROW_TEXT As String = "+1"
+Private Const BTN_FORMAT_TEXT As String = "Format"
+
+
+
 Public Sub MergeAccounts(columnKeys As Variant)
 
     Dim firstAccount As Boolean
@@ -203,24 +217,161 @@ Public Sub AccountsFullRefresh()
     ' MsgBox ("Full refresh duration = " & CStr(DateDiff("s", startTime, Now)))
 End Sub
 
-Sub AccountCreate()
-    Dim accNbr As String, accName As String
-    accNbr = InputBox("Account number ?", "Account Number", "<accountNumber>")
+Public Sub AccountCreateBtn()
+    Dim accType As String, accName As String
     accName = InputBox("Account name ?", "Account Name", "<accountName>")
-    Sheets("Account Template").Visible = True
-    Sheets("Account Template").Copy Before:=Sheets(1)
-    Sheets("Account Template").Visible = False
-    With Sheets(1)
-        .name = accName
-        ' .Range("A1").Formula = "=VLOOKUP("k.account", TblKeys, LangId, FALSE)"
-        .Range(ACCOUNT_NAME_VALUE).value = accName
-        formulaRoot = "=VLOOKUP(B$1," & ACCOUNTS_TABLE
-        .Range(ACCOUNT_NBR_VALUE).Formula = formulaRoot & ",2,FALSE)"
-        .Range(ACCOUNT_BANK_VALUE).Formula = formulaRoot & ",4,FALSE)"
-        .Range(ACCOUNT_STATUS_VALUE).Formula = formulaRoot & ",6,FALSE)"
-        .Range(ACCOUNT_AVAIL_VALUE).Formula = formulaRoot & ",5,FALSE)"
+    accType = InputBox("Account type ?", "Account type", "<accountType>")
+    Dim res As Boolean
+    res = AccountCreate(accName, accType)
+End Sub
+Private Function AccountCreate(accountId As String, accType As String) As Boolean
+    Dim res As Boolean
+    res = KeyedTableInsert(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, accountId, 2)
+    If Not res Then
+        MsgBox ("Account already exist, aborting")
+        AccountCreate = False
+        Exit Function
+    End If
+    AccountCreate = True
+    Sheets.Add
+    ActiveSheet.name = accountId
+    Call accountAddBalanceTable(ActiveSheet, accountId, "EUR", accType)
+    Call accountAddStandardButtons(ActiveSheet)
+    If accType = "Courant" Then
+        Call accountAddImportButton(ActiveSheet)
+    Else
+        Call accountAddDepositTable(ActiveSheet, accountId)
+        Call accountAddInterestTable(ActiveSheet, accountId)
+        Call accountAddInterestButtons(ActiveSheet)
+    End If
+    Call AccountFormat(accountId)
+End Function
+
+Private Sub accountAddStandardButtons(ws As Worksheet)
+    Dim w As Integer, h As Integer, x As Integer, y As Integer
+    w = 39
+    h = 29
+    x = 100
+    y = 50
+    Call BtnAdd(ws, name:="BtnHome", action:="ThisWorkbook.GoToSolde", x:=x, y:=y, text:=BTN_HOME_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnPrev5", action:="ThisWorkbook.GoBack5", x:=x, y:=y, text:=BTN_PREV_5_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnPrev", action:="ThisWorkbook.GoToPrev", x:=x, y:=y, text:=BTN_PREV_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnNext", action:="ThisWorkbook.GoToNext", x:=x, y:=y, text:=BTN_NEXT_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnNext5", action:="ThisWorkbook.GoFwd5", x:=x, y:=y, text:=BTN_NEXT_5_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnTop", action:="scrollToTop", x:=x, y:=y, text:=BTN_TOP_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnBottom", action:="scrollToBottom", x:=x, y:=y, text:=BTN_BOTTOM_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnFormat", action:="AccountFormatCurrent", x:=x, y:=y, text:=BTN_FORMAT_TEXT, _
+        w:=w, h:=h, font:="Arial", fontSize:=10)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnSort", action:="sortCurrentAccount", x:=x, y:=y, text:=BTN_SORT_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+End Sub
+Private Sub accountAddInterestButtons(ws As Worksheet)
+    Dim w As Integer, h As Integer, x As Integer, y As Integer
+    w = 40
+    h = 30
+    x = 100
+    y = 81
+    Dim BTN_INTEREST_TEXT As String
+    BTN_INTEREST_TEXT = Chr$(143)
+
+    Call BtnAdd(ws, name:="BtnInterest", action:="BtnAccountInterest", x:=x, y:=y, text:=BTN_INTEREST_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+    Call BtnAdd(ws, name:="BtnAddEntry", action:="addSavingsRow", x:=x, y:=y, text:=BTN_ADD_ROW_TEXT, _
+        w:=w - 1, h:=h, font:="Arial", fontSize:=18)
+End Sub
+Private Sub accountAddImportButton(ws As Worksheet)
+    Dim w As Integer, h As Integer, x As Integer, y As Integer
+    w = 40
+    h = 30
+    x = 100
+    y = 81
+    Dim BTN_IMPORT_TEXT As String
+    BTN_IMPORT_TEXT = Chr$(71)
+    Call BtnAdd(ws, name:="BtnImport", action:="ImportAny", x:=x, y:=y, text:=BTN_IMPORT_TEXT, _
+        w:=w, h:=h, font:="Webdings", fontSize:=18)
+    x = x + w + 1
+End Sub
+Private Sub accountAddBalanceTable(ws As Worksheet, accountId As String, accountCurrency As String, accountType As String)
+    Dim tblName As String
+    tblName = accountId & "_" & BALANCE_TABLE_NAME
+    
+    ws.Range("A11:A12").Select
+    ws.ListObjects.Add(xlSrcRange, Range("$A$10:$A$11"), , xlYes).name = tblName
+    With ws.ListObjects(tblName)
+        .TableStyle = "TableStyleMedium2"
+        .ListColumns(1).name = "Date"
+        .ListColumns.Add
+        .ListColumns(2).name = "Montant"
+        .ListColumns.Add
+        .ListColumns(3).name = "Solde"
+        If accountType = "Courant" Then
+            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[Montant]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+        Else
+            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[Solde]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+        End If
+        .ListColumns.Add
+        .ListColumns(4).name = "Description"
+        .ListColumns.Add
+        .ListColumns(5).name = "Sous-Catégorie"
+        If accountType = "Courant" Then
+            .ListColumns.Add
+            .ListColumns(6).name = "Catégorie"
+            .ListRows(1).Range(1, 6).FormulaR1C1 = "=VLOOKUP([Sous-Catégorie],TableCategories,2,FALSE)"
+            If AccountIsInBudget(accountId) Then
+                .ListColumns.Add
+                .ListColumns(7).name = "In Budget"
+            End If
+        End If
     End With
 End Sub
+
+Private Sub accountAddDepositTable(ws As Worksheet, accountId As String, Optional accountCurrency As String = "EUR")
+    Dim tblName As String
+    tblName = accountId & "_" & DEPOSIT_TABLE_NAME
+    
+    ws.ListObjects.Add(xlSrcRange, Range("$G$10:$G$11"), , xlYes).name = tblName
+    With ws.ListObjects(tblName)
+        .TableStyle = "TableStyleMedium4"
+        .ListColumns(1).name = "Date"
+        .ListColumns.Add
+        .ListColumns(2).name = "Montant"
+        .ListRows.Add
+        .ListRows.Add
+        .ListRows.Add
+        .ListRows.Add
+    End With
+End Sub
+Private Sub accountAddInterestTable(ws As Worksheet, accountId As String)
+    Dim tblName As String
+    tblName = accountId & "_" & INTEREST_TABLE_NAME
+    
+    ws.ListObjects.Add(xlSrcRange, Range("$G$1:$G$2"), , xlYes).name = tblName
+    With ws.ListObjects(tblName)
+        .TableStyle = "TableStyleMedium5"
+        .ListColumns(1).name = "Période"
+        .ListColumns.Add
+        .ListColumns(2).name = "Rend. Brut"
+        .ListColumns.Add
+        .ListColumns(3).name = "Rend. Net"
+    End With
+End Sub
+
 
 Public Sub AccountFormatCurrent()
     Call AccountFormat(ActiveSheet.name)
@@ -322,11 +473,11 @@ Public Sub SortCurrentAccount()
 End Sub
 Public Function IsInterestAccount(accountId As String) As Boolean
     Dim accType As String
-    accType = AccountType(accountId)
+    accType = accountType(accountId)
     IsInterestAccount = Not (accType = "Courant" Or accType = "Autres")
 End Function
-Public Function AccountInterestPeriod(AccountType) As Integer
-    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), AccountType, 2))
+Public Function AccountInterestPeriod(accountType) As Integer
+    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), accountType, 2))
 End Function
 
 
@@ -355,11 +506,11 @@ End Function
 Public Function AccountIsClosed(accountId As String) As Boolean
     AccountIsClosed = Not AccountIsOpen(accountId)
 End Function
-Public Function AccountCurrency(accountId As String) As String
-    AccountCurrency = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 7))
+Public Function accountCurrency(accountId As String) As String
+    accountCurrency = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 7))
 End Function
-Public Function AccountType(accountId As String) As String
-    AccountType = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 8))
+Public Function accountType(accountId As String) As String
+    accountType = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 8))
 End Function
 Public Function AccountIsInBudget(accountId As String) As Boolean
     AccountInBudget = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 9) = 1)
@@ -465,7 +616,7 @@ Public Sub CalcAccountInterests(accountId As String)
     Dim interestPeriod As Integer
     deposits = AccountDepositHistory(accountId)
     balances = AccountBalanceHistory(accountId, "Yearly")
-    interestPeriod = AccountInterestPeriod(AccountType(accountId))
+    interestPeriod = AccountInterestPeriod(accountType(accountId))
     If interestPeriod > 0 Then
         Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod))
     End If
@@ -678,40 +829,40 @@ Private Sub formatAccountButtons(ws As Worksheet)
     For Each s In ws.Shapes
         If s.name = "BtnHome" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y, BTN_HOME_X + sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="9", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_HOME_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnPrev5" Then
             Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="7", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_PREV_5_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnPrev" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="3", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_PREV_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnNext" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="4", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_NEXT_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnNext5" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y, BTN_HOME_X + 5 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="8", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_NEXT_5_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnTop" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 5 * sbw, BTN_HOME_Y, BTN_HOME_X + 6 * sbw, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="5", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_TOP_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnBottom" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 6 * sbw, BTN_HOME_Y, BTN_HOME_X + 7 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="6", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_BOTTOM_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnSort" Then
             Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="~", font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=BTN_SORT_TEXT, font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnImport" Then
             Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:=Chr$(71), font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=Chr$(71), font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnAddEntry" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="+1", font:="Arial", size:=14)
+            Call BtnSetProperties(s, text:=BTN_ADD_ROW_TEXT, font:="Arial", fontSize:=14)
         ElseIf s.name = "BtnInterests" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:=Chr(143), font:="Webdings", size:=18)
+            Call BtnSetProperties(s, text:=Chr$(143), font:="Webdings", fontSize:=18)
         ElseIf s.name = "BtnFormat" Then
             Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 6 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="Format", font:="Arial", size:=12)
+            Call BtnSetProperties(s, text:=BTN_FORMAT_TEXT, font:="Arial", fontSize:=12)
 
         ElseIf (s.Type = msoFormControl) Then
             ' This is a button, move it to right place
@@ -812,4 +963,5 @@ Private Sub formatInterestTable(accountId As String)
     Call SetTableColumnFormat(oTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oTable, 3, INTEREST_FORMAT)
 End Sub
+
 
