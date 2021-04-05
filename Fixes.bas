@@ -41,46 +41,36 @@ Public Sub FixButtons(ws As Worksheet)
     Dim s As Shape
     Dim sbw As Integer, lbw As Integer
     sbw = 40
-    lbw = 100
-    ws.Activate
-    For Each s In ws.Shapes
-        If s.name = "BtnHome" Then
-            Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y, BTN_HOME_X + sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="9", font:="Webdings", size:=18, action:="ThisWorkbook.GoToSolde")
-        ElseIf s.name = "BtnPrev5" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="7", font:="Webdings", size:=18, action:="ThisWorkbook.GoBack5")
-        ElseIf s.name = "BtnPrev" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="3", font:="Webdings", size:=18, action:="ThisWorkbook.GoToPrev")
-        ElseIf s.name = "BtnNext" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="4", font:="Webdings", size:=18, action:="ThisWorkbook.GoToNext")
-        ElseIf s.name = "BtnNext5" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y, BTN_HOME_X + 5 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="8", font:="Webdings", size:=18, action:="ThisWorkbook.GoFwd5")
-        ElseIf s.name = "BtnTop" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 5 * sbw, BTN_HOME_Y, BTN_HOME_X + 6 * sbw, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="5", font:="Webdings", size:=18, action:="scrollToTop")
-        ElseIf s.name = "BtnBottom" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 6 * sbw, BTN_HOME_Y, BTN_HOME_X + 7 * sbw - 1, BTN_HOME_Y + BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="6", font:="Webdings", size:=18, action:="scrollToBottom")
-        ElseIf s.name = "BtnSort" Then
-            Call ShapePlacementXY(s, BTN_HOME_X, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="~", font:="Webdings", size:=18, action:="sortCurrentAccount")
-        ElseIf s.name = "BtnImport" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 2 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:=Chr$(71), font:="Webdings", size:=18, action:="ImportAny")
-        ElseIf s.name = "BtnAddEntry" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 2 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 3 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="+1", font:="Arial", size:=14, action:="addSavingsRow")
-        ElseIf s.name = "BtnInterests" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 3 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 4 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:=Chr(143), font:="Webdings", size:=18, action:="btnAccountInterests")
-        ElseIf s.name = "BtnFormat" Then
-            Call ShapePlacementXY(s, BTN_HOME_X + 4 * sbw, BTN_HOME_Y + BTN_HEIGHT, BTN_HOME_X + 6 * sbw - 1, BTN_HOME_Y + 2 * BTN_HEIGHT - 1)
-            Call SetBtnAttributes(s, text:="Format", font:="Arial", size:=12, action:="AccountFormatCurrent")
+    If ws.Shapes.Count <= 0 Then
+        Exit Sub
+    End If
+    Dim sbw As Integer
+    sbw = 40
+    Dim i As Long
+    i = 0
+    Dim s As Shape
+
+    For Each btnData In Array( _
+        "BtnHome," & BTN_HOME_TEXT & ",Webdings,18,1,1,40" _
+        , "BtnPrev5," & BTN_PREV_5_TEXT & ",Webdings,18,1,2,40" _
+        , "BtnPrev," & BTN_PREV_TEXT & ",Webdings,18,1,3,40" _
+        , "BtnNext," & BTN_NEXT_TEXT & ",Webdings,18,1,4,40" _
+        , "BtnNext5," & BTN_NEXT_5_TEXT & ",Webdings,18,1,5,40" _
+        , "BtnTop," & BTN_TOP_TEXT & ",Webdings,18,1,6,40" _
+        , "BtnBottom," & BTN_BOTTOM_TEXT & ",Webdings,18,1,7,40" _
+        , "BtnSort," & BTN_SORT_TEXT & ",Webdings,18,2,1,40" _
+        , "BtnImport," & Chr$(71) & ",Webdings,18,2,2,40" _
+        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",Arial,14,2,3,40" _
+        , "BtnInterest," & Chr$(143) & ",Webdings,18,2,4,40" _
+        , "BtnFormat," & BTN_FORMAT_TEXT & ",Arial,18,2,5,80" _
+        )
+        values = Split(btnData, ",", -1, vbTextCompare)
+        Set s = ShapeFind(ws, CStr(values(0)))
+        If Not s Is Nothing Then
+            Call BtnSetProperties(s, text:=CStr(values(1)), font:=CStr(values(2)), fontSize:=CInt(values(3)))
+            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(5)) - 1) * sbw, BTN_HOME_Y + (CInt(values(4)) - 1) * BTN_HEIGHT, CInt(values(6)) - 1, BTN_HEIGHT - 1)
         End If
-    Next s
+    Next btnData
+    ws.Range("A1").Select
 End Sub
 
