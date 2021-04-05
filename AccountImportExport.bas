@@ -112,7 +112,7 @@ Private Function deleteDuplicateSepa(desc As String) As String
         s_emitter = Mid$(desc, Len(idstr) + 1, i_end_emitter - Len(idstr) - 2)
         i_repeat_emitter = InStr(desc, " DE " & s_emitter)
         If i_repeat_emitter > 0 Then
-            deleteDuplicateSepa = Left$(desc, i_repeat_emitter - 1)
+            deleteDuplicateSepa = left$(desc, i_repeat_emitter - 1)
         End If
     End If
 End Function
@@ -121,7 +121,7 @@ Private Function strReplace(oldString, newString, targetString As String) As Str
     strReplace = targetString
     i = InStr(targetString, oldString)
     If (i > 0) Then
-        strReplace = Left$(targetString, i - 1) & newString & Right$(targetString, Len(targetString) - i - Len(oldString) + 1)
+        strReplace = left$(targetString, i - 1) & newString & Right$(targetString, Len(targetString) - i - Len(oldString) + 1)
     End If
 End Function
 
@@ -350,7 +350,7 @@ Private Function convertCsvToXls(fileToOpen As Variant) As Variant
         Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
         , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
         TrailingMinusNumbers:=True
-    xlsFile = Left(fileToOpen, Len(fileToOpen) - 4) & format(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
+    xlsFile = left$(fileToOpen, Len(fileToOpen) - 4) & format$(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
     ActiveWorkbook.SaveAs filename:=xlsFile, fileformat:=xlExcel8, Password:="", WriteResPassword:="", _
         ReadOnlyRecommended:=False, CreateBackup:=False
     ActiveWorkbook.Close

@@ -255,23 +255,13 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub ShapePlacementOnCells(oShape, oCell1, oCell2)
 With oShape
-    .Top = oCell1.Top
-    .Left = oCell1.Left
-    .width = oCell2.Left - oCell1.Left + oCell2.width
-    .height = oCell2.Top - oCell1.Top + oCell2.height
+    .top = oCell1.top
+    .left = oCell1.left
+    .width = oCell2.left - oCell1.left + oCell2.width
+    .height = oCell2.top - oCell1.top + oCell2.height
 End With
 End Sub
-'------------------------------------------------------------------------------
-' Places a shape (a button for instance) on given X, Y coordinates
-'------------------------------------------------------------------------------
-Public Sub ShapePlacementXY(oShape, x1, y1, x2, y2)
-With oShape
-    .Left = x1
-    .Top = y1
-    .width = x2 - x1
-    .height = y2 - y1
-End With
-End Sub
+
 
 '==============================================================================
 '
