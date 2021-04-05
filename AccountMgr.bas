@@ -69,9 +69,13 @@ Public Sub MergeAccounts(columnKeys As Variant)
     Dim firstAccount As Boolean
     Dim balanceNdx As Integer
     Dim ws As Worksheet
-
-    Call FreezeDisplay
-
+    Dim i As Long, total As Long
+    
+    'Call FreezeDisplay
+    i = 0
+    total = (UBound(columnKeys) + 1) * Worksheets.Count
+    Call ProgressBarStart("Refresh in progress" & vbCrLf & vbCrLf & "0 %")
+    
     For Each colKey In columnKeys
         Dim col As String
         col = GetColName(colKey)
@@ -99,10 +103,13 @@ Public Sub MergeAccounts(columnKeys As Variant)
                    ret = ConcatenateArrays(totalColumn, arr1d)
                 End If
             End If
+            i = i + 1
+            Call ProgressBarUpdate("Refresh in progress..." & vbCrLf & vbCrLf & CStr((i * 100) \ total) & " %")
         Next ws
         Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), col, totalColumn)
         Erase totalColumn
     Next colKey
+    Call ProgressBarStop
 
     ' Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     
@@ -357,13 +364,23 @@ Public Sub AccountFormatAllSheets()
 '
     Dim ws As Worksheet
     Call ShowAllSheets
+    Dim total As Long, i As Long, pct As Long
+    Call ProgressBarStart("Formatting in progress..." & vbCrLf & vbCrLf & "0 %")
+    total = Worksheets.Count + 2
     For Each ws In Worksheets
        If IsAnAccount(ws) Then
            Call AccountFormat(ws.name)
         End If
+        i = i + 1
+        Call ProgressBarUpdate("Formatting in progress..." & vbCrLf & vbCrLf & CStr((i * 100) \ total) & " %")
     Next ws
     Call AccountHideClosed
+    i = i + 1
+    Call ProgressBarUpdate("Formatting in progress..." & vbCrLf & vbCrLf & CStr((i * 100) \ total) & " %")
     Call AccountHideTemplates
+    i = i + 1
+    Call ProgressBarUpdate("Formatting in progress..." & vbCrLf & vbCrLf & CStr((i * 100) \ total) & " %")
+    Call ProgressBarStop
 End Sub
 
 '-------------------------------------------------
@@ -588,14 +605,19 @@ End Sub
 Public Sub CalcInterestForAllAccounts()
     Dim accountId As String
     Dim ws As Worksheet
-    FreezeDisplay
+    Dim total As Long, i As Long
+    total = Worksheets.Count
+    i = 0
+    Call ProgressBarStart("Calcul d'intérêts en cours..." & vbCrLf & vbCrLf & "0 %")
     For Each ws In Worksheets
         accountId = getAccountId(ws)
         If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
             Call CalcAccountInterests(accountId)
         End If
+        i = i + 1
+        Call ProgressBarUpdate("Calcul d'intérêts en cours..." & vbCrLf & vbCrLf & CStr((i * 100) \ total) & " %")
     Next ws
-    UnfreezeDisplay
+    Call ProgressBarStop
 End Sub
 
 
