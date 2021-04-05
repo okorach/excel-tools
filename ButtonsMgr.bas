@@ -38,14 +38,51 @@ Public Sub BtnSetProperties(oBtn As Shape, Optional font As String = vbNullStrin
     'End With
 End Sub
 
-Public Sub BtnAdd(ws As Worksheet, name As String, action As String, text As String, _
+Public Sub BtnAdd(ws As Worksheet, name As String, action As String, Optional text As String = vbNullString, _
     Optional size As Integer = 0, Optional font As String = vbNullString, Optional fontSize As Integer = 18, _
     Optional x As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20)
     Dim oBtn As Shape
     ws.Buttons.Add(x, y, w, h).Select
     Set oBtn = ws.Shapes(ws.Shapes.Count)
     oBtn.name = name
+    If text = vbNullString Then
+        text = name
+    End If
     Call BtnSetProperties(oBtn, text:=text, font:=font, fontSize:=fontSize, action:=action)
 End Sub
 
 
+'------------------------------------------------------------------------------
+' Places a shape (a button for instance) on given X, Y coordinates
+'------------------------------------------------------------------------------
+Public Sub ShapePlacement(oShape As Shape, Optional left As Integer = -1, Optional top As Integer = -1, _
+                        Optional width As Integer = -1, Optional height As Integer = -1)
+    With oShape
+        If x >= 0 Then
+            .left = left
+        End If
+        If top >= 0 Then
+            .top = top
+        End If
+        If width >= 0 Then
+            .width = width
+        End If
+        If height >= 0 Then
+            .height = height
+        End If
+    End With
+End Sub
+
+Public Function ShapeFind(ws As Worksheet, name As String) As Shape
+    For Each s In ws.Shapes
+        If s.name = name Then
+            Set ShapeFind = s
+            Exit For
+        End If
+    Next s
+    ' Return Nothing if not found
+End Function
+
+Public Function ShapeExist(ws As Worksheet, name As String) As Boolean
+    ShapeExist = Not (ShapeFind(ws, name) Is Nothing)
+End Function
