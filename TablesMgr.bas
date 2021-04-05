@@ -296,6 +296,9 @@ Public Function TableColNbr(oTable As ListObject, colNameOrNumber As Variant) As
         TableColNbr = colNameOrNumber
     End If
 End Function
+Public Function TableColumnNameExists(oTable As ListObject, columnName As String) As Integer
+    TableColumnNameExists = (TableColNbrFromName(oTable, columnName) > 0)
+End Function
 
 Private Function GetColList(oTable As ListObject, currentColList) As Variant
     If (IsNumeric(currentColList)) Then
@@ -329,6 +332,32 @@ Public Function AppendTableColToArray(oTable As ListObject, colNbrOrName As Vari
 End Function
 
 
+Public Sub TableColumnFormatIcons(oTable As ListObject, colNameOrNumber As Variant)
+    With oTable.ListColumns(colNameOrNumber).DataBodyRange
+        .FormatConditions.AddIconSetCondition
+        .FormatConditions(.FormatConditions.Count).SetFirstPriority
+    End With
+    With oTable.ListColumns(colNameOrNumber).DataBodyRange.FormatConditions(1)
+        .IconCriteria(2).Type = xlConditionValueNumber
+        .IconCriteria(2).value = 0
+        .IconCriteria(2).Operator = xlGreater
+        .IconCriteria(3).Type = xlConditionValueNumber
+        .IconCriteria(3).value = 0
+        .IconCriteria(3).Operator = xlGreaterEqual
+    End With
+    oTable.ListColumns(colNameOrNumber).DataBodyRange.Rows(1).Select
+    With Selection
+        .FormatConditions.Add Type:=xlExpression, Formula1:="=ET($A10=$A11;$B10=$B11)"
+    End With
+    With Selection.FormatConditions(2).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 49407
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(2).StopIfTrue = False
+    Selection.Copy
+    oTable.ListColumns(colNameOrNumber).DataBodyRange.PasteSpecial Paste:=xlPasteFormats
+End Sub
 '------------------------------------------------------------------------------
 ' Row functions
 '------------------------------------------------------------------------------
