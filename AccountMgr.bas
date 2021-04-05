@@ -896,6 +896,18 @@ Private Sub formatBalanceTable(accountId As String)
         Call SetColumnWidth(Chr$(col + 64), 5, ws)
         Call SetColumnWidth(Chr$(col + 65), 5, ws)
     End If
+    For Each colName In Array(GetLabel(AMOUNT_KEY), GetLabel(BALANCE_KEY))
+        If TableColumnNameExists(oTable, CStr(colName)) Then
+            Call TableColumnFormatIcons(oTable, CStr(colName))
+        End If
+        For Each curr In Array("EUR", "CHF", "USD")
+            Dim cname As String
+            cname = CStr(colName) & " " & CStr(curr)
+            If TableColumnNameExists(oTable, cname) Then
+                Call TableColumnFormatIcons(oTable, cname)
+            End If
+        Next curr
+    Next colName
 End Sub
 
 Private Sub formatDepositTable(accountId As String)
