@@ -12,7 +12,21 @@ Public Function KeyedTableValue(oTable As ListObject, key As Variant, colNameOrN
     On Error GoTo 0
 End Function
 
-Public Sub KeyedTableInsertOrReplace(oTable As ListObject, key As Variant, value As Variant, colNameOrNumber As Variant)
+Public Sub KeyedTableUpdate(oTable As ListObject, key As Variant, value As Variant, colNameOrNumber As Variant)
+    Dim col As Integer
+    Dim row As ListRow
+    col = TableColNbr(oTable, colNameOrNumber)
+    With oTable
+        For Each row In .ListRows
+            If row.Range.Cells(1, 1).value = key Then
+                row.Range.Cells(1, col).value = value
+                Exit Sub
+            End If
+        Next row
+    End With
+End Sub
+
+Public Sub KeyedTableInsertOrUpdate(oTable As ListObject, key As Variant, value As Variant, colNameOrNumber As Variant)
     Dim col As Integer
     Dim row As ListRow
     col = TableColNbr(oTable, colNameOrNumber)
