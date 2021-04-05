@@ -144,7 +144,13 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 
-    Dim iRow As Long
+    Dim iRow As Long, total As Long
+    Call ProgressBarStart("Import in progress..." & vbCrLf & vbCrLf & "0 %")
+    iRow = 1
+    Do While LenB(Cells(iRow, 1).value) > 0
+        iRow = iRow + 1
+    Loop
+    total = iRow
     iRow = 1
     Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
@@ -154,8 +160,10 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Int
             .Range(1, descCol).value = simplifyDescription(Cells(iRow, 2).value, subsTable)
         End With
         iRow = iRow + 1
+        Call ProgressBarUpdate("Import in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
     Loop
     ActiveWorkbook.Close
+    Call ProgressBarStop
 End Sub
 
 '------------------------------------------------------------------------------
@@ -167,7 +175,14 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
 
-    Dim iRow As Long
+    Dim iRow As Long, total As Long
+    Call ProgressBarStart("Import in progress..." & vbCrLf & vbCrLf & "0 %")
+    iRow = 1
+    Do While LenB(Cells(iRow + 1, 1).value) > 0
+        iRow = iRow + 1
+    Loop
+    total = iRow
+    
     iRow = 1
     Do While LenB(Cells(iRow + 1, 1).value) > 0
         oTable.ListRows.Add
@@ -183,8 +198,10 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
             End If
         End With
         iRow = iRow + 1
+        Call ProgressBarUpdate("Import in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
     Loop
     ActiveWorkbook.Close
+    Call ProgressBarStop
 End Sub
 
 '------------------------------------------------------------------------------
@@ -201,10 +218,19 @@ End Sub
 
 Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
+    Call ProgressBarStart("Import Revolut XLS in progress..." & vbCrLf & vbCrLf & "0 %")
+    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     
-    Dim iRow As Long
+    Dim iRow As Long, total As Long
+
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).value) > 0
+        iRow = iRow + 1
+    Loop
+    total = iRow
+    
     iRow = 2
     Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
@@ -231,14 +257,18 @@ CheckAmount:
             .Range(1, descCol).value = desc & Trim$(Cells(iRow, 2).value)
         End With
         iRow = iRow + 1
+        Call ProgressBarUpdate("Import revolut XLS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
     Loop
     ActiveWorkbook.Close
+    Call ProgressBarStop
 End Sub
 
 
 Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     ' Open file a first time to replace " , " and " ," by ";"
 
+    Call ProgressBarStart("Import Revolut CSV in progress..." & vbCrLf & vbCrLf & "0 %")
+    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
 
     Workbooks.Add
@@ -272,7 +302,12 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     Cells.Replace What:=" , ", Replacement:=";", LookAt:=xlPart
     Cells.Replace What:=", ", Replacement:=";", LookAt:=xlPart
 
-    Dim iRow As Long
+    Dim iRow As Long, total As Long
+    iRow = 2
+    Do While LenB(Cells(iRow, 1).value) > 0
+        iRow = iRow + 1
+    Loop
+    total = iRow
     iRow = 2
     Do While LenB(Cells(iRow, 1).value) > 0
         A = Split(Cells(iRow, 1).value, ";", -1, vbTextCompare)
@@ -297,8 +332,10 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
             End If
         End With
         iRow = iRow + 1
+        Call ProgressBarUpdate("Import Revolut CSV in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
     Loop
     ActiveWorkbook.Close SaveChanges:=False
+    Call ProgressBarStop
 End Sub
 
 '------------------------------------------------------------------------------
@@ -308,6 +345,8 @@ End Sub
 
 Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
+    Call ProgressBarStart("Import UBS in progress..." & vbCrLf & vbCrLf & "0 %")
+
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     If LCase$(Right(fileToOpen, 4)) = ".csv" Then
         xlsFile = convertCsvToXls(fileToOpen)
@@ -315,8 +354,15 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
     Else
         Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     End If
-    Dim iRow As Long
+
+    Dim iRow As Long, total As Long
     iRow = 2
+    Do While LenB(Cells(iRow, 1).value) > 0
+        iRow = iRow + 1
+    Loop
+    total = iRow
+    iRow = 2
+    
     Do While LenB(Cells(iRow, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
@@ -335,8 +381,10 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
             .Range(1, descCol).value = simplifyDescription(Cells(iRow, 13).value & " " & Cells(iRow, 14).value & " " & Cells(iRow, 15).value, subsTable)
         End With
         iRow = iRow + 1
+        Call ProgressBarUpdate("Import UBS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
     Loop
     ActiveWorkbook.Close
+    Call ProgressBarStop
 End Sub
 
 Private Function convertCsvToXls(fileToOpen As Variant) As Variant
