@@ -350,7 +350,7 @@ Private Function convertCsvToXls(fileToOpen As Variant) As Variant
         Array(9, 1), Array(10, 1), Array(11, 1), Array(12, 1), Array(13, 1), Array(14, 1), Array(15 _
         , 1), Array(16, 1), Array(17, 1), Array(18, 1), Array(19, 1), Array(20, 1), Array(21, 1)), _
         TrailingMinusNumbers:=True
-    xlsFile = left$(fileToOpen, Len(fileToOpen) - 4) & format(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
+    xlsFile = left$(fileToOpen, Len(fileToOpen) - 4) & format$(Now(), "yyyy-MM-dd hh-mm-ss") & ".xls"
     ActiveWorkbook.SaveAs filename:=xlsFile, fileformat:=xlExcel8, Password:="", WriteResPassword:="", _
         ReadOnlyRecommended:=False, CreateBackup:=False
     ActiveWorkbook.Close
