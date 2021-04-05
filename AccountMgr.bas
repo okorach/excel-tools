@@ -24,17 +24,13 @@ Public Const SPREAD_KEY As String = "k.amountSpread"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const BALANCE_SHEET As String = "Solde"
 
-Public Const ACCOUNT_TYPE_STANDARD As String = "Standard"
-Public Const ACCOUNT_TYPE_SAVINGS As String = "Savings"
-Public Const ACCOUNT_TYPE_INVESTMENT As String = "Investment"
-
 Public Const ACCOUNT_CLOSED As Long = 0
 Public Const ACCOUNT_OPEN As Long = 1
 
 Private Const MAX_MERGE_SIZE As Long = 100000
 
 Private Const ACCOUNTS_TABLE As String = "tblAccounts"
-Private Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
+Public Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
 
 Private Const ACCOUNT_NAME_VALUE As String = "B1"
 Private Const ACCOUNT_NBR_VALUE As String = "B2"
@@ -218,24 +214,37 @@ Public Sub AccountsFullRefresh()
 End Sub
 
 Public Sub AccountCreateBtn()
-    Dim accType As String, accName As String
-    accName = InputBox("Account name ?", "Account Name", "<accountName>")
-    accType = InputBox("Account type ?", "Account type", "<accountType>")
-    Dim res As Boolean
-    res = AccountCreate(accName, accType)
+    CreateAccountUserForm.Show
 End Sub
-Private Function AccountCreate(accountId As String, accType As String) As Boolean
+Public Function AccountCreate(accountId As String, accCurrency As String, accType As String, _
+    Optional avail As Integer = 0, Optional accNumber As String = vbNullString, _
+    Optional bank As String = vbNullString, Optional inBudget As Boolean = True) As Boolean
+
     Dim res As Boolean
-    res = KeyedTableInsert(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, accountId, 2)
+    Dim accTable As ListObject
+    Set accTable = Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE)
+    res = KeyedTableInsert(accTable, accountId, accountId, 2)
     If Not res Then
         MsgBox ("Account already exist, aborting")
         AccountCreate = False
         Exit Function
     End If
     AccountCreate = True
+    
+    Call KeyedTableUpdate(accTable, accountId, accNumber, 2)
+    res = KeyedTableInsert(accTable, accountId, accountId, 3)
+    Call KeyedTableUpdate(accTable, accountId, bank, 4)
+    Call KeyedTableUpdate(accTable, accountId, avail, 5)
+    Call KeyedTableUpdate(accTable, accountId, "Open", 6)
+    Call KeyedTableUpdate(accTable, accountId, accCurrency, 7)
+    Call KeyedTableUpdate(accTable, accountId, accType, 8)
+    Call KeyedTableUpdate(accTable, accountId, inBudget, 9)
+    tax = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), accountId, 3)
+    Call KeyedTableUpdate(accTable, accountId, CDbl(tax), 10)
+
     Sheets.Add
     ActiveSheet.name = accountId
-    Call accountAddBalanceTable(ActiveSheet, accountId, "EUR", accType)
+    Call accountAddBalanceTable(ActiveSheet, accountId, accCurrency, accType)
     Call accountAddStandardButtons(ActiveSheet)
     If accType = "Courant" Then
         Call accountAddImportButton(ActiveSheet)
