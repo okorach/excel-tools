@@ -23,12 +23,19 @@ Public Sub FixWorksheet(ws As Worksheet)
         oName = LCase$(ws.ListObjects(i).name)
         If oName Like "*yield*" Or oName Like "*interest*" Then
             ws.ListObjects(i).name = wsName & "_" & INTEREST_TABLE_NAME
+            ws.ListObjects(i).DisplayName = wsName & "_" & INTEREST_TABLE_NAME
         ElseIf oName Like "*transaction*" Or oName Like "*balance*" Then
             ws.ListObjects(i).name = wsName & "_" & BALANCE_TABLE_NAME
+            ws.ListObjects(i).DisplayName = wsName & "_" & BALANCE_TABLE_NAME
         ElseIf oName Like "*deposit*" Or oName = wsName & "_" Then
             ws.ListObjects(i).name = wsName & "_" & DEPOSIT_TABLE_NAME
+            ws.ListObjects(i).DisplayName = wsName & "_" & DEPOSIT_TABLE_NAME
         End If
     Next i
+End Sub
+
+Public Sub FixButtons(ws As Worksheet)
+
 End Sub
 
 
