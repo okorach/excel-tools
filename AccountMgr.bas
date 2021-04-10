@@ -56,8 +56,8 @@ Private Const BTN_PREV_5_TEXT As String = "7"
 Private Const BTN_PREV_TEXT As String = "3"
 Private Const BTN_NEXT_TEXT As String = "4"
 Private Const BTN_NEXT_5_TEXT As String = "8"
-Private Const BTN_BOTTOM_TEXT As String = "5"
-Private Const BTN_TOP_TEXT As String = "6"
+Private Const BTN_BOTTOM_TEXT As String = "6"
+Private Const BTN_TOP_TEXT As String = "5"
 Private Const BTN_SORT_TEXT As String = "~"
 Private Const BTN_ADD_ROW_TEXT As String = "+1"
 Private Const BTN_FORMAT_TEXT As String = "Format"
@@ -716,7 +716,7 @@ Private Function accountDepositTable(accountId As String) As ListObject
     Set accountDepositTable = accountTable(accountId, DEPOSIT_TABLE_NAME)
 End Function
 
-Private Function accountBalanceTable(accountId As String) As ListObject
+Function accountBalanceTable(accountId As String) As ListObject
     Set accountBalanceTable = accountTable(accountId, BALANCE_TABLE_NAME)
 End Function
 
