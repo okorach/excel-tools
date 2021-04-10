@@ -98,6 +98,9 @@ Sub ImportAny()
     End If
 End Sub
 
+Public Sub AccountExport()
+    Call ExportGeneric(ActiveSheet.name)
+End Sub
 
 ' PRLV SEPA CE URSSAF RHONE ALPES-CNTFS : FR55ZZZ143065 000828DC120181231145950A000136092 DE CE URSSAF RHONE ALPES-CNTFS : 000828DC120181231145950A000136092 FR55ZZZ143065
 Private Function deleteDuplicateSepa(desc As String) As String
@@ -487,62 +490,102 @@ Sub ImportGeneric(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
     Next iRow
 End Sub
 
-Sub ExportGeneric(ws, Optional csvFile As String = "", Optional silent As Boolean = False)
+Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional silent As Boolean = False)
+    If Not IsAnAccount(accountId) Then
+        If Not silent Then
+            Call ErrorMessage("k.warningNotAccount", accountId)
+        End If
+        Exit Sub
+    End If
 
-    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    Dim accType As String, accCurrency As String, defaultCurrency As String
+    accType = AccountType(accountId)
 
-    Dim sFolder As String
-    exportFrom = ActiveWorkbook.name
-
-    Sheets(ws).Select
-    Range("A1:B8").Select
-    Selection.Copy
-    exportVersion = 1
-
-    ' Create blank workbook and copy data on that workbook
-    Workbooks.Add
-    exportTo = ActiveWorkbook.name
-    Range("A1").Select
-    ActiveSheet.Paste
-    Range("A9").value = "Exporter version"
-    Range("B9").value = 1.2
-
-    Workbooks(exportFrom).Activate
-    Sheets(ws).ListObjects(1).DataBodyRange.Select
-    Selection.Copy
-    Workbooks(exportTo).Activate
-    Range("A10").Select
-    ActiveSheet.Paste
-    Range("B:C").NumberFormat = "General"
-    'Range("A:A").NumberFormat = Workbooks(exportFrom).Names("date_format").RefersToRange.Value
-    Range("A:A").NumberFormat = "YYYY-mm-dd"
-
-    ' Silently delete sheets in excess
-    Call DeleteAllButSheetOne
+    If accType <> "Courant" Then
+        MsgBox ("Account type is " & accType & vbCrLf & vbCrLf & "Can only export checking accounts for the moment, aborting...")
+        Exit Sub
+    End If
 
     ' Get filename to save
     If LenB(csvFile) = 0 Then
-        file = Application.GetSaveAsFilename
-        If file Then
-           csvFile = file & "csv"
+        Dim file As Variant
+        file = Application.GetSaveAsFilename(InitialFileName:=accountId & ".csv")
+        If file = False Then
+            Call ErrorMessage("k.warningExportCancelled")
+            Exit Sub
+        End If
+        csvFile = CStr(file)
+        If LCase$(Right(csvFile, 3)) <> "csv" Then
+            csvFile = csvFile & "csv"
         End If
     End If
 
-    ' Save CSV file
-    If LenB(csvFile) > 0 Then
-        ActiveWorkbook.SaveAs filename:=csvFile, fileformat:=xlCSV, CreateBackup:=False, local:=True
-        If (Not silent) Then
-            MsgBox "File " & csvFile & " saved"
-        End If
+    Call FreezeDisplay
+    
+    Dim exportFrom As String, exportTo As String
+    Dim ws As Worksheet
+    Set ws = Sheets(accountId)
+    exportFrom = ActiveWorkbook.name
+    accCurrency = AccountCurrency(accountId)
+    defaultCurrency = GetGlobalParam("DefaultCurrency")
+
+    ' Copy account transactions
+    Dim balanceTable As ListObject
+    Set balanceTbl = accountBalanceTable(accountId)
+    balanceTbl.DataBodyRange.Select
+    Selection.Copy
+    
+    ' Create blank workbook and copy data on that workbook to save as CSV
+    Workbooks.Add (xlWBATWorksheet)
+    exportTo = ActiveWorkbook.name
+    
+    ' Paste account transactions starting from row 2
+    Workbooks(exportTo).Activate
+    Range("A2").Select
+    ActiveSheet.Paste
+
+    ' Delete useless category and balance row
+    If accCurrency = defaultCurrency Then
+        For Each c In Array("F", "C")
+            ActiveSheet.Columns(c).EntireColumn.Delete shift:=xlToLeft
+        Next c
     Else
-        If Not silent Then
-            Call ErrorMessage("k.warningExportCancelled")
-        End If
+        ' For non default currency account also remove columns with amounts converted to default currency
+        For Each c In Array("H", "E", "C", "B")
+            ActiveSheet.Columns(c).EntireColumn.Delete shift:=xlToLeft
+        Next c
     End If
+    ' Set universal format for dates and numbers
+    Range("A:A").NumberFormat = "YYYY-mm-dd"
+    Range("B:I").NumberFormat = "General"
+
+    ' Copy metadata on row 1
+    Workbooks(exportFrom).Activate
+    Workbooks(exportTo).ActiveSheet.Range("A1") = "ExportDate=" & format(Now(), "YYYY-mm-dd HH:MM:SS")
+    Workbooks(exportTo).ActiveSheet.Range("B1") = "AccountId=" & accountId
+    Workbooks(exportTo).ActiveSheet.Range("C1") = "AccountNumber=" & AccountNumber(accountId)
+    Workbooks(exportTo).ActiveSheet.Range("D1") = "Bank=" & AccountBank(accountId)
+    avail = AccountAvailability(accountId)
+    If avail = "Immédiate" Then
+        avail = 0
+    End If
+    Workbooks(exportTo).ActiveSheet.Range("E1") = "Availability=" & AccountAvailability(accountId)
+    Workbooks(exportTo).ActiveSheet.Range("F1") = "Currency=" & accCurrency
+    Workbooks(exportTo).ActiveSheet.Range("G1") = "Type=" & AccountType(accountId)
+    Workbooks(exportTo).ActiveSheet.Range("H1") = "TaxRate=" & AccountTaxRate(accountId)
+
+    ' Save CSV file
+    Workbooks(exportTo).Activate
+    ActiveWorkbook.SaveAs filename:=csvFile, fileformat:=xlCSV, CreateBackup:=False, local:=True
     Application.DisplayAlerts = False
     ActiveWorkbook.Close
     Application.DisplayAlerts = True
-
+    
+    Workbooks(exportFrom).ActiveSheet.Range("A1").Select
+    Call UnfreezeDisplay
+    If Not silent Then
+        MsgBox "File " & csvFile & " saved"
+    End If
 End Sub
 Sub ExportAll()
     Dim sFolder As String
@@ -557,7 +600,7 @@ Sub ExportAll()
     If LenB(sFolder) > 0 Then ' if a file was chosen
         Call FreezeDisplay
         For Each ws In Worksheets
-            If ws.Cells(1, 1).value = "Nom Compte" Then
+            If IsAnAccount(ws.name) Then
                 filename = sFolder & "\" & ws.name & ".csv"
                 Call ExportGeneric(ws.name, filename, True)
             End If
@@ -567,10 +610,5 @@ Sub ExportAll()
         Call ErrorMessage("k.warningExportCancelled")
     End If
 End Sub
-Sub ExportLCL()
-    Call ExportGeneric("LCL CC")
-End Sub
-Sub ExportING()
-    Call ExportGeneric("ING CC")
-End Sub
+
 

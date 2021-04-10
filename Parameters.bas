@@ -1,6 +1,7 @@
 Attribute VB_Name = "Parameters"
 Public Const PARAMS_SHEET As String = "Paramètres"
 Public Const GLOBAL_PARAMS_TABLE As String = "TblGlobalParams"
+Public Const CURRENCIES_TABLE As String = "TblCurrencies"
 
 Public Function GetGlobalParam(paramKey As String) As Variant
     GetGlobalParam = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE), paramKey, 2)
