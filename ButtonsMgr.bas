@@ -40,9 +40,9 @@ End Sub
 
 Public Sub BtnAdd(ws As Worksheet, name As String, action As String, Optional text As String = vbNullString, _
     Optional size As Integer = 0, Optional font As String = vbNullString, Optional fontSize As Integer = 18, _
-    Optional x As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20)
+    Optional X As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20)
     Dim oBtn As Shape
-    ws.Buttons.Add(x, y, w, h).Select
+    ws.Buttons.Add(X, y, w, h).Select
     Set oBtn = ws.Shapes(ws.Shapes.Count)
     oBtn.name = name
     If text = vbNullString Then
@@ -58,7 +58,7 @@ End Sub
 Public Sub ShapePlacement(oShape As Shape, Optional left As Integer = -1, Optional top As Integer = -1, _
                         Optional width As Integer = -1, Optional height As Integer = -1)
     With oShape
-        If x >= 0 Then
+        If X >= 0 Then
             .left = left
         End If
         If top >= 0 Then

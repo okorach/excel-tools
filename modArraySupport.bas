@@ -270,7 +270,7 @@ Public Function ConcatenateArrays(ResultArray As Variant, arrayToAppend As Varia
 
 Dim VTypeResult As VbVarType
 Dim Ndx As Long
-Dim Res As Long
+Dim res As Long
 Dim NumElementsToAdd As Long
 Dim AppendNdx As Long
 Dim VTypeAppend As VbVarType
@@ -2062,14 +2062,14 @@ Public Function NumberOfArrayDimensions(arr As Variant) As Integer
 ' has 0 dimensions. This condition can also be tested with IsArrayEmpty.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Dim Ndx As Integer
-Dim Res As Integer
+Dim res As Integer
 On Error Resume Next
 ' Loop, increasing the dimension index Ndx, until an error occurs.
 ' An error will occur when Ndx exceeds the number of dimension
 ' in the array. Return Ndx - 1.
 Do
     Ndx = Ndx + 1
-    Res = UBound(arr, Ndx)
+    res = UBound(arr, Ndx)
 Loop Until Err.Number <> 0
 
 NumberOfArrayDimensions = Ndx - 1
