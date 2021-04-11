@@ -430,11 +430,12 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     importTo = ActiveWorkbook.name
     Dim balanceTbl As ListObject, depositsTbl As ListObject
     Dim accCurrency As String, defaultCurrency As String, accType As String, offset As Integer
-    
+    Dim isCurrent As Boolean
     Set balanceTbl = accountBalanceTable(accountId)
     Set depositsTbl = accountDepositTable(accountId)
     accCurrency = AccountCurrency(accountId)
     accType = AccountType(accountId)
+    isCurrent = (accType = GetLabel("k.accountStandard"))
     defaultCurrency = GetGlobalParam("DefaultCurrency")
     If accCurrency = defaultCurrency Then
         offset = 0
@@ -476,14 +477,14 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         balanceTbl.ListRows.Add
         With balanceTbl.ListRows(balanceTbl.ListRows.Count)
             .Range(1, 1) = dt
-            If accType = "Courant" Then
+            If isCurrent Then
                 .Range(1, offset + 2).value = amt
             Else
                 .Range(1, offset + 3).value = bal
             End If
             .Range(1, offset + 4).value = desc
             .Range(1, offset + 5).value = categ
-            If accType = "Courant" And LenB(inb) > 0 Then
+            If isCurrent And LenB(inb) > 0 Then
                 .Range(1, offset + 7).value = CInt(inb)
             End If
         End With
@@ -517,11 +518,6 @@ Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional
 
     Dim accType As String, accCurrency As String, defaultCurrency As String
     accType = AccountType(accountId)
-
-    'If accType <> "Courant" Then
-    '    MsgBox ("Account type is " & accType & vbCrLf & vbCrLf & "Can only export checking accounts for the moment, aborting...")
-    '    Exit Sub
-    'End If
 
     ' Get filename to save
     If LenB(csvFile) = 0 Then
