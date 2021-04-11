@@ -242,7 +242,7 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
     res = KeyedTableInsert(accTable, accountId, accountId, 3)
     Call KeyedTableUpdate(accTable, accountId, bank, 4)
     Call KeyedTableUpdate(accTable, accountId, avail, 5)
-    Call KeyedTableUpdate(accTable, accountId, "Open", 6)
+    Call KeyedTableUpdate(accTable, accountId, GetLabel("k.AccountOpen"), 6)
     Call KeyedTableUpdate(accTable, accountId, accCurrency, 7)
     Call KeyedTableUpdate(accTable, accountId, accType, 8)
     Call KeyedTableUpdate(accTable, accountId, inBudget, 9)
@@ -253,7 +253,7 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
     ActiveSheet.name = accountId
     Call accountAddBalanceTable(ActiveSheet, accountId, accCurrency, accType)
     Call accountAddStandardButtons(ActiveSheet)
-    If accType = "Courant" Then
+    If accType = GetLabel("k.accountStandard") Then
         Call accountAddImportButton(ActiveSheet)
     Else
         Call accountAddDepositTable(ActiveSheet, accountId)
@@ -303,7 +303,7 @@ Private Sub accountAddBalanceTable(ws As Worksheet, accountId As String, accCurr
         .ListColumns(3).name = lblBalance
         .ListColumns(4).name = GetLabel("k.description")
         .ListColumns(5).name = lblSubcat
-        If accType = "Courant" Then
+        If accType = GetLabel("k.accountStandard") Then
             .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
             .ListColumns(6).name = GetLabel("k.category")
@@ -320,7 +320,7 @@ Private Sub accountAddBalanceTable(ws As Worksheet, accountId As String, accCurr
             lblBalance = lblBalance & " " & accCurrency
             .ListColumns.Add(4).name = lblAmount
             .ListColumns.Add(5).name = lblBalance
-            If accType = "Courant" Then
+            If accType = GetLabel("k.accountStandard") Then
                 .ListRows(1).Range(1, 5).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             Else
                 .ListRows(1).Range(1, 4).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
@@ -338,8 +338,8 @@ Private Sub accountAddDepositTable(ws As Worksheet, accountId As String, Optiona
     ws.ListObjects.Add(xlSrcRange, Range("$G$10:$H$11"), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium4"
-        .ListColumns(1).name = "Date"
-        .ListColumns(2).name = "Montant"
+        .ListColumns(1).name = GetLabel("k.date")
+        .ListColumns(2).name = GetLabel("k.amount")
     End With
 End Sub
 Private Sub accountAddInterestTable(ws As Worksheet, accountId As String)
@@ -349,14 +349,14 @@ Private Sub accountAddInterestTable(ws As Worksheet, accountId As String)
     ws.ListObjects.Add(xlSrcRange, Range("$G$1:$I$6"), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium5"
-        .ListColumns(1).name = "Période"
-        .ListColumns(2).name = "Rend. Brut"
-        .ListColumns(3).name = "Rend. Net"
-        .ListRows(1).Range(1, 1).value = "Cette Année"
-        .ListRows(2).Range(1, 1).value = "Année dernière"
-        .ListRows(3).Range(1, 1).value = "3 dernières années"
-        .ListRows(4).Range(1, 1).value = "5 dernières années"
-        .ListRows(5).Range(1, 1).value = "Depuis le début"
+        .ListColumns(1).name = GetLabel("k.period")
+        .ListColumns(2).name = GetLabel("k.grossYield")
+        .ListColumns(3).name = GetLabel("k.netYield")
+        .ListRows(1).Range(1, 1).value = GetLabel("k.thisYear")
+        .ListRows(2).Range(1, 1).value = GetLabel("k.lastYear")
+        .ListRows(3).Range(1, 1).value = GetLabel("k.last3Years")
+        .ListRows(4).Range(1, 1).value = GetLabel("k.last5Years")
+        .ListRows(5).Range(1, 1).value = GetLabel("k.allTime")
     End With
 End Sub
 
@@ -449,7 +449,7 @@ Public Sub refreshOpenAccountsList()
     Call TruncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
     With Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS)
         For i = 1 To Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows.Count
-            If (Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 6).value = "Open") Then
+            If Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 6).value = GetLabel("k.accountOpen") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
                 .ListRows(.ListRows.Count).Range.Cells(1, 1).value = Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 1).value
             End If
@@ -472,7 +472,7 @@ End Sub
 Public Function IsInterestAccount(accountId As String) As Boolean
     Dim accType As String
     accType = AccountType(accountId)
-    IsInterestAccount = Not (accType = "Courant" Or accType = "Autres")
+    IsInterestAccount = Not (accType = GetLabel("k.accountStandard") Or accType = "Autres")
 End Function
 Public Function AccountInterestPeriod(AccountType) As Integer
     AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), AccountType, 2))
@@ -499,7 +499,7 @@ Public Function AccountStatus(accountId As String) As String
     AccountStatus = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 6))
 End Function
 Public Function AccountIsOpen(accountId As String) As Boolean
-    AccountIsOpen = (AccountStatus(accountId) = "Open")
+    AccountIsOpen = (AccountStatus(accountId) = GetLabel("k.accountOpen"))
 End Function
 Public Function AccountIsClosed(accountId As String) As Boolean
     AccountIsClosed = Not AccountIsOpen(accountId)
