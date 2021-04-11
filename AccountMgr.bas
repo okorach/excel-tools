@@ -290,24 +290,43 @@ Private Sub accountAddBalanceTable(ws As Worksheet, accountId As String, accCurr
     
     ws.Range("A11:A12").Select
     ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).name = tblName
+
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium2"
-        .ListColumns(1).name = "Date"
-        .ListColumns(2).name = "Montant"
-        .ListColumns(3).name = "Solde"
-        .ListColumns(4).name = "Description"
-        .ListColumns(5).name = "Sous-Catégorie"
+        Dim lblAmount As String, lblBalance As String, lblDate As String, lblSubcat As String
+        lblAmount = GetLabel("k.amount")
+        lblBalance = GetLabel("k.accountBalance")
+        lblDate = GetLabel("k.date")
+        lblSubcat = GetLabel("k.subcategory")
+        .ListColumns(1).name = lblDate
+        .ListColumns(2).name = lblAmount
+        .ListColumns(3).name = lblBalance
+        .ListColumns(4).name = GetLabel("k.description")
+        .ListColumns(5).name = lblSubcat
         If accType = "Courant" Then
-            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[Montant]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
-            .ListColumns(6).name = "Catégorie"
-            .ListRows(1).Range(1, 6).FormulaR1C1 = "=VLOOKUP([Sous-Catégorie],TableCategories,2,FALSE)"
+            .ListColumns(6).name = GetLabel("k.category")
+            .ListRows(1).Range(1, 6).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
             If AccountIsInBudget(accountId) Then
                 .ListColumns.Add
-                .ListColumns(7).name = "In Budget"
+                .ListColumns(7).name = GetLabel("k.inBudget")
             End If
         Else
-            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[Solde]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
+            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
+        End If
+        If accCurrency <> GetGlobalParam("DefaultCurrency") Then
+            lblAmount = lblAmount & " " & accCurrency
+            lblBalance = lblBalance & " " & accCurrency
+            .ListColumns.Add(4).name = lblAmount
+            .ListColumns.Add(5).name = lblBalance
+            If accType = "Courant" Then
+                .ListRows(1).Range(1, 5).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+            Else
+                .ListRows(1).Range(1, 4).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
+            End If
+            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
+            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
         End If
     End With
 End Sub
@@ -712,11 +731,11 @@ Private Function accountTable(accountId As String, accountSection As String) As 
     Next i
 End Function
 
-Private Function accountDepositTable(accountId As String) As ListObject
+Public Function accountDepositTable(accountId As String) As ListObject
     Set accountDepositTable = accountTable(accountId, DEPOSIT_TABLE_NAME)
 End Function
 
-Function accountBalanceTable(accountId As String) As ListObject
+Public Function accountBalanceTable(accountId As String) As ListObject
     Set accountBalanceTable = accountTable(accountId, BALANCE_TABLE_NAME)
 End Function
 
