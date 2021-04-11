@@ -74,7 +74,9 @@ End Sub
 Public Function GetNamedVariableValue(varName As String)
     GetNamedVariableValue = Names(varName).RefersToRange.value
 End Function
-
+Public Sub SetNamedVariableValue(varName As String, varValue As Variant)
+    Names(varName).RefersToRange.value = varValue
+End Sub
 
 
 Public Function GetColName(key) As String
