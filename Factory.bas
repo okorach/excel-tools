@@ -9,3 +9,9 @@ Public Function NewProgressBar(msg As String, goal As Integer, Optional show As 
     End If
 End Function
 
+Public Function NewInterest(accountId As String, Optional balTbl As ListObject = Nothing, Optional depTbl As ListObject = Nothing) As Interest
+    Set NewInterest = New Interest
+    NewInterest.Init accountId, balTbl, depTbl
+End Function
+
+

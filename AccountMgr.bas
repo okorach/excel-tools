@@ -223,7 +223,7 @@ Public Sub AccountCreateBtn()
 End Sub
 Public Function AccountCreate(accountId As String, accCurrency As String, accType As String, _
     Optional avail As Integer = 0, Optional accNumber As String = vbNullString, _
-    Optional bank As String = vbNullString, Optional inBudget As Boolean = True) As Boolean
+    Optional bank As String = vbNullString, Optional inBudget As Boolean = True, Optional taxRate As Double = 0) As Boolean
 
     Dim res As Boolean
     Dim accTable As ListObject
@@ -246,8 +246,9 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
     Call KeyedTableUpdate(accTable, accountId, accCurrency, 7)
     Call KeyedTableUpdate(accTable, accountId, accType, 8)
     Call KeyedTableUpdate(accTable, accountId, inBudget, 9)
-    tax = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), accountId, 3)
-    Call KeyedTableUpdate(accTable, accountId, CDbl(tax), 10)
+    Call KeyedTableUpdate(accTable, accountId, taxRate, 10)
+    'tax = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), accountId, 3)
+    'Call KeyedTableUpdate(accTable, accountId, CDbl(tax), 10)
 
     Sheets.Add
     ActiveSheet.name = accountId
@@ -658,24 +659,24 @@ Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
     
     For i = 1 To interestTable.ListRows.Count
         With interestTable.ListRows(i)
-            Dim interest As Variant
-            interest = "-"
+            Dim valInterest As Variant
+            valInterest = "-"
             If i = 1 Then
-                interest = interestsArray(nbrYears)
+                valInterest = interestsArray(nbrYears)
             ElseIf i = 2 And nbrYears >= 3 Then
-                interest = interestsArray(nbrYears - 1)
+                valInterest = interestsArray(nbrYears - 1)
             ElseIf i = 3 And nbrYears >= 5 Then
-                interest = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
+                valInterest = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
             ElseIf i = 4 And nbrYears >= 7 Then
-                interest = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
+                valInterest = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
             ElseIf i = 5 And nbrYears >= 3 Then
-                interest = ArrayAverage(interestsArray, 2, nbrYears - 1)
+                valInterest = ArrayAverage(interestsArray, 2, nbrYears - 1)
             End If
-            .Range(1, 2).value = interest
-            If interest = "-" Then
-                .Range(1, 3) = interest
+            .Range(1, 2).value = valInterest
+            If valInterest = "-" Then
+                .Range(1, 3) = valInterest
             Else
-                .Range(1, 3).value = min(interest, interest * (1 - tax))
+                .Range(1, 3).value = min(valInterest, valInterest * (1 - tax))
             End If
         End With
     Next i
