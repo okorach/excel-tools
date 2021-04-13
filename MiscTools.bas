@@ -128,9 +128,9 @@ Public Function GetColName(key) As String
     GetColName = GetLabel(key)
 End Function
 
-Public Sub ErrorMessage(key1 As String, Optional key2 As String = "")
+Public Sub ErrorMessage(key1 As String, Optional key2 As String = vbNullString)
     msg = GetLabel(key1)
-    If key2 <> "" Then
+    If LenB(key2) > 0 Then
         ms = msg & ", " & GetLabel(key2)
     End If
     MsgBox (msg)
