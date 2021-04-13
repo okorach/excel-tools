@@ -272,7 +272,6 @@ Public Sub SetTableColumnFormat(oTable As ListObject, colNbr As Long, theFormat 
 End Sub
 '------------------------------------------------------------------------------
 Public Sub SetTableStyle(oTable As ListObject, style As String)
-
     If Not oTable Is Nothing Then
         oTable.Range.ClearFormats
         oTable.TableStyle = style
@@ -280,11 +279,9 @@ Public Sub SetTableStyle(oTable As ListObject, style As String)
 End Sub
 
 Public Function TableColNbrFromName(oTable As ListObject, columnName As String) As Integer
-    On Error GoTo Except
-    TableColNbrFromName = oTable.ListColumns(columnName).index
-    GoTo ThisIsTheEnd
-Except:
     TableColNbrFromName = 0
+    On Error Resume Next
+    TableColNbrFromName = oTable.ListColumns(columnName).index
 ThisIsTheEnd:
     
 End Function
