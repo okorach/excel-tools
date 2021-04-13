@@ -447,7 +447,8 @@ Public Sub refreshOpenAccountsList()
         For i = 1 To Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows.Count
             If Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 6).value = GetLabel("k.accountOpen") Then
                 .ListRows.Add ' Add 1 row at the end, then extend
-                .ListRows(.ListRows.Count).Range.Cells(1, 1).value = Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 1).value
+                .ListRows(.ListRows.Count).Range.Cells(1, 1).value = _
+                    Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows(i).Range.Cells(1, 1).value
             End If
         Next i
         nbrAccounts = .ListRows.Count + 1
@@ -832,7 +833,8 @@ Private Sub formatAccountButtons(ws As Worksheet)
         Set s = ShapeFind(ws, CStr(values(0)))
         If Not s Is Nothing Then
             Call BtnSetProperties(s, text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
+            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
+                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
         End If
     Next btnData
     ws.Range("A1").Select

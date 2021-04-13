@@ -25,7 +25,8 @@ Public Function InterestsCalc(balanceArray As Variant, depositsArray As Variant,
     InterestsCalc = interestsCalcFromData(calcPerPeriod, withModal)
 End Function
 
-Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, ByVal lastYear As Variant, ByVal last3years As Variant, ByVal last5years As Variant, ByVal allTime As Variant)
+Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, ByVal lastYear As Variant, _
+                          ByVal last3years As Variant, ByVal last5years As Variant, ByVal allTime As Variant)
     Dim oTable As ListObject
     Set oTable = Sheets(INTEREST_CALC_SHEET).ListObjects(INTEREST_TABLE)
     If oTable.ListColumns.Count = 1 Then
@@ -43,7 +44,8 @@ Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, 
     Call interestsRecord(oTable.ListRows(oTable.ListRows.Count), thisYear, lastYear, last3years, last5years, allTime)
 End Sub
 
-Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant, Optional accName As String = "account", Optional interestPeriod As Integer = 1)
+Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant, _
+                              Optional accName As String = "account", Optional interestPeriod As Integer = 1)
     ' Loads data need for interests calculation in the calculation sheet
     With Sheets(INTEREST_CALC_SHEET)
         .Range("I1").value = accName
@@ -60,8 +62,6 @@ Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant
         Call SetTableColumn(.ListObjects(DEPOSITS_HISTORY_TABLE), 2, GetArrayColumn(depositsArray, 2, False))
         Call SetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), DATE_COL, GetArrayColumn(balancesArray, 1, False))
         Call SetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), BALANCE_COL, GetArrayColumn(balancesArray, 2, False))
-        '.ListObjects(2).ListColumns(3).DataBodyRange.Cells(1).formula = "=IF(OR([Date]>target_date,[Date]<=start_date),0,FLOOR((target_date-[Date])/15.2,1))"
-        '.ListObjects(2).ListColumns(4).DataBodyRange.Cells(1).formula = "=IF([Nbr de périodes]<=0;IF(OR([Date]>=target_date;[Date]<=start_date);0;[Montant]);[Montant]*(1+$R$1)^[Nbr de périodes])"
         
         ' Clear old calculated interest rates
         Call ClearTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), INTEREST_COL)
@@ -97,7 +97,8 @@ Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True,
     End With
 End Function
 
-Private Sub interestsRecord(row As ListRow, thisYear As Variant, lastYear As Variant, last3years As Variant, last5years As Variant, allTime As Variant, Optional tax As Double = 0)
+Private Sub interestsRecord(row As ListRow, thisYear As Variant, lastYear As Variant, last3years As Variant, _
+                            last5years As Variant, allTime As Variant, Optional tax As Double = 0)
     row.Range.Cells(1, 2).value = thisYear
     row.Range.Cells(1, 3).value = lastYear
     row.Range.Cells(1, 4).value = last3years

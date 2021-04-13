@@ -15,7 +15,6 @@ End Function
 
 Private Function toMonth(str) As Long
     s = LCase$(Trim$(str))
-    ' TODO handle accents in Fev and Dec
     If s Like "jan*" Then
         toMonth = 1
     ElseIf s Like "f?[bv]*" Then
@@ -215,7 +214,7 @@ End Sub
 '------------------------------------------------------------------------------
 
 Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
-    If LCase$(Right(fileToOpen, 4)) = ".csv" Then
+    If LCase$(Right$(fileToOpen, 4)) = ".csv" Then
         Call importRevolutCsv(oTable, fileToOpen, dateCol, amountCol, descCol)
     Else
         Call importRevolutXls(oTable, fileToOpen, dateCol, amountCol, descCol)
@@ -242,7 +241,7 @@ ErrDate:
             .Range(1, dateCol).value = toDate(Trim$(Cells(i, 1).value))
 CheckAmount:
             Dim desc As String
-            desc = ""
+            desc = vbNullString
             If LenB(Trim$(Cells(i, 3).value)) = 0 Then
                 .Range(1, amountCol).value = toAmount(Trim$(Cells(i, 4).value))
                 If LenB(Trim$(Cells(i, 6).value)) > 0 Then
@@ -321,7 +320,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
                 comment = Trim$(a(4))
             End If
             .Range(1, amountCol).value = amount
-            If comment <> "" Then
+            If Len(comment) > 0 Then
                 .Range(1, descCol).value = simplifyDescription(desc & " --> " & comment, subsTable)
             Else
                 .Range(1, descCol).value = simplifyDescription(desc, subsTable)
@@ -341,7 +340,7 @@ End Sub
 Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     Dim xlsFile As Variant
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    If LCase$(Right(fileToOpen, 4)) = ".csv" Then
+    If LCase$(Right$(fileToOpen, 4)) = ".csv" Then
         xlsFile = convertCsvToXls(fileToOpen)
         Workbooks.Open filename:=xlsFile, ReadOnly:=True
     Else
@@ -499,6 +498,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Set modal = Nothing
 End Sub
 
+
 Public Sub AccountCreateFromCSV()
     Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
@@ -525,9 +525,12 @@ Public Sub AccountCreateFromCSV()
     Call ImportGeneric(accountId, fileToOpen)
 End Sub
 
+
 Public Sub AccountExportHere()
     Call AccountExport(ActiveSheet.name)
 End Sub
+
+
 Public Sub AccountExportAll()
     Dim sFolder As String
     Dim filename As String
@@ -551,6 +554,8 @@ Public Sub AccountExportAll()
         Call ErrorMessage("k.warningExportCancelled")
     End If
 End Sub
+
+
 Public Sub AccountExport(accountId As String, Optional csvFile As String = "", Optional silent As Boolean = False)
     If Not IsAnAccount(accountId) Then
         If Not silent Then
@@ -571,7 +576,7 @@ Public Sub AccountExport(accountId As String, Optional csvFile As String = "", O
             Exit Sub
         End If
         csvFile = CStr(file)
-        If LCase$(Right(csvFile, 3)) <> "csv" Then
+        If LCase$(Right$(csvFile, 3)) <> "csv" Then
             csvFile = csvFile & "csv"
         End If
     End If
@@ -652,9 +657,10 @@ Public Sub AccountExport(accountId As String, Optional csvFile As String = "", O
     End If
 End Sub
 
+
 Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nbrTransactions As Long, Optional nbrDeposits As Long = 0)
     ' Copy metadata on row 1
-    targetWs.Range("A1") = "ExportDate=" & format(Now(), "YYYY-mm-dd HH:MM:SS")
+    targetWs.Range("A1") = "ExportDate=" & format$(Now(), "YYYY-mm-dd HH:MM:SS")
     targetWs.Range("B1") = "AccountId=" & accountId
     targetWs.Range("C1") = "AccountNumber=" & AccountNumber(accountId)
     targetWs.Range("D1") = "Bank=" & AccountBank(accountId)
@@ -671,6 +677,8 @@ Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nb
         targetWs.Range("J1") = "NbrDeposits=" & CStr(nbrDeposits)
     End If
 End Sub
+
+
 Private Sub AccountImportMetadata(ws As Worksheet, accountId As String, exportDate As String, accNumber As String, _
     bank As String, avail As Integer, accCurrency As String, accType As String, taxRate As Double, _
     nbrTransactions As Long, nbrDeposits As Long)
