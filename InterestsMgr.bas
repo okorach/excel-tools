@@ -20,10 +20,8 @@ Private Const INTEREST_COL = 3
 
 Public Function InterestsCalc(balanceArray As Variant, depositsArray As Variant, Optional account As String = "account", _
                               Optional interestPeriod As Integer = 1, Optional calcPerPeriod As Boolean = True)
-    FreezeDisplay
     Call interestsLoadData(balanceArray, depositsArray, account, interestPeriod)
     InterestsCalc = interestsCalcFromData(calcPerPeriod)
-    UnfreezeDisplay
 End Function
 
 Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, ByVal lastYear As Variant, ByVal last3years As Variant, ByVal last5years As Variant, ByVal allTime As Variant)
@@ -73,6 +71,7 @@ End Sub
 Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True)
     ' Calculate interest rates for each delta period or since the beginning of the balance history sheet
     With Sheets(INTEREST_CALC_SHEET)
+        Call ProgressBarStart("Interest calculation", .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1)
         For i = 2 To .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count
             If calcPerPeriod Then
                 .Range(INTEREST_DATE_START_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(DATE_COL).DataBodyRange.Rows(i - 1).value
@@ -83,8 +82,10 @@ Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True)
             .Range(INTEREST_RATE_CELL).value = 0
             .Range(INTEREST_GOAL_SEEK_CELL).GoalSeek Goal:=.Range(BALANCE_END_CELL).value, ChangingCell:=.Range(INTEREST_RATE_CELL)
             .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(INTEREST_COL).DataBodyRange.Rows(i).value = .Range(INTEREST_RATE_CELL).value
+            Call ProgressBarUpdate
         Next i
         interestsCalcFromData = GetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), INTEREST_COL)
+        Call ProgressBarStop
     End With
 End Function
 

@@ -234,6 +234,8 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
     End If
     AccountCreate = True
     
+    Call FreezeDisplay
+    
     Call KeyedTableUpdate(accTable, accountId, accNumber, 2)
     res = KeyedTableInsert(accTable, accountId, accountId, 3)
     Call KeyedTableUpdate(accTable, accountId, bank, 4)
@@ -257,6 +259,7 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
         Call accountAddInterestButtons(ActiveSheet)
     End If
     Call AccountFormat(accountId)
+    Call UnfreezeDisplay
 End Function
 
 Private Sub accountAddStandardButtons(ws As Worksheet)
@@ -331,7 +334,12 @@ Private Sub accountAddDepositTable(ws As Worksheet, accountId As String, Optiona
     Dim tblName As String
     tblName = accountId & "_" & DEPOSIT_TABLE_NAME
     
-    ws.ListObjects.Add(xlSrcRange, Range("$G$10:$H$11"), , xlYes).name = tblName
+    Dim r As String
+    r = "$G$10:$H$11"
+    If AccountCurrency(accountId) <> GetGlobalParam("DefaultCurrency") Then
+        r = "$I$10:$J$11"
+    End If
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium4"
         .ListColumns(1).name = GetLabel("k.date")
@@ -342,7 +350,12 @@ Private Sub accountAddInterestTable(ws As Worksheet, accountId As String)
     Dim tblName As String
     tblName = accountId & "_" & INTEREST_TABLE_NAME
     
-    ws.ListObjects.Add(xlSrcRange, Range("$G$1:$I$6"), , xlYes).name = tblName
+    Dim r As String
+    r = "$G$1:$I$6"
+    If AccountCurrency(accountId) <> GetGlobalParam("DefaultCurrency") Then
+        r = "$I$1:$K$6"
+    End If
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium5"
         .ListColumns(1).name = GetLabel("k.period")
@@ -356,10 +369,12 @@ Private Sub accountAddInterestTable(ws As Worksheet, accountId As String)
     End With
 End Sub
 
-
-Public Sub AccountFormatCurrent()
-    Call AccountFormat(ActiveSheet.name)
+Public Sub AccountFormatHere()
+    Call FreezeDisplay
+    Call AccountFormat(getAccountId(ActiveSheet))
+    Call UnfreezeDisplay
 End Sub
+
 Public Sub AccountFormat(accountId As String)
     Dim ws As Worksheet
     Set ws = getAccountSheet(accountId)
@@ -373,30 +388,32 @@ Public Sub AccountFormat(accountId As String)
 End Sub
 
 
-Public Sub AccountFormatAllSheets()
+Public Sub AccountFormatAll()
 '
 '  Reformat all account sheets
 '
-    Dim ws As Worksheet
-    Call ShowAllSheets
     Call ProgressBarStart("Formatting in progress", Worksheets.Count + 2)
+    Call FreezeDisplay
+    
+    Dim ws As Worksheet, activeWs As Worksheet
+    Set activeWs = ActiveSheet
+    Call ShowAllSheets
+    Call ProgressBarUpdate
     For Each ws In Worksheets
        If IsAnAccount(ws) Then
-           Call AccountFormat(ws.name)
+           Call AccountFormat(getAccountId(ws))
         End If
         Call ProgressBarUpdate
     Next ws
     Call AccountHideClosed
     Call ProgressBarUpdate
-    Call AccountHideTemplates
-    Call ProgressBarUpdate
+    activeWs.Activate
     Call ProgressBarStop
+    Call UnfreezeDisplay
 End Sub
-
-'-------------------------------------------------
-Public Function isTemplate(ws As Worksheet) As Boolean
-    isTemplate = (ws.name Like "*TEMPLATE*")
-End Function
+Public Sub GoToSolde()
+    Sheets(BALANCE_SHEET).Activate
+End Sub
 
 '-------------------------------------------------
 Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
@@ -415,23 +432,6 @@ End Sub
 
 Public Sub AccountShowClosed()
     Call accountSetClosedVisibility(xlSheetVisible)
-End Sub
-'-------------------------------------------------
-Private Sub accountSetTemplatesVisibility(visibility As XlSheetVisibility)
-    Dim ws As Worksheet
-    For Each ws In Worksheets
-        If isTemplate(ws) Then
-            ws.Visible = visibility
-        End If
-    Next ws
-End Sub
-
-Public Sub AccountHideTemplates()
-    Call accountSetTemplatesVisibility(xlSheetHidden)
-End Sub
-
-Public Sub AccountShowTemplates()
-    Call accountSetTemplatesVisibility(xlSheetVisible)
 End Sub
 
 Public Sub refreshOpenAccountsList()
@@ -599,7 +599,7 @@ Public Function AccountBalanceHistory(accountId As String, Optional sampling As 
 End Function
 
 
-Public Sub CalcAccountInterests(accountId As String)
+Public Sub AccountInterestCalc(accountId As String)
     Dim deposits As Variant
     Dim balances As Variant
     Dim interestPeriod As Integer
@@ -612,17 +612,21 @@ Public Sub CalcAccountInterests(accountId As String)
 End Sub
 
 
-Public Sub CalcInterestForAllAccounts()
+Public Sub AccountsCalcInterestAll()
     Dim accountId As String
     Dim ws As Worksheet
     Call ProgressBarStart("Calcul d'intérêts en cours", Worksheets.Count)
+    Call FreezeDisplay
     For Each ws In Worksheets
         accountId = getAccountId(ws)
         If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
-            Call CalcAccountInterests(accountId)
+            Call AccountInterestCalc(accountId)
         End If
+        Call UnfreezeDisplay
         Call ProgressBarUpdate
+        Call FreezeDisplay
     Next ws
+    Call UnfreezeDisplay
     Call ProgressBarStop
 End Sub
 
@@ -691,13 +695,13 @@ End Function
 ' Button methods
 '--------------------------------------------------------------------------
 
-Public Sub BtnAccountInterests()
-    Call CalcAccountInterests(getAccountId(ActiveSheet))
+Public Sub AccountInterestCalcHere()
+    Call FreezeDisplay
+    Call AccountInterestCalc(getAccountId(ActiveSheet))
+    Call UnfreezeDisplay
 End Sub
 
-Public Sub BtnAccountFormat()
-    Call FormatAccount(getAccountId(ActiveSheet))
-End Sub
+
 
 '--------------------------------------------------------------------------
 ' Private methods
@@ -807,24 +811,24 @@ Private Sub formatAccountButtons(ws As Worksheet)
     Dim s As Shape
 
     For Each btnData In Array( _
-        "BtnHome," & BTN_HOME_TEXT & ",Webdings,18,1,1,40" _
-        , "BtnPrev5," & BTN_PREV_5_TEXT & ",Webdings,18,1,2,40" _
-        , "BtnPrev," & BTN_PREV_TEXT & ",Webdings,18,1,3,40" _
-        , "BtnNext," & BTN_NEXT_TEXT & ",Webdings,18,1,4,40" _
-        , "BtnNext5," & BTN_NEXT_5_TEXT & ",Webdings,18,1,5,40" _
-        , "BtnTop," & BTN_TOP_TEXT & ",Webdings,18,1,6,40" _
-        , "BtnBottom," & BTN_BOTTOM_TEXT & ",Webdings,18,1,7,40" _
-        , "BtnSort," & BTN_SORT_TEXT & ",Webdings,18,2,1,40" _
-        , "BtnImport," & Chr$(71) & ",Webdings,18,2,2,40" _
-        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",Arial,14,2,3,40" _
-        , "BtnInterest," & Chr$(143) & ",Webdings,18,2,4,40" _
-        , "BtnFormat," & BTN_FORMAT_TEXT & ",Arial,18,2,5,80" _
+        "BtnHome," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
+        , "BtnPrev5," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
+        , "BtnPrev," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
+        , "BtnNext," & BTN_NEXT_TEXT & ",GoToNext,Webdings,18,1,4,40" _
+        , "BtnNext5," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
+        , "BtnTop," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
+        , "BtnBottom," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
+        , "BtnSort," & BTN_SORT_TEXTfFom & ",SortCurrentAccount,Webdings,18,2,1,40" _
+        , "BtnImport," & Chr$(71) & ",ThisWorkbook.GoToSolde,Webdings,18,2,2,40" _
+        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddInvestmentRow,Arial,14,2,3,40" _
+        , "BtnInterests," & Chr$(143) & ",AccountInterestCalcHere,Webdings,18,2,4,40" _
+        , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
         )
         values = Split(btnData, ",", -1, vbTextCompare)
         Set s = ShapeFind(ws, CStr(values(0)))
         If Not s Is Nothing Then
-            Call BtnSetProperties(s, text:=CStr(values(1)), font:=CStr(values(2)), fontSize:=CInt(values(3)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(5)) - 1) * sbw, BTN_HOME_Y + (CInt(values(4)) - 1) * BTN_HEIGHT, CInt(values(6)) - 1, BTN_HEIGHT - 1)
+            Call BtnSetProperties(s, text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
+            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
         End If
     Next btnData
     ws.Range("A1").Select

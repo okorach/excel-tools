@@ -46,12 +46,12 @@ Private Function toMonth(str) As Long
 End Function
 
 Private Function toDate(str) As Date
-    A = Split(str, " ", -1, vbTextCompare)
-    toDate = DateSerial(CInt(A(2)), toMonth(A(1)), CInt(A(0)))
+    a = Split(str, " ", -1, vbTextCompare)
+    toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
 End Function
 Private Function isoToDate(str) As Date
-    A = Split(str, "-", -1, vbTextCompare)
-    isoToDate = DateSerial(CInt(A(2)), CInt(A(1)), CInt(A(0)))
+    a = Split(str, "-", -1, vbTextCompare)
+    isoToDate = DateSerial(CInt(a(2)), CInt(a(1)), CInt(a(0)))
 End Function
 
 
@@ -102,9 +102,8 @@ Sub ImportAny()
     End If
 End Sub
 
-Public Sub AccountExport()
-    Call ExportGeneric(ActiveSheet.name)
-End Sub
+
+
 Public Sub AccountImport()
     Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
@@ -324,19 +323,19 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     total = iRow
     iRow = 2
     Do While LenB(Cells(iRow, 1).value) > 0
-        A = Split(Cells(iRow, 1).value, ";", -1, vbTextCompare)
+        a = Split(Cells(iRow, 1).value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             Dim desc As String, comment As String
             Dim amount As Double
-            .Range(1, dateCol).value = toDate(Trim$(A(0)))
-            desc = Trim$(A(1))
-            If LenB(Trim$(A(2))) = 0 Then
-                amount = CDbl(Trim$(A(3)))
-                comment = Trim$(A(5))
+            .Range(1, dateCol).value = toDate(Trim$(a(0)))
+            desc = Trim$(a(1))
+            If LenB(Trim$(a(2))) = 0 Then
+                amount = CDbl(Trim$(a(3)))
+                comment = Trim$(a(5))
             Else
-                amount = -CDbl(Trim$(A(2)))
-                comment = Trim$(A(4))
+                amount = -CDbl(Trim$(a(2)))
+                comment = Trim$(a(4))
             End If
             .Range(1, amountCol).value = amount
             If comment <> "" Then
@@ -355,7 +354,6 @@ End Sub
 '------------------------------------------------------------------------------
 ' UBS
 '------------------------------------------------------------------------------
-
 
 Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
@@ -426,7 +424,9 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
 
     Dim xlsFile As String
     Dim importFrom As String, importTo As String
-    Call ProgressBarStart("Import generic CSV in progress..." & vbCrLf & vbCrLf & "0 %")
+
+    'Call ProgressBarStart("Import generic CSV", 9)
+    
     importTo = ActiveWorkbook.name
     Dim balanceTbl As ListObject, depositsTbl As ListObject
     Dim accCurrency As String, defaultCurrency As String, accType As String, offset As Integer
@@ -443,72 +443,140 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         offset = 2
     End If
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    
-    xlsFile = convertCsvToXls(fileToOpen)
-    Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-    importFrom = ActiveWorkbook.name
-    
-    Dim tDates() As Variant
-    Dim tDesc() As String
-    Dim tSubCateg() As String
-    Dim tBudgetSpread() As Variant
-    Dim tAmounts() As Double
-    
-    Dim iRow As Long
+    'Call ProgressBarUpdate
 
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
+    Dim accId As String, cur As String, typ As String, avail As Integer, exportDate As String
+    Dim bank As String, taxRate As Double, accNbr As String
+    Dim nbrTr As Long, nbrDep As Long
+
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
+    Call AccountImportMetadata(ActiveSheet, accountId, exportDate, accNbr, bank, avail, cur, typ, taxRate, nbrTr, nbrDep)
+    importFrom = ActiveWorkbook.name
+    'Call ProgressBarUpdate
     
-    iRow = 1
-    ' skip account properties for now
-    
-    iRow = 2
+    Dim lastRow As String, firstRow As String
+    lastRow = CStr(nbrTr + 1)
+
     Workbooks(importFrom).Activate
-    Do While LenB(Cells(iRow, 1).value) > 0 And Cells(iRow, 1).value <> "---DEPOSITS---"
-        dt = Cells(iRow, 1).value
-        amt = CDbl(Cells(iRow, 2).value)
-        bal = CDbl(Cells(iRow, 3).value)
-        desc = Cells(iRow, 4).value
-        categ = Cells(iRow, 5).value
-        inb = Cells(iRow, 6).value
-        balanceTbl.ListRows.Add
-        With balanceTbl.ListRows(balanceTbl.ListRows.Count)
-            .Range(1, 1) = dt
-            If isCurrent Then
-                .Range(1, offset + 2).value = amt
-            Else
-                .Range(1, offset + 3).value = bal
-            End If
-            .Range(1, offset + 4).value = desc
-            .Range(1, offset + 5).value = categ
-            If isCurrent And LenB(inb) > 0 Then
-                .Range(1, offset + 7).value = CInt(inb)
-            End If
-        End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import UBS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
-    Loop
+    Range("A2:A" & lastRow).Select
+    Selection.Copy
+    Workbooks(importTo).Activate
+    balanceTbl.ListRows(1).Range(1, 1).Select
+    Selection.PasteSpecial Paste:=xlPasteValues
+    'Call ProgressBarUpdate
+    
+    Workbooks(importFrom).Activate
+    Range("B2:B" & lastRow).Select
+    Selection.Copy
+    Workbooks(importTo).Activate
+    balanceTbl.ListRows(1).Range(1, 2 + offset).Select
+    Selection.PasteSpecial Paste:=xlPasteValues
+    'Call ProgressBarUpdate
+
+    Workbooks(importFrom).Activate
+    Range("C2:C" & lastRow).Select
+    Selection.Copy
+    Workbooks(importTo).Activate
+    balanceTbl.ListRows(1).Range(1, 3 + offset).Select
+    Selection.PasteSpecial Paste:=xlPasteValues
+    'Call ProgressBarUpdate
+
+    Workbooks(importFrom).Activate
+    Range("D2:D" & lastRow).Select
+    Selection.Copy
+    Workbooks(importTo).Activate
+    balanceTbl.ListRows(1).Range(1, 4 + offset).Select
+    Selection.PasteSpecial Paste:=xlPasteValues
+    'Call ProgressBarUpdate
+
+    Workbooks(importFrom).Activate
+    Range("E2:E" & lastRow).Select
+    Selection.Copy
+    Workbooks(importTo).Activate
+    balanceTbl.ListRows(1).Range(1, 5 + offset).Select
+    Selection.PasteSpecial Paste:=xlPasteValues
+    Call ProgressBarUpdate
+
     ' Read deposits part if any
-    iRow = iRow + 1
-    Do While LenB(Cells(iRow, 1).value) > 0
-        dt = Cells(iRow, 1).value
-        amt = CDbl(Cells(iRow, 2).value)
-        depositsTbl.ListRows.Add
-        With depositsTbl.ListRows(depositsTbl.ListRows.Count)
-            .Range(1, 1) = dt
-            .Range(1, 2).value = amt
-        End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import UBS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
-    Loop
-    ActiveWorkbook.Close
-    Call ProgressBarStop
+    If nbrDep > 0 Then
+        firstRow = CStr(nbrTr + 2)
+        lastRow = CStr(nbrTr + nbrDep + 1)
+        Workbooks(importFrom).Activate
+        Range("A" & firstRow & ":A" & lastRow).Select
+        Selection.Copy
+        Workbooks(importTo).Activate
+        depositsTbl.ListRows(1).Range(1, 1).Select
+        Selection.PasteSpecial Paste:=xlPasteValues
+        'Call ProgressBarUpdate
+
+        Workbooks(importFrom).Activate
+        Range("B" & firstRow & ":B" & lastRow).Select
+        Selection.Copy
+        Workbooks(importTo).Activate
+        depositsTbl.ListRows(1).Range(1, 2).Select
+        Selection.PasteSpecial Paste:=xlPasteValues
+        'Call ProgressBarUpdate
+    Else
+        'Call ProgressBarUpdate(2)
+    End If
+    Workbooks(importFrom).Close SaveChanges:=False
+    'Call ProgressBarStop
 End Sub
 
-Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional silent As Boolean = False)
+Public Sub AccountCreateFromCSV()
+    Dim fileToOpen As Variant
+    fileToOpen = Application.GetOpenFilename()
+    If fileToOpen = False Then
+        Exit Sub
+    End If
+
+    Dim importFrom As String, importTo As String
+    importTo = ActiveWorkbook.name
+
+    Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
+    importFrom = ActiveWorkbook.name
+
+    Dim accountId As String, cur As String, typ As String, avail As Integer, exportDate As String
+    Dim bank As String, taxRate As Double, accNbr As String
+    Dim nbrTr As Long, nbrDep As Long
+    
+    Call AccountImportMetadata(Workbooks(importFrom).ActiveSheet, accountId, exportDate, accNbr, bank, avail, cur, _
+        typ, taxRate, nbrTr, nbrDep)
+    
+    Workbooks(importFrom).Close SaveChanges:=False
+    Workbooks(importTo).Activate
+    Call AccountCreate(accountId, cur, typ, avail, accNbr, bank)
+    Sheets(accountId).Activate
+    Call ImportGeneric(accountId, fileToOpen)
+End Sub
+
+Public Sub AccountExportHere()
+    Call AccountExport(ActiveSheet.name)
+End Sub
+Public Sub AccountExportAll()
+    Dim sFolder As String
+    Dim filename As String
+    ' Open the select folder prompt
+    With Application.FileDialog(msoFileDialogFolderPicker)
+        If .Show = -1 Then ' if OK is pressed
+            sFolder = .SelectedItems(1)
+        End If
+    End With
+
+    If LenB(sFolder) > 0 Then ' if a file was chosen
+        Call FreezeDisplay
+        For Each ws In Worksheets
+            If IsAnAccount(ws.name) Then
+                filename = sFolder & "\" & ws.name & ".csv"
+                Call AccountExport(ws.name, filename, True)
+            End If
+        Next ws
+        Call UnfreezeDisplay
+    Else
+        Call ErrorMessage("k.warningExportCancelled")
+    End If
+End Sub
+Public Sub AccountExport(accountId As String, Optional csvFile As String = "", Optional silent As Boolean = False)
     If Not IsAnAccount(accountId) Then
         If Not silent Then
             Call ErrorMessage("k.warningNotAccount", accountId)
@@ -569,19 +637,17 @@ Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional
         Next c
     End If
 
-
     Workbooks(exportFrom).Activate
     ' If account has deposits (savings account), store them
-    Dim depositsTable As ListObject
-    Set depositsTable = accountDepositTable(accountId)
-    If Not depositsTable Is Nothing Then
+    Dim depositsTbl As ListObject
+    Set depositsTbl = accountDepositTable(accountId)
+    If Not depositsTbl Is Nothing Then
         Dim rowNbr As Long
-        depositsTable.DataBodyRange.Select
+        depositsTbl.DataBodyRange.Select
         Selection.Copy
-        rowNbr = balanceTbl.ListRows.Count + 2
+        rowNbr = balanceTbl.ListRows.Count + 1
         Workbooks(exportTo).Activate
-        Range("A" & CStr(rowNbr)).value = "---DEPOSITS---"
-        Range("A" & CStr(rowNbr + 1)).Select
+        Range("A" & CStr(rowNbr)).Select
         Selection.PasteSpecial Paste:=xlPasteValues
     End If
 
@@ -591,18 +657,11 @@ Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional
 
     ' Copy metadata on row 1
     Workbooks(exportFrom).Activate
-    Workbooks(exportTo).ActiveSheet.Range("A1") = "ExportDate=" & format(Now(), "YYYY-mm-dd HH:MM:SS")
-    Workbooks(exportTo).ActiveSheet.Range("B1") = "AccountId=" & accountId
-    Workbooks(exportTo).ActiveSheet.Range("C1") = "AccountNumber=" & AccountNumber(accountId)
-    Workbooks(exportTo).ActiveSheet.Range("D1") = "Bank=" & AccountBank(accountId)
-    avail = AccountAvailability(accountId)
-    If avail Like "Immédiate" Then
-        avail = 0
+    If depositsTbl Is Nothing Then
+        Call AccountExportMetadata(accountId, Workbooks(exportTo).ActiveSheet, balanceTbl.ListRows.Count)
+    Else
+        Call AccountExportMetadata(accountId, Workbooks(exportTo).ActiveSheet, balanceTbl.ListRows.Count, depositsTbl.ListRows.Count)
     End If
-    Workbooks(exportTo).ActiveSheet.Range("E1") = "Availability=" & avail
-    Workbooks(exportTo).ActiveSheet.Range("F1") = "Currency=" & accCurrency
-    Workbooks(exportTo).ActiveSheet.Range("G1") = "Type=" & AccountType(accountId)
-    Workbooks(exportTo).ActiveSheet.Range("H1") = "TaxRate=" & AccountTaxRate(accountId)
 
     ' Save CSV file
     Workbooks(exportTo).Activate
@@ -617,28 +676,57 @@ Sub ExportGeneric(accountId As String, Optional csvFile As String = "", Optional
         MsgBox "File " & csvFile & " saved"
     End If
 End Sub
-Sub ExportAll()
-    Dim sFolder As String
-    Dim filename As String
-    ' Open the select folder prompt
-    With Application.FileDialog(msoFileDialogFolderPicker)
-        If .Show = -1 Then ' if OK is pressed
-            sFolder = .SelectedItems(1)
-        End If
-    End With
 
-    If LenB(sFolder) > 0 Then ' if a file was chosen
-        Call FreezeDisplay
-        For Each ws In Worksheets
-            If IsAnAccount(ws.name) Then
-                filename = sFolder & "\" & ws.name & ".csv"
-                Call ExportGeneric(ws.name, filename, True)
-            End If
-        Next ws
-        Call UnfreezeDisplay
-    Else
-        Call ErrorMessage("k.warningExportCancelled")
+Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nbrTransactions As Long, Optional nbrDeposits As Long = 0)
+    ' Copy metadata on row 1
+    targetWs.Range("A1") = "ExportDate=" & format(Now(), "YYYY-mm-dd HH:MM:SS")
+    targetWs.Range("B1") = "AccountId=" & accountId
+    targetWs.Range("C1") = "AccountNumber=" & AccountNumber(accountId)
+    targetWs.Range("D1") = "Bank=" & AccountBank(accountId)
+    avail = AccountAvailability(accountId)
+    If avail = "Immédiate" Then
+        avail = 0
+    End If
+    targetWs.Range("E1") = "Availability=" & avail
+    targetWs.Range("F1") = "Currency=" & AccountCurrency(accountId)
+    targetWs.Range("G1") = "Type=" & AccountType(accountId)
+    targetWs.Range("H1") = "TaxRate=" & AccountTaxRate(accountId)
+    targetWs.Range("I1") = "NbrTransactions=" & CStr(nbrTransactions)
+    If nbrDeposits > 0 Then
+        targetWs.Range("J1") = "NbrDeposits=" & CStr(nbrDeposits)
     End If
 End Sub
-
-
+Private Sub AccountImportMetadata(ws As Worksheet, accountId As String, exportDate As String, accNumber As String, _
+    bank As String, avail As Integer, accCurrency As String, accType As String, taxRate As Double, _
+    nbrTransactions As Long, nbrDeposits As Long)
+    ' Copy metadata on row 1
+    nbrTransactions = 0
+    nbrDeposits = 0
+    Dim i As Long
+    i = 1
+    Do While LenB(ws.Cells(1, i).value) > 0
+        a = Split(ws.Cells(1, i).value, "=", -1, vbTextCompare)
+        If a(0) = "AccountId" Then
+            accountId = a(1)
+        ElseIf a(0) = "ExportDate" Then
+            exportDate = a(1)
+        ElseIf a(0) = "AccountNumber" Then
+            accNumber = a(1)
+        ElseIf a(0) = "Bank" Then
+            bank = a(1)
+        ElseIf a(0) = "Availability" Then
+            avail = CInt(a(1))
+        ElseIf a(0) = "Currency" Then
+            accCurrency = a(1)
+        ElseIf a(0) = "Type" Then
+            accType = a(1)
+        ElseIf a(0) = "TaxRate" Then
+            taxRate = CDbl(a(1))
+        ElseIf a(0) = "NbrTransactions" Then
+            nbrTransactions = CLng(a(1))
+        ElseIf a(0) = "NbrDeposits" Then
+            nbrDeposits = CLng(a(1))
+        End If
+        i = i + 1
+    Loop
+End Sub
