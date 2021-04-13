@@ -19,9 +19,10 @@ Private Const BALANCE_COL = 2
 Private Const INTEREST_COL = 3
 
 Public Function InterestsCalc(balanceArray As Variant, depositsArray As Variant, Optional account As String = "account", _
-                              Optional interestPeriod As Integer = 1, Optional calcPerPeriod As Boolean = True)
+                              Optional interestPeriod As Integer = 1, Optional calcPerPeriod As Boolean = True, _
+                              Optional withModal As Boolean = True)
     Call interestsLoadData(balanceArray, depositsArray, account, interestPeriod)
-    InterestsCalc = interestsCalcFromData(calcPerPeriod)
+    InterestsCalc = interestsCalcFromData(calcPerPeriod, withModal)
 End Function
 
 Public Sub InterestsStore(ByVal accountId As String, ByVal thisYear As Variant, ByVal lastYear As Variant, ByVal last3years As Variant, ByVal last5years As Variant, ByVal allTime As Variant)
@@ -68,10 +69,13 @@ Private Sub interestsLoadData(balancesArray As Variant, depositsArray As Variant
 End Sub
 
 
-Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True)
+Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True, Optional withModal As Boolean = True)
     ' Calculate interest rates for each delta period or since the beginning of the balance history sheet
     With Sheets(INTEREST_CALC_SHEET)
-        Call ProgressBarStart("Interest calculation", .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1)
+        Dim modal As ProgressBar
+        If withModal Then
+            Set modal = NewProgressBar("Interest calculation", .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1)
+        End If
         For i = 2 To .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count
             If calcPerPeriod Then
                 .Range(INTEREST_DATE_START_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(DATE_COL).DataBodyRange.Rows(i - 1).value
@@ -80,12 +84,16 @@ Private Function interestsCalcFromData(Optional calcPerPeriod As Boolean = True)
             End If
             .Range(INTEREST_DATE_STOP_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(DATE_COL).DataBodyRange.Rows(i).value
             .Range(INTEREST_RATE_CELL).value = 0
-            .Range(INTEREST_GOAL_SEEK_CELL).GoalSeek Goal:=.Range(BALANCE_END_CELL).value, ChangingCell:=.Range(INTEREST_RATE_CELL)
+            .Range(INTEREST_GOAL_SEEK_CELL).GoalSeek goal:=.Range(BALANCE_END_CELL).value, ChangingCell:=.Range(INTEREST_RATE_CELL)
             .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(INTEREST_COL).DataBodyRange.Rows(i).value = .Range(INTEREST_RATE_CELL).value
-            Call ProgressBarUpdate
+            If withModal Then
+                modal.Update
+            End If
         Next i
         interestsCalcFromData = GetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), INTEREST_COL)
-        Call ProgressBarStop
+        If withModal Then
+            Set modal = Nothing
+        End If
     End With
 End Function
 

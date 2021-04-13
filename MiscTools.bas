@@ -54,6 +54,15 @@ Public Function min(ByVal val1 As Double, ByVal val2 As Double) As Double
     End If
 End Function
 
+Public Function GetLastNonEmptyRow(Optional col As Integer = 1)
+    Dim i As Long
+    i = 1
+    Do While LenB(Cells(i, col).value) > 0
+        i = i + 1
+    Loop
+    GetLastNonEmptyRow = i - 1
+End Function
+
 Public Function SheetExists(sheetToFind As String) As Boolean
     SheetExists = False
     For Each Sheet In Worksheets
