@@ -64,11 +64,11 @@ Public Sub ClearTable(oTable As ListObject)
 End Sub
 
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
-                     Optional sortCol2 As String = "", Optional sortOrder2 As XlSortOrder = xlDescending)
+                     Optional sortCol2 As String = vbNullString, Optional sortOrder2 As XlSortOrder = xlDescending)
     oTable.Sort.SortFields.Clear
     oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
         DataOption:=xlSortNormal
-    If sortCol2 <> "" Then
+    If LenB(sortCol2) > 0 Then
         oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
              DataOption:=xlSortNormal
     End If
@@ -363,7 +363,7 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
     For j = 1 To oTable.ListColumns.Count
-        oTable.ListRows(rowNbr).DataBodyRange.Columns(j).value = ""
+        oTable.ListRows(rowNbr).DataBodyRange.Columns(j).value = vbNullString
     Next j
 End Sub
 
