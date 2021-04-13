@@ -156,27 +156,24 @@ Public Sub ImportING(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-
-    Dim iRow As Long, total As Long
-    Call ProgressBarStart("Import in progress..." & vbCrLf & vbCrLf & "0 %")
-    iRow = 1
-    Do While LenB(Cells(iRow, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
-    iRow = 1
-    Do While LenB(Cells(iRow, 1).value) > 0
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import ING in progress", GetLastNonEmptyRow() + 1)
+    modal.Update
+    
+    Dim r As Long
+    r = 1
+    Do While LenB(Cells(r, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).value = Cells(iRow, 1).value
-            .Range(1, amountCol).value = toAmount(Cells(iRow, 4).value)
-            .Range(1, descCol).value = simplifyDescription(Cells(iRow, 2).value, subsTable)
+            .Range(1, dateCol).value = Cells(r, 1).value
+            .Range(1, amountCol).value = toAmount(Cells(r, 4).value)
+            .Range(1, descCol).value = simplifyDescription(Cells(r, 2).value, subsTable)
         End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
+        r = r + 1
+        modal.Update
     Loop
     ActiveWorkbook.Close
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 '------------------------------------------------------------------------------
@@ -187,34 +184,30 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-
-    Dim iRow As Long, total As Long
-    Call ProgressBarStart("Import in progress..." & vbCrLf & vbCrLf & "0 %")
-    iRow = 1
-    Do While LenB(Cells(iRow + 1, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import LCL in progress", GetLastNonEmptyRow() + 1)
+    modal.Update
     
-    iRow = 1
-    Do While LenB(Cells(iRow + 1, 1).value) > 0
+    Dim r As Long
+    r = 1
+    Do While LenB(Cells(r + 1, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).value = DateValue(Cells(iRow, 1).value)
-            .Range(1, amountCol).value = toAmount(Cells(iRow, 2).value)
-            If (Cells(iRow, 3).value Like "Ch?que") Then
-                .Range(1, descCol).value = "Cheque " & simplifyDescription(CStr(Cells(iRow, 4).value), subsTable)
-            ElseIf (Cells(iRow, 3).value = "Virement") Then
-                .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(iRow, 5).value, subsTable)
+            .Range(1, dateCol).value = DateValue(Cells(r, 1).value)
+            .Range(1, amountCol).value = toAmount(Cells(r, 2).value)
+            If (Cells(i, 3).value Like "Ch?que") Then
+                .Range(1, descCol).value = "Cheque " & simplifyDescription(CStr(Cells(r, 4).value), subsTable)
+            ElseIf (Cells(i, 3).value = "Virement") Then
+                .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(r, 5).value, subsTable)
             Else
-                .Range(1, descCol).value = simplifyDescription(Cells(iRow, 3).value & " " & Cells(iRow, 5).value & " " & Cells(iRow, 6).value, subsTable)
+                .Range(1, descCol).value = simplifyDescription(Cells(i, 3).value & " " & Cells(r, 5).value & " " & Cells(r, 6).value, subsTable)
             End If
         End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
+        r = r + 1
+        modal.Update
     Loop
     ActiveWorkbook.Close
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 '------------------------------------------------------------------------------
@@ -230,60 +223,51 @@ Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Intege
 End Sub
 
 Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
-
-    Call ProgressBarStart("Import Revolut XLS in progress..." & vbCrLf & vbCrLf & "0 %")
     
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True
-    
-    Dim iRow As Long, total As Long
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import Revolut XLS in progress", GetLastNonEmptyRow())
+    modal.Update
 
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
-    
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
+    Dim i As Long
+    i = 2
+    Do While LenB(Cells(i, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             On Error GoTo ErrDate
-            .Range(1, dateCol).value = DateValue(Trim$(Cells(iRow, 1).value))
+            .Range(1, dateCol).value = DateValue(Trim$(Cells(i, 1).value))
             GoTo CheckAmount
 ErrDate:
-            .Range(1, dateCol).value = toDate(Trim$(Cells(iRow, 1).value))
+            .Range(1, dateCol).value = toDate(Trim$(Cells(i, 1).value))
 CheckAmount:
             Dim desc As String
             desc = ""
-            If LenB(Trim$(Cells(iRow, 3).value)) = 0 Then
-                .Range(1, amountCol).value = toAmount(Trim$(Cells(iRow, 4).value))
-                If LenB(Trim$(Cells(iRow, 6).value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(iRow, 6).value) & " : ", subsTable)
+            If LenB(Trim$(Cells(i, 3).value)) = 0 Then
+                .Range(1, amountCol).value = toAmount(Trim$(Cells(i, 4).value))
+                If LenB(Trim$(Cells(i, 6).value)) > 0 Then
+                    desc = simplifyDescription(Trim$(Cells(i, 6).value) & " : ", subsTable)
                 End If
             Else
-                .Range(1, amountCol).value = -toAmount(Trim$(Cells(iRow, 3).value))
-                If LenB(Trim$(Cells(iRow, 5).value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(iRow, 5).value) & " : ", subsTable)
+                .Range(1, amountCol).value = -toAmount(Trim$(Cells(i, 3).value))
+                If LenB(Trim$(Cells(i, 5).value)) > 0 Then
+                    desc = simplifyDescription(Trim$(Cells(i, 5).value) & " : ", subsTable)
                 End If
             End If
-            .Range(1, descCol).value = desc & Trim$(Cells(iRow, 2).value)
+            .Range(1, descCol).value = desc & Trim$(Cells(i, 2).value)
         End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import revolut XLS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
+        i = i + 1
+        modal.Update
     Loop
     ActiveWorkbook.Close
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 
 Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     ' Open file a first time to replace " , " and " ," by ";"
 
-    Call ProgressBarStart("Import Revolut CSV in progress..." & vbCrLf & vbCrLf & "0 %")
-    
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-
     Workbooks.Add
     With ActiveSheet.QueryTables.Add(Connection:= _
         "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
@@ -315,15 +299,14 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     Cells.Replace What:=" , ", Replacement:=";", LookAt:=xlPart
     Cells.Replace What:=", ", Replacement:=";", LookAt:=xlPart
 
-    Dim iRow As Long, total As Long
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
-        a = Split(Cells(iRow, 1).value, ";", -1, vbTextCompare)
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import Revolut CSV in progress", GetLastNonEmptyRow())
+    modal.Update
+
+    Dim i As Long
+    i = 2
+    Do While LenB(Cells(i, 1).value) > 0
+        a = Split(Cells(i, 1).value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             Dim desc As String, comment As String
@@ -344,11 +327,11 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
                 .Range(1, descCol).value = simplifyDescription(desc, subsTable)
             End If
         End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import Revolut CSV in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
+        i = i + 1
+        modal.Update
     Loop
     ActiveWorkbook.Close SaveChanges:=False
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 '------------------------------------------------------------------------------
@@ -356,9 +339,7 @@ End Sub
 '------------------------------------------------------------------------------
 
 Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
-
-    Call ProgressBarStart("Import UBS in progress..." & vbCrLf & vbCrLf & "0 %")
-
+    Dim xlsFile As Variant
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     If LCase$(Right(fileToOpen, 4)) = ".csv" Then
         xlsFile = convertCsvToXls(fileToOpen)
@@ -366,37 +347,34 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
     Else
         Workbooks.Open filename:=fileToOpen, ReadOnly:=True
     End If
-
-    Dim iRow As Long, total As Long
-    iRow = 2
-    Do While LenB(Cells(iRow, 1).value) > 0
-        iRow = iRow + 1
-    Loop
-    total = iRow
-    iRow = 2
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import UBS in progress", GetLastNonEmptyRow())
+    modal.Update
     
-    Do While LenB(Cells(iRow, 1).value) > 0
+    Dim i As Long
+    i = 2
+    Do While LenB(Cells(i, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             If Cells(iRow, 13) = "Solde prix prestations" Then
                 .Range(1, amountCol).value = 0
             ElseIf LenB(Cells(iRow, 18).value) > 0 Then
-                .Range(1, amountCol).value = toAmount(Cells(iRow, 18).value) ' Sous-montant column
+                .Range(1, amountCol).value = toAmount(Cells(i, 18).value) ' Sous-montant column
             ElseIf LenB(Cells(iRow, 19).value) > 0 Then
-                .Range(1, amountCol).value = -toAmount(Cells(iRow, 19).value) ' Debit column
+                .Range(1, amountCol).value = -toAmount(Cells(i, 19).value) ' Debit column
             ElseIf LenB(Cells(iRow, 20).value) > 0 Then
-                .Range(1, amountCol).value = toAmount(Cells(iRow, 20).value) ' Credit column
+                .Range(1, amountCol).value = toAmount(Cells(i, 20).value) ' Credit column
             Else
                 .Range(1, amountCol).value = 0
             End If
-            .Range(1, dateCol).value = CDate(DateValue(Replace(Cells(iRow, 12).value, ".", "/")))
-            .Range(1, descCol).value = simplifyDescription(Cells(iRow, 13).value & " " & Cells(iRow, 14).value & " " & Cells(iRow, 15).value, subsTable)
+            .Range(1, dateCol).value = CDate(DateValue(Replace(Cells(i, 12).value, ".", "/")))
+            .Range(1, descCol).value = simplifyDescription(Cells(i, 13).value & " " & Cells(i, 14).value & " " & Cells(i, 15).value, subsTable)
         End With
-        iRow = iRow + 1
-        Call ProgressBarUpdate("Import UBS in progress..." & vbCrLf & vbCrLf & CStr((iRow * 100) \ total) & " %")
+        i = i + 1
+        modal.Update
     Loop
     ActiveWorkbook.Close
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 Private Function convertCsvToXls(fileToOpen As Variant) As Variant
@@ -422,37 +400,33 @@ End Function
 '------------------------------------------------------------------------------
 Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
 
-    Dim xlsFile As String
+   ' Dim xlsFile As String
     Dim importFrom As String, importTo As String
-
-    'Call ProgressBarStart("Import generic CSV", 9)
-    
     importTo = ActiveWorkbook.name
-    Dim balanceTbl As ListObject, depositsTbl As ListObject
-    Dim accCurrency As String, defaultCurrency As String, accType As String, offset As Integer
-    Dim isCurrent As Boolean
-    Set balanceTbl = accountBalanceTable(accountId)
-    Set depositsTbl = accountDepositTable(accountId)
-    accCurrency = AccountCurrency(accountId)
-    accType = AccountType(accountId)
-    isCurrent = (accType = GetLabel("k.accountStandard"))
-    defaultCurrency = GetGlobalParam("DefaultCurrency")
-    If accCurrency = defaultCurrency Then
-        offset = 0
-    Else
-        offset = 2
-    End If
-    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
-    'Call ProgressBarUpdate
 
+    subsTable = GetTableAsArray(Workbooks(importTo).Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    
     Dim accId As String, cur As String, typ As String, avail As Integer, exportDate As String
     Dim bank As String, taxRate As Double, accNbr As String
     Dim nbrTr As Long, nbrDep As Long
 
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import Generic CSV in progress", 9)
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-    Call AccountImportMetadata(ActiveSheet, accountId, exportDate, accNbr, bank, avail, cur, typ, taxRate, nbrTr, nbrDep)
     importFrom = ActiveWorkbook.name
-    'Call ProgressBarUpdate
+    Call AccountImportMetadata(ActiveSheet, accountId, exportDate, accNbr, bank, avail, cur, typ, taxRate, nbrTr, nbrDep)
+    modal.Update
+
+    Dim offset As Integer
+    offset = 0
+    If cur <> GetGlobalParam("DefaultCurrency", Workbooks(importTo)) Then
+        offset = 2
+    End If
+
+    Dim balanceTbl As ListObject, depositsTbl As ListObject
+    Set balanceTbl = accountBalanceTable(accountId)
+    Set depositsTbl = accountDepositTable(accountId)
+    modal.Update
     
     Dim lastRow As String, firstRow As String
     lastRow = CStr(nbrTr + 1)
@@ -463,7 +437,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Workbooks(importTo).Activate
     balanceTbl.ListRows(1).Range(1, 1).Select
     Selection.PasteSpecial Paste:=xlPasteValues
-    'Call ProgressBarUpdate
+    modal.Update
     
     Workbooks(importFrom).Activate
     Range("B2:B" & lastRow).Select
@@ -471,7 +445,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Workbooks(importTo).Activate
     balanceTbl.ListRows(1).Range(1, 2 + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
-    'Call ProgressBarUpdate
+    modal.Update
 
     Workbooks(importFrom).Activate
     Range("C2:C" & lastRow).Select
@@ -479,7 +453,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Workbooks(importTo).Activate
     balanceTbl.ListRows(1).Range(1, 3 + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
-    'Call ProgressBarUpdate
+    modal.Update
 
     Workbooks(importFrom).Activate
     Range("D2:D" & lastRow).Select
@@ -487,7 +461,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Workbooks(importTo).Activate
     balanceTbl.ListRows(1).Range(1, 4 + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
-    'Call ProgressBarUpdate
+    modal.Update
 
     Workbooks(importFrom).Activate
     Range("E2:E" & lastRow).Select
@@ -495,7 +469,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Workbooks(importTo).Activate
     balanceTbl.ListRows(1).Range(1, 5 + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
-    Call ProgressBarUpdate
+    modal.Update
 
     ' Read deposits part if any
     If nbrDep > 0 Then
@@ -507,7 +481,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         Workbooks(importTo).Activate
         depositsTbl.ListRows(1).Range(1, 1).Select
         Selection.PasteSpecial Paste:=xlPasteValues
-        'Call ProgressBarUpdate
+        modal.Update
 
         Workbooks(importFrom).Activate
         Range("B" & firstRow & ":B" & lastRow).Select
@@ -515,12 +489,14 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         Workbooks(importTo).Activate
         depositsTbl.ListRows(1).Range(1, 2).Select
         Selection.PasteSpecial Paste:=xlPasteValues
-        'Call ProgressBarUpdate
+        modal.Update
     Else
-        'Call ProgressBarUpdate(2)
+        modal.Update 2
     End If
-    Workbooks(importFrom).Close SaveChanges:=False
-    'Call ProgressBarStop
+    Application.DisplayAlerts = False
+    Workbooks(importFrom).Close
+    Application.DisplayAlerts = True
+    Set modal = Nothing
 End Sub
 
 Public Sub AccountCreateFromCSV()
@@ -532,7 +508,6 @@ Public Sub AccountCreateFromCSV()
 
     Dim importFrom As String, importTo As String
     importTo = ActiveWorkbook.name
-
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
     importFrom = ActiveWorkbook.name
 
@@ -558,7 +533,7 @@ Public Sub AccountExportAll()
     Dim filename As String
     ' Open the select folder prompt
     With Application.FileDialog(msoFileDialogFolderPicker)
-        If .Show = -1 Then ' if OK is pressed
+        If .show = -1 Then ' if OK is pressed
             sFolder = .SelectedItems(1)
         End If
     End With
@@ -730,3 +705,5 @@ Private Sub AccountImportMetadata(ws As Worksheet, accountId As String, exportDa
         i = i + 1
     Loop
 End Sub
+
+

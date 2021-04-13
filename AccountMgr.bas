@@ -59,6 +59,7 @@ Private Const BTN_NEXT_5_TEXT As String = "8"
 Private Const BTN_BOTTOM_TEXT As String = "6"
 Private Const BTN_TOP_TEXT As String = "5"
 Private Const BTN_SORT_TEXT As String = "~"
+Private Const BTN_IMPORT_TEXT As String = "G"
 Private Const BTN_ADD_ROW_TEXT As String = "+1"
 Private Const BTN_FORMAT_TEXT As String = "Format"
 
@@ -71,7 +72,8 @@ Public Sub MergeAccounts(columnKeys As Variant)
     Dim ws As Worksheet
 
     'Call FreezeDisplay
-    Call ProgressBarStart("Refresh in progress", (UBound(columnKeys) + 1) * Worksheets.Count)
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Refresh in progress", (UBound(columnKeys) + 1) * Worksheets.Count)
     
     For Each colKey In columnKeys
         Dim col As String
@@ -100,12 +102,12 @@ Public Sub MergeAccounts(columnKeys As Variant)
                    ret = ConcatenateArrays(totalColumn, arr1d)
                 End If
             End If
-            Call ProgressBarUpdate
+            modal.Update
         Next ws
         Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), col, totalColumn)
         Erase totalColumn
     Next colKey
-    Call ProgressBarStop
+    Set modal = Nothing
 
     ' Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     
@@ -217,7 +219,7 @@ Public Sub AccountsFullRefresh()
 End Sub
 
 Public Sub AccountCreateBtn()
-    CreateAccountUserForm.Show
+    CreateAccountUserForm.show
 End Sub
 Public Function AccountCreate(accountId As String, accCurrency As String, accType As String, _
     Optional avail As Integer = 0, Optional accNumber As String = vbNullString, _
@@ -392,23 +394,25 @@ Public Sub AccountFormatAll()
 '
 '  Reformat all account sheets
 '
-    Call ProgressBarStart("Formatting in progress", Worksheets.Count + 2)
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Formatting in progress", Worksheets.Count + 2)
     Call FreezeDisplay
     
     Dim ws As Worksheet, activeWs As Worksheet
     Set activeWs = ActiveSheet
     Call ShowAllSheets
-    Call ProgressBarUpdate
+    modal.Update
+    
     For Each ws In Worksheets
        If IsAnAccount(ws) Then
            Call AccountFormat(getAccountId(ws))
         End If
-        Call ProgressBarUpdate
+        modal.Update
     Next ws
     Call AccountHideClosed
-    Call ProgressBarUpdate
+    modal.Update
     activeWs.Activate
-    Call ProgressBarStop
+    Set modal = Nothing
     Call UnfreezeDisplay
 End Sub
 Public Sub GoToSolde()
@@ -599,35 +603,34 @@ Public Function AccountBalanceHistory(accountId As String, Optional sampling As 
 End Function
 
 
-Public Sub AccountInterestCalc(accountId As String)
-    Dim deposits As Variant
-    Dim balances As Variant
+Public Sub AccountInterestCalc(accountId As String, Optional withModal As Boolean = True)
     Dim interestPeriod As Integer
-    deposits = AccountDepositHistory(accountId)
-    balances = AccountBalanceHistory(accountId, "Yearly")
     interestPeriod = AccountInterestPeriod(AccountType(accountId))
     If interestPeriod > 0 Then
-        Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod))
+        Dim deposits As Variant
+        Dim balances As Variant
+        deposits = AccountDepositHistory(accountId)
+        balances = AccountBalanceHistory(accountId, "Yearly")
+        Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod, withModal:=withModal))
     End If
 End Sub
 
 
 Public Sub AccountsCalcInterestAll()
-    Dim accountId As String
-    Dim ws As Worksheet
-    Call ProgressBarStart("Calcul d'intérêts en cours", Worksheets.Count)
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Interests calculation in progress", Worksheets.Count)
     Call FreezeDisplay
+    Dim ws As Worksheet
     For Each ws In Worksheets
+        Dim accountId As String
         accountId = getAccountId(ws)
         If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
-            Call AccountInterestCalc(accountId)
+            Call AccountInterestCalc(accountId, withModal:=False)
         End If
-        Call UnfreezeDisplay
-        Call ProgressBarUpdate
-        Call FreezeDisplay
+        modal.Update
     Next ws
     Call UnfreezeDisplay
-    Call ProgressBarStop
+    Set modal = Nothing
 End Sub
 
 
@@ -818,8 +821,8 @@ Private Sub formatAccountButtons(ws As Worksheet)
         , "BtnNext5," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
         , "BtnTop," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
         , "BtnBottom," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
-        , "BtnSort," & BTN_SORT_TEXTfFom & ",SortCurrentAccount,Webdings,18,2,1,40" _
-        , "BtnImport," & Chr$(71) & ",ThisWorkbook.GoToSolde,Webdings,18,2,2,40" _
+        , "BtnSort," & BTN_SORT_TEXT & ",SortCurrentAccount,Webdings,18,2,1,40" _
+        , "BtnImport," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
         , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddInvestmentRow,Arial,14,2,3,40" _
         , "BtnInterests," & Chr$(143) & ",AccountInterestCalcHere,Webdings,18,2,4,40" _
         , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
@@ -851,7 +854,7 @@ Private Sub formatBalanceTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.name = accountId & "_" & BALANCE_TABLE_NAME
+    oTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium2")
     Dim col As Long
     col = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
@@ -926,7 +929,7 @@ Private Sub formatDepositTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.name = accountId & "_" & DEPOSIT_TABLE_NAME
+    oTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oTable, 2, EUR_FORMAT)
@@ -938,7 +941,7 @@ Private Sub formatInterestTable(accountId As String)
     If oTable Is Nothing Then
         Exit Sub
     End If
-    oTable.name = accountId & "_" & INTEREST_TABLE_NAME
+    oTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oTable, "TableStyleMedium5")
     Call SetTableColumnFormat(oTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oTable, 3, INTEREST_FORMAT)
