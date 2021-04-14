@@ -8,8 +8,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Public msg As String
-Public progress As Integer
-Public goal As Integer
+Public progress As Long
+Public goal As Long
 Public form As UserForm
 
 
