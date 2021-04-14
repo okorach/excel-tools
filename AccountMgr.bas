@@ -225,30 +225,28 @@ Public Function AccountCreate(accountId As String, accCurrency As String, accTyp
     Optional avail As Integer = 0, Optional accNumber As String = vbNullString, _
     Optional bank As String = vbNullString, Optional inBudget As Boolean = True, Optional taxRate As Double = 0) As Boolean
 
+    Call FreezeDisplay
+    
     Dim res As Boolean
-    Dim accTable As ListObject
-    Set accTable = Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE)
-    res = KeyedTableInsert(accTable, accountId, accountId, 2)
-    If Not res Then
+    Dim tbl As KeyedTable
+    Set tbl = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
+
+    If tbl.KeyExists(accountId) Then
         MsgBox ("Account already exist, aborting")
         AccountCreate = False
         Exit Function
     End If
     AccountCreate = True
     
-    Call FreezeDisplay
-    
-    Call KeyedTableUpdate(accTable, accountId, accNumber, 2)
-    res = KeyedTableInsert(accTable, accountId, accountId, 3)
-    Call KeyedTableUpdate(accTable, accountId, bank, 4)
-    Call KeyedTableUpdate(accTable, accountId, avail, 5)
-    Call KeyedTableUpdate(accTable, accountId, GetLabel("k.AccountOpen"), 6)
-    Call KeyedTableUpdate(accTable, accountId, accCurrency, 7)
-    Call KeyedTableUpdate(accTable, accountId, accType, 8)
-    Call KeyedTableUpdate(accTable, accountId, inBudget, 9)
-    Call KeyedTableUpdate(accTable, accountId, taxRate, 10)
-    'tax = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), accountId, 3)
-    'Call KeyedTableUpdate(accTable, accountId, CDbl(tax), 10)
+    tbl.Insert accountId, accNumber, 2
+    tbl.Update accountId, accountId, 3
+    tbl.Update accountId, bank, 4
+    tbl.Update accountId, avail, 5
+    tbl.Update accountId, GetLabel("k.AccountOpen"), 6
+    tbl.Update accountId, accCurrency, 7
+    tbl.Update accountId, accType, 8
+    tbl.Update accountId, inBudget, 9
+    tbl.Update accountId, taxRate, 10
 
     Sheets.Add
     ActiveSheet.name = accountId
@@ -472,28 +470,41 @@ Public Function IsInterestAccount(accountId As String) As Boolean
     IsInterestAccount = Not (accType = GetLabel("k.accountStandard") Or accType = "Autres")
 End Function
 Public Function AccountInterestPeriod(AccountType) As Integer
-    AccountInterestPeriod = CInt(KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE), AccountType, 2))
+    Dim accountTypes As KeyedTable
+    Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
+    AccountInterestPeriod = CInt(accountTypes.Lookup(AccountType, 2))
 End Function
 
 
 '-------------------------------------------------
 Public Function AccountExists(accountId As String) As Boolean
-    AccountExists = (SheetExists(accountId) And KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2) <> vbNull)
+    Dim accounts As KeyedTable
+    Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
+    AccountExists = (SheetExists(accountId) And accounts.KeyExists(accountId))
 End Function
+
+
+Private Function accountData(accountId As String, col As Integer) As Variant
+    Dim accounts As KeyedTable
+    Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
+    accountData = accounts.Lookup(accountId, col)
+End Function
+
+
 Public Function AccountNumber(accountId As String) As String
-    AccountNumber = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2))
+    AccountNumber = CStr(accountData(accountId, 2))
 End Function
 Public Function AccountName(accountId As String) As String
-    AccountName = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 3))
+    AccountName = CStr(accountData(accountId, 3))
 End Function
 Public Function AccountBank(accountId As String) As String
-    AccountBank = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 4))
+    AccountBank = CStr(accountData(accountId, 4))
 End Function
 Public Function AccountAvailability(accountId As String) As String
-    AccountAvailability = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 5))
+    AccountAvailability = CStr(accountData(accountId, 5))
 End Function
 Public Function AccountStatus(accountId As String) As String
-    AccountStatus = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 6))
+    AccountStatus = CStr(accountData(accountId, 6))
 End Function
 Public Function AccountIsOpen(accountId As String) As Boolean
     AccountIsOpen = (AccountStatus(accountId) = GetLabel("k.accountOpen"))
@@ -502,16 +513,16 @@ Public Function AccountIsClosed(accountId As String) As Boolean
     AccountIsClosed = Not AccountIsOpen(accountId)
 End Function
 Public Function AccountCurrency(accountId As String) As String
-    AccountCurrency = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 7))
+    AccountCurrency = CStr(accountData(accountId, 7))
 End Function
 Public Function AccountType(accountId As String) As String
-    AccountType = CStr(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 8))
+    AccountType = CStr(accountData(accountId, 8))
 End Function
 Public Function AccountIsInBudget(accountId As String) As Boolean
-    AccountInBudget = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 9) = 1)
+    AccountInBudget = CBool(accountData(accountId, 9))
 End Function
 Public Function AccountTaxRate(accountId As String) As Double
-    AccountTaxRate = CDbl(KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 10))
+    AccountTaxRate = CDbl(accountData(accountId, 10))
 End Function
 
 Public Sub AddSavingsRow()
@@ -547,7 +558,9 @@ Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     Else
         accountId = accountIdOrWs.name
     End If
-    IsAnAccount = (KeyedTableValue(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE), accountId, 2) <> vbNull)
+    Dim accounts As KeyedTable
+    Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
+    IsAnAccount = accounts.KeyExists(accountId)
 End Function
 
 Public Function AccountDepositHistory(accountId As String) As Variant
@@ -738,7 +751,7 @@ Private Sub formatAccountButtons(ws As Worksheet)
         , "BtnBottom," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
         , "BtnSort," & BTN_SORT_TEXT & ",SortCurrentAccount,Webdings,18,2,1,40" _
         , "BtnImport," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
-        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddInvestmentRow,Arial,14,2,3,40" _
+        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
         , "BtnInterests," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
         , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
         )

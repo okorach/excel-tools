@@ -3,19 +3,23 @@ Public Const PARAMS_SHEET As String = "Paramètres"
 Public Const GLOBAL_PARAMS_TABLE As String = "TblGlobalParams"
 Public Const CURRENCIES_TABLE As String = "TblCurrencies"
 
+
 Public Function GetGlobalParam(paramKey As String, Optional wb As Workbook = Nothing) As Variant
     If wb Is Nothing Then
-        GetGlobalParam = KeyedTableValue(Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE), paramKey, 2)
-    Else
-        GetGlobalParam = KeyedTableValue(wb.Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE), paramKey, 2)
+        Set wb = ActiveWorkbook
     End If
+    Dim paramsTable As KeyedTable
+    Set paramsTable = NewKeyedTable(wb.Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE))
+    GetGlobalParam = paramsTable.Lookup(paramKey, 2)
 End Function
 
-Public Sub SetGlobalParam(paramKey As String, paramValue As Variant, Optional wb As Workbook = Nothing)
+
+Public Function SetGlobalParam(paramKey As String, paramValue As Variant, Optional wb As Workbook = Nothing) As Boolean
     If wb Is Nothing Then
-        Call KeyedTableInsertOrReplace(Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE), paramKey, paramValue, 2)
-    Else
-        Call KeyedTableInsertOrReplace(wb.Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE), paramKey, paramValue, 2)
+        Set wb = ActiveWorkbook
     End If
-End Sub
+    Dim paramsTable As KeyedTable
+    Set paramsTable = NewKeyedTable(wb.Sheets(PARAMS_SHEET).ListObjects(GLOBAL_PARAMS_TABLE))
+    SetGlobalParam = paramsTable.InsertOrUpdate(paramKey, paramValue, 2)
+End Function
 
