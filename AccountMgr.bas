@@ -605,41 +605,6 @@ Public Function AccountBalanceHistory(accountId As String, Optional sampling As 
 End Function
 
 
-Public Sub AccountInterestCalc(accountId As String, Optional withModal As Boolean = True)
-    Dim interestPeriod As Integer
-    interestPeriod = AccountInterestPeriod(AccountType(accountId))
-    If interestPeriod > 0 Then
-        Dim deposits As Variant
-        Dim balances As Variant
-        deposits = AccountDepositHistory(accountId)
-        balances = AccountBalanceHistory(accountId, "Yearly")
-
-        Dim accountInterests As Interest
-        Set accountInterests = NewInterest(accountId, balances, deposits, interestPeriod)
-        accountInterests.Calc
-        accountInterests.Store AccountTaxRate(accountId)
-    End If
-End Sub
-
-
-Public Sub AccountsCalcInterestAll()
-    Dim modal As ProgressBar
-    Set modal = NewProgressBar("Interests calculation in progress", Worksheets.Count)
-    Call FreezeDisplay
-    Dim ws As Worksheet
-    For Each ws In Worksheets
-        Dim accountId As String
-        accountId = getAccountId(ws)
-        If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
-            Call AccountInterestCalc(accountId, withModal:=False)
-        End If
-        modal.Update
-    Next ws
-    Call UnfreezeDisplay
-    Set modal = Nothing
-End Sub
-
-
 Private Sub setInterest(r As Range, value As Variant, tax As Double)
     If value = "-" Then
         r.value = value
@@ -654,18 +619,6 @@ Public Function getSelectedAccount() As String
     selectedNbr = GetNamedVariableValue("selectedAccount")
     getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects("TblOpenAccounts").ListRows(selectedNbr).Range(1, 1)
 End Function
-
-
-'--------------------------------------------------------------------------
-' Button methods
-'--------------------------------------------------------------------------
-
-Public Sub AccountInterestCalcHere()
-    Call FreezeDisplay
-    Call AccountInterestCalc(getAccountId(ActiveSheet))
-    Call UnfreezeDisplay
-End Sub
-
 
 
 '--------------------------------------------------------------------------
@@ -752,7 +705,7 @@ Private Function AccountBalanceArray(accountId As String) As Variant
     AccountBalanceArray = accountArray(accountId, BALANCE_TABLE_NAME)
 End Function
 
-Private Function getAccountId(ws As Worksheet) As String
+Public Function getAccountId(ws As Worksheet) As String
     getAccountId = ws.name
 End Function
 
@@ -786,7 +739,7 @@ Private Sub formatAccountButtons(ws As Worksheet)
         , "BtnSort," & BTN_SORT_TEXT & ",SortCurrentAccount,Webdings,18,2,1,40" _
         , "BtnImport," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
         , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddInvestmentRow,Arial,14,2,3,40" _
-        , "BtnInterests," & Chr$(143) & ",AccountInterestCalcHere,Webdings,18,2,4,40" _
+        , "BtnInterests," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
         , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
         )
         values = Split(btnData, ",", -1, vbTextCompare)
