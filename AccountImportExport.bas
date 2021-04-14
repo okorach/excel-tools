@@ -279,7 +279,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
         .RefreshOnFileOpen = False
         .RefreshStyle = xlInsertDeleteCells
         .SavePassword = False
-        .SaveData = True
+        .saveData = True
         .AdjustColumnWidth = True
         .RefreshPeriod = 0
         .TextFilePromptOnRefresh = False
