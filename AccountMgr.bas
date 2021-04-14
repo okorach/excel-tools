@@ -613,7 +613,11 @@ Public Sub AccountInterestCalc(accountId As String, Optional withModal As Boolea
         Dim balances As Variant
         deposits = AccountDepositHistory(accountId)
         balances = AccountBalanceHistory(accountId, "Yearly")
-        Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod, withModal:=withModal))
+
+        Dim accountInterests As Interest
+        Set accountInterests = NewInterest(accountId, balances, deposits, interestPeriod)
+        accountInterests.Calc
+        accountInterests.Store AccountTaxRate(accountId)
     End If
 End Sub
 
@@ -644,50 +648,6 @@ Private Sub setInterest(r As Range, value As Variant, tax As Double)
     End If
 End Sub
 
-Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
-    Dim nbrYears As Long
-    Dim lastYear As Variant, last3years As Variant, last5year As Variant, allTime As Variant
-    Dim interestsTable As ListObject
-    Dim ws As Worksheet
-    Dim tax As Double
-    nbrYears = UBound(interestsArray)
-    Set interestTable = accountInterestTable(accountId)
-    If interestTable.ListColumns.Count <= 2 Then
-        interestTable.ListColumns.Add
-        interestTable.ListColumns(3).name = "Rend. Net"
-    End If
-    tax = AccountTaxRate(accountId)
-    
-    For i = 1 To interestTable.ListRows.Count
-        With interestTable.ListRows(i)
-            Dim valInterest As Variant
-            valInterest = "-"
-            If i = 1 Then
-                valInterest = interestsArray(nbrYears)
-            ElseIf i = 2 And nbrYears >= 3 Then
-                valInterest = interestsArray(nbrYears - 1)
-            ElseIf i = 3 And nbrYears >= 5 Then
-                valInterest = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
-            ElseIf i = 4 And nbrYears >= 7 Then
-                valInterest = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
-            ElseIf i = 5 And nbrYears >= 3 Then
-                valInterest = ArrayAverage(interestsArray, 2, nbrYears - 1)
-            End If
-            .Range(1, 2).value = valInterest
-            If valInterest = "-" Then
-                .Range(1, 3) = valInterest
-            Else
-                .Range(1, 3).value = min(valInterest, valInterest * (1 - tax))
-            End If
-        End With
-    Next i
-    interestTable.ListColumns(2).DataBodyRange.NumberFormat = INTEREST_FORMAT
-    interestTable.ListColumns(3).DataBodyRange.NumberFormat = INTEREST_FORMAT
-    
-    With interestTable.ListColumns(3).DataBodyRange
-        Call InterestsStore(accountId, .Rows(1).value, .Rows(2).value, .Rows(3).value, .Rows(4).value, .Rows(5).value)
-    End With
-End Sub
 
 
 Public Function getSelectedAccount() As String
@@ -735,7 +695,7 @@ Public Function accountBalanceTable(accountId As String) As ListObject
     Set accountBalanceTable = accountTable(accountId, BALANCE_TABLE_NAME)
 End Function
 
-Private Function accountInterestTable(accountId As String) As ListObject
+Public Function accountInterestTable(accountId As String) As ListObject
     Set accountInterestTable = accountTable(accountId, INTEREST_TABLE_NAME)
 End Function
 
