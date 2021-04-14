@@ -605,37 +605,6 @@ Public Function AccountBalanceHistory(accountId As String, Optional sampling As 
 End Function
 
 
-Public Sub AccountInterestCalc(accountId As String, Optional withModal As Boolean = True)
-    Dim interestPeriod As Integer
-    interestPeriod = AccountInterestPeriod(AccountType(accountId))
-    If interestPeriod > 0 Then
-        Dim deposits As Variant
-        Dim balances As Variant
-        deposits = AccountDepositHistory(accountId)
-        balances = AccountBalanceHistory(accountId, "Yearly")
-        Call StoreAccountInterests(accountId, InterestsCalc(balances, deposits, accountId, interestPeriod, withModal:=withModal))
-    End If
-End Sub
-
-
-Public Sub AccountsCalcInterestAll()
-    Dim modal As ProgressBar
-    Set modal = NewProgressBar("Interests calculation in progress", Worksheets.Count)
-    Call FreezeDisplay
-    Dim ws As Worksheet
-    For Each ws In Worksheets
-        Dim accountId As String
-        accountId = getAccountId(ws)
-        If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
-            Call AccountInterestCalc(accountId, withModal:=False)
-        End If
-        modal.Update
-    Next ws
-    Call UnfreezeDisplay
-    Set modal = Nothing
-End Sub
-
-
 Private Sub setInterest(r As Range, value As Variant, tax As Double)
     If value = "-" Then
         r.value = value
@@ -644,68 +613,12 @@ Private Sub setInterest(r As Range, value As Variant, tax As Double)
     End If
 End Sub
 
-Public Sub StoreAccountInterests(accountId As String, interestsArray As Variant)
-    Dim nbrYears As Long
-    Dim lastYear As Variant, last3years As Variant, last5year As Variant, allTime As Variant
-    Dim interestsTable As ListObject
-    Dim ws As Worksheet
-    Dim tax As Double
-    nbrYears = UBound(interestsArray)
-    Set interestTable = accountInterestTable(accountId)
-    If interestTable.ListColumns.Count <= 2 Then
-        interestTable.ListColumns.Add
-        interestTable.ListColumns(3).name = "Rend. Net"
-    End If
-    tax = AccountTaxRate(accountId)
-    
-    For i = 1 To interestTable.ListRows.Count
-        With interestTable.ListRows(i)
-            Dim valInterest As Variant
-            valInterest = "-"
-            If i = 1 Then
-                valInterest = interestsArray(nbrYears)
-            ElseIf i = 2 And nbrYears >= 3 Then
-                valInterest = interestsArray(nbrYears - 1)
-            ElseIf i = 3 And nbrYears >= 5 Then
-                valInterest = ArrayAverage(interestsArray, nbrYears - 3, nbrYears - 1)
-            ElseIf i = 4 And nbrYears >= 7 Then
-                valInterest = ArrayAverage(interestsArray, nbrYears - 5, nbrYears - 1)
-            ElseIf i = 5 And nbrYears >= 3 Then
-                valInterest = ArrayAverage(interestsArray, 2, nbrYears - 1)
-            End If
-            .Range(1, 2).value = valInterest
-            If valInterest = "-" Then
-                .Range(1, 3) = valInterest
-            Else
-                .Range(1, 3).value = min(valInterest, valInterest * (1 - tax))
-            End If
-        End With
-    Next i
-    interestTable.ListColumns(2).DataBodyRange.NumberFormat = INTEREST_FORMAT
-    interestTable.ListColumns(3).DataBodyRange.NumberFormat = INTEREST_FORMAT
-    
-    With interestTable.ListColumns(3).DataBodyRange
-        Call InterestsStore(accountId, .Rows(1).value, .Rows(2).value, .Rows(3).value, .Rows(4).value, .Rows(5).value)
-    End With
-End Sub
 
 
 Public Function getSelectedAccount() As String
     selectedNbr = GetNamedVariableValue("selectedAccount")
     getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects("TblOpenAccounts").ListRows(selectedNbr).Range(1, 1)
 End Function
-
-
-'--------------------------------------------------------------------------
-' Button methods
-'--------------------------------------------------------------------------
-
-Public Sub AccountInterestCalcHere()
-    Call FreezeDisplay
-    Call AccountInterestCalc(getAccountId(ActiveSheet))
-    Call UnfreezeDisplay
-End Sub
-
 
 
 '--------------------------------------------------------------------------
@@ -735,7 +648,7 @@ Public Function accountBalanceTable(accountId As String) As ListObject
     Set accountBalanceTable = accountTable(accountId, BALANCE_TABLE_NAME)
 End Function
 
-Private Function accountInterestTable(accountId As String) As ListObject
+Public Function accountInterestTable(accountId As String) As ListObject
     Set accountInterestTable = accountTable(accountId, INTEREST_TABLE_NAME)
 End Function
 
@@ -792,7 +705,7 @@ Private Function AccountBalanceArray(accountId As String) As Variant
     AccountBalanceArray = accountArray(accountId, BALANCE_TABLE_NAME)
 End Function
 
-Private Function getAccountId(ws As Worksheet) As String
+Public Function getAccountId(ws As Worksheet) As String
     getAccountId = ws.name
 End Function
 
@@ -826,7 +739,7 @@ Private Sub formatAccountButtons(ws As Worksheet)
         , "BtnSort," & BTN_SORT_TEXT & ",SortCurrentAccount,Webdings,18,2,1,40" _
         , "BtnImport," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
         , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddInvestmentRow,Arial,14,2,3,40" _
-        , "BtnInterests," & Chr$(143) & ",AccountInterestCalcHere,Webdings,18,2,4,40" _
+        , "BtnInterests," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
         , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
         )
         values = Split(btnData, ",", -1, vbTextCompare)
