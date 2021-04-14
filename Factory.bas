@@ -9,9 +9,16 @@ Public Function NewProgressBar(msg As String, goal As Integer, Optional show As 
     End If
 End Function
 
+
 Public Function NewInterest(accountId As String, Optional balancesArray As Variant = Nothing, Optional depositsArray As Variant = Nothing, _
                             Optional interestPeriod As Integer = 1) As Interest
     Set NewInterest = New Interest
     NewInterest.Init accountId, balancesArray, depositsArray, interestPeriod
+End Function
+
+
+Public Function NewKeyedTable(oTable As ListObject) As KeyedTable
+    Set NewKeyedTable = New KeyedTable
+    NewKeyedTable.Init oTable
 End Function
 
