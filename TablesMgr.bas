@@ -364,3 +364,19 @@ Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
     Next j
 End Sub
 
+Private Function TableIndex(likeString As String, Optional ws As Worksheet = Nothing, Optional wb As Workbook = Nothing) As Integer
+    If wb Is Nothing Then
+        wb = ActiveWorkbook
+    End If
+    If ws Is Nothing Then
+        ws = wb.ActiveSheet
+    End If
+    Dim i As Long
+    accountTableIndex = 0
+    For i = 1 To ws.ListObjects.Count
+        If LCase$(ws.ListObjects(i).name) Like "*_" & likeString Then
+            TableIndex = i
+            Exit For
+        End If
+    Next i
+End Function
