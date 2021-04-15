@@ -8,7 +8,7 @@ Public Function GetLabel(key)
     Else
         col = 2
     End If
-    GetLabel = Application.VLookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
+    GetLabel = Application.vlookup(key, Sheets("Language").ListObjects("TblKeys").DataBodyRange, col, False)
     If IsError(GetLabel) Then
         GetLabel = key & " not found"
     End If
