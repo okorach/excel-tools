@@ -11,14 +11,31 @@ End Function
 
 
 Public Function NewInterest(accountId As String, Optional balancesArray As Variant = Nothing, Optional depositsArray As Variant = Nothing, _
-                            Optional interestPeriod As Integer = 1) As Interest
+                            Optional InterestPeriod As Integer = 1) As Interest
     Set NewInterest = New Interest
-    NewInterest.Init accountId, balancesArray, depositsArray, interestPeriod
+    NewInterest.Init accountId, balancesArray, depositsArray, InterestPeriod
 End Function
 
 
 Public Function NewKeyedTable(oTable As ListObject) As KeyedTable
     Set NewKeyedTable = New KeyedTable
     NewKeyedTable.Init oTable
+End Function
+
+
+Public Function LoadAccount(accountId As String) As Account
+    Set LoadAccount = New Account
+    If Not LoadAccount.Load(accountId) Then
+        Set LoadAccount = Nothing
+    End If
+End Function
+
+Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optional aCur As String = vbNullString, _
+                           Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
+                           Optional aInB As Boolean = False, Optional aTax As Double = 0) As Account
+    Set NewAccount = New Account
+    If Not NewAccount.Create(aId, aCur, aType, aAvail, aNbr, aBank, aInB, aTax) Then
+        Set NewAccount = Nothing
+    End If
 End Function
 
