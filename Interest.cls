@@ -7,7 +7,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-
 Private Const INTEREST_DATE_START_CELL As String = "I2"
 Private Const INTEREST_DATE_STOP_CELL As String = "I3"
 Private Const INTEREST_PERIOD_CELL As String = "I4"
@@ -23,7 +22,7 @@ Private accountId As String
 Private balanceArr As Variant
 Private depositArr As Variant
 Private calculatedInterests As Variant
-Private interestPeriod As Integer
+Private InterestPeriod As Integer
 
 
 Private Sub Class_Initialize()
@@ -38,17 +37,17 @@ Public Sub Init(accId As String, Optional balancesArray As Variant = Nothing, Op
     If period = 0 Then
         period = 1
     End If
-    interestPeriod = period
+    InterestPeriod = period
 End Sub
 
-Public Function Calc(Optional modal As ProgressBar = Nothing)
+Public Function Calc(Optional modal As ProgressBar = Nothing) As Variant
     Dim calcPerPeriod As Boolean
     calcPerPeriod = True
     With Sheets(INTEREST_CALC_SHEET)
         .Range("I1").value = accountId
         .Range("H11").value = "Deposit history for " & accountId
         .Range("M11").value = "Balance history for " & accountId
-        .Range(INTEREST_PERIOD_CELL).value = interestPeriod
+        .Range(INTEREST_PERIOD_CELL).value = InterestPeriod
         
         Call ResizeTable(.ListObjects(BALANCE_HISTORY_TABLE), UBound(balanceArr, 1))
         Call ResizeTable(.ListObjects(DEPOSITS_HISTORY_TABLE), UBound(depositArr, 1))
@@ -88,17 +87,15 @@ Public Function Calc(Optional modal As ProgressBar = Nothing)
     End If
 End Function
 
-Public Sub Store(Optional taxRate As Double = 0)
+Public Function Store(resultTable As ListObject, globalKey As String, Optional TaxRate As Double = 0) As Boolean
     Dim periodicInterests As Variant
     Dim row As ListRow
-    periodicInterests = calcPerPeriod
-    Dim interestTable As ListObject
-    Set interestTable = accountInterestTable(accountId)
-    With interestTable
+    periodicInterests = calcPerPeriod()
+    With resultTable
         For i = 1 To 5
             .ListRows(i).Range(1, 2).value = periodicInterests(i)
             If VarType(periodicInterests(i)) = vbDouble Then
-                .ListRows(i).Range(1, 3).value = periodicInterests(i) * (1 - taxRate)
+                .ListRows(i).Range(1, 3).value = periodicInterests(i) * (1 - TaxRate)
             End If
         Next i
     End With
@@ -106,23 +103,24 @@ Public Sub Store(Optional taxRate As Double = 0)
     ' Compute net interest before storing globally
     For i = 1 To 5
         If VarType(periodicInterests(i)) = vbDouble Then
-            periodicInterests(i) = periodicInterests(i) * (1 - taxRate)
+            periodicInterests(i) = periodicInterests(i) * (1 - TaxRate)
         End If
     Next i
     With Sheets(INTEREST_CALC_SHEET).ListObjects(INTEREST_TABLE)
         For Each row In .ListRows
-            If row.Range.Cells(1, 1).value = accountId Then
+            If row.Range.Cells(1, 1).value = globalKey Then
                 Call saveData(row, periodicInterests)
-                Exit Sub
+                Exit Function
             End If
         Next row
         .ListRows.Add
         .ListRows(.ListRows.Count).Range.Cells(1, 1).value = accountId
         Call saveData(.ListRows(oTable.ListRows.Count), periodicInterest)
     End With
-End Sub
+    Store = True
+End Function
 
-Private Function calcPerPeriod(Optional taxRate As Double = 0) As Variant
+Private Function calcPerPeriod() As Variant
     Dim nbrYears As Long
     nbrYears = UBound(calculatedInterests)
     Dim periodicInterest(1 To 5) As Variant
@@ -149,7 +147,7 @@ Private Sub loadData()
         .Range("I1").value = accountId
         .Range("H11").value = "Deposit history for " & accountId
         .Range("M11").value = "Balance history for " & accountId
-        .Range(INTEREST_PERIOD_CELL).value = interestPeriod
+        .Range(INTEREST_PERIOD_CELL).value = InterestPeriod
         
         Call ResizeTable(.ListObjects(BALANCE_HISTORY_TABLE), UBound(balanceArr, 1))
         Call ResizeTable(.ListObjects(DEPOSITS_HISTORY_TABLE), UBound(depositArr, 1))
@@ -170,5 +168,4 @@ Private Sub saveData(row As ListRow, netInterests As Variant)
         row.Range.Cells(1, i + 2).value = netInterests(i)
     Next i
 End Sub
-
 
