@@ -206,8 +206,8 @@ Sub reformatAmount(colObject As ListColumn)
 End Sub
 
 '------------------------------------------------
-Sub setCellFormat(cellName, format)
-    Range(cellName).NumberFormat = format
+Sub setCellFormat(cellName, Format)
+    Range(cellName).NumberFormat = Format
 End Sub
 
 Public Function IsInArray(str As String, arr As Variant) As Boolean
