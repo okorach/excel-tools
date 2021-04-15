@@ -1,22 +1,26 @@
 Attribute VB_Name = "Interests"
 Public Sub InterestsCalcHere()
     Call FreezeDisplay
-    Call InterestsCalc(getAccountId(ActiveSheet))
+    Dim oAccount As Account
+    oAccount = LoadAccount(getAccountId(ActiveSheet))
+    If Not oAccount Is Nothing Then
+        oAccount.CalcInterests
+    End If
     Call UnfreezeDisplay
 End Sub
 
 
 Public Sub InterestsCalc(accountId As String, Optional withModal As Boolean = True)
-    Dim interestPeriod As Integer
-    interestPeriod = AccountInterestPeriod(AccountType(accountId))
-    If interestPeriod > 0 Then
+    Dim InterestPeriod As Integer
+    InterestPeriod = AccountInterestPeriod(AccountType(accountId))
+    If InterestPeriod > 0 Then
         Dim deposits As Variant
         Dim balances As Variant
         deposits = AccountDepositHistory(accountId)
         balances = AccountBalanceHistory(accountId, "Yearly")
 
         Dim accountInterests As Interest
-        Set accountInterests = NewInterest(accountId, balances, deposits, interestPeriod)
+        Set accountInterests = NewInterest(accountId, balances, deposits, InterestPeriod)
         accountInterests.Calc
         accountInterests.Store AccountTaxRate(accountId)
     End If
@@ -29,10 +33,10 @@ Public Sub InterestsCalcAll()
     Call FreezeDisplay
     Dim ws As Worksheet
     For Each ws In Worksheets
-        Dim accountId As String
-        accountId = getAccountId(ws)
-        If IsAnAccount(ws) And AccountIsOpen(accountId) And IsInterestAccount(accountId) Then
-            Call InterestsCalc(accountId, withModal:=False)
+        Dim oAccount As Account
+        oAccount = LoadAccount(getAccountId(ws))
+        If oAccount Is Not Nothing And oAccount.IsOpen() And oAccount.HasInterests() Then
+            Call oAccount.CalcInterests
         End If
         modal.Update
     Next ws
