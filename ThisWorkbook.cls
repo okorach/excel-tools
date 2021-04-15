@@ -16,12 +16,10 @@ Application.Calculation = xlAutomatic
 End Sub
 
 Public Sub GoToAccount()
-    Dim accName As String
-    accName = getSelectedAccount()
-    If AccountExists(accName) Then
-        Sheets(accName).Activate
+    Dim oAccount As Account
+    oAccount = LoadAccount(getSelectedAccount())
+    If Not oAccount Is Nothing Then
+        Sheets(oAccount.Id()).Activate
     End If
 End Sub
-
-
 
