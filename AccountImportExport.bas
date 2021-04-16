@@ -1,6 +1,4 @@
 Attribute VB_Name = "AccountImportExport"
-Const MAX_IMPORT = 30000
-
 Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
 Private Function toAmount(str) As Double
@@ -65,29 +63,30 @@ Sub ImportAny()
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
         Call FreezeDisplay
+        Dim oAccount As Account
+        Set oAccount = LoadAccount(getAccountId(ActiveSheet))
+        
+        Dim defaultCurrency As String
+        defaultCurrency = GetGlobalParam("DefaultCurrency")
         Dim oTable As ListObject
-        Set oTable = ActiveSheet.ListObjects(1)
+        Set oTable = oAccount.BalanceTable
+        
         Dim dateCol As Integer, amountCol As Integer, descCol As Integer
         dateCol = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
         
-        Dim defaultCurrency As String, accCurrency As String
-        defaultCurrency = GetGlobalParam("DefaultCurrency")
-        accCurrency = AccountCurrency(ActiveSheet.name)
-        If accCurrency = defaultCurrency Then
+        If oAccount.MyCurrency = defaultCurrency Then
             amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
         Else
             amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY) & " " & accCurrency)
         End If
         descCol = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
-        Dim Bank As String
-        Bank = Cells(3, 2).value
-        If (Bank = "ING Direct") Then
+        If (oAccount.Bank = "ING") Then
             Call ImportING(oTable, fileToOpen, dateCol, amountCol, descCol)
-        ElseIf (Bank = "LCL") Then
+        ElseIf (oAccount.Bank = "LCL") Then
             Call ImportLCL(oTable, fileToOpen, dateCol, amountCol, descCol)
-        ElseIf (Bank = "UBS") Then
+        ElseIf (oAccount.Bank = "UBS") Then
             Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
-        ElseIf (Bank = "Revolut") Then
+        ElseIf (oAccount.Bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
         Else
             Call UnfreezeDisplay
@@ -107,7 +106,7 @@ Public Sub AccountImport()
     Dim fileToOpen As Variant
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
-        Call ImportGeneric(ActiveSheet.name, fileToOpen)
+        Call ImportGeneric(ActiveSheet.Name, fileToOpen)
     End If
 End Sub
 
@@ -271,7 +270,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     Workbooks.Add
     With ActiveSheet.QueryTables.Add(Connection:= _
         "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
-        .name = "import"
+        .Name = "import"
         .FieldNames = True
         .RowNumbers = False
         .FillAdjacentFormulas = False
@@ -402,7 +401,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
 
    ' Dim xlsFile As String
     Dim importFrom As String, importTo As String
-    importTo = ActiveWorkbook.name
+    importTo = ActiveWorkbook.Name
 
     subsTable = GetTableAsArray(Workbooks(importTo).Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     
@@ -413,7 +412,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Dim modal As ProgressBar
     Set modal = NewProgressBar("Import Generic CSV in progress", 9)
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-    importFrom = ActiveWorkbook.name
+    importFrom = ActiveWorkbook.Name
     Call AccountImportMetadata(ActiveSheet, accountId, exportDate, accNbr, Bank, avail, cur, typ, TaxRate, nbrTr, nbrDep)
     modal.Update
 
@@ -508,9 +507,9 @@ Public Sub AccountCreateFromCSV()
     End If
 
     Dim importFrom As String, importTo As String
-    importTo = ActiveWorkbook.name
+    importTo = ActiveWorkbook.Name
     Workbooks.Open filename:=fileToOpen, ReadOnly:=True, local:=True
-    importFrom = ActiveWorkbook.name
+    importFrom = ActiveWorkbook.Name
 
     Dim accountId As String, cur As String, typ As String, avail As Integer, exportDate As String
     Dim Bank As String, TaxRate As Double, accNbr As String
@@ -549,9 +548,9 @@ Public Sub AccountExportAll()
     If LenB(sFolder) > 0 Then ' if a file was chosen
         Call FreezeDisplay
         For Each ws In Worksheets
-            If IsAnAccount(ws.name) Then
-                filename = sFolder & "\" & ws.name & ".csv"
-                Call AccountExport(ws.name, filename, True)
+            If IsAnAccount(ws.Name) Then
+                filename = sFolder & "\" & ws.Name & ".csv"
+                Call AccountExport(ws.Name, filename, True)
             End If
         Next ws
         Call UnfreezeDisplay
@@ -619,5 +618,4 @@ Private Sub AccountImportMetadata(ws As Worksheet, accountId As String, exportDa
         i = i + 1
     Loop
 End Sub
-
 
