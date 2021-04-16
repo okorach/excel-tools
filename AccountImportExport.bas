@@ -194,12 +194,12 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
         With oTable.ListRows(oTable.ListRows.Count)
             .Range(1, dateCol).value = DateValue(Cells(r, 1).value)
             .Range(1, amountCol).value = toAmount(Cells(r, 2).value)
-            If (Cells(i, 3).value Like "Ch?que") Then
+            If (Cells(r, 3).value Like "Ch?que") Then
                 .Range(1, descCol).value = "Cheque " & simplifyDescription(CStr(Cells(r, 4).value), subsTable)
-            ElseIf (Cells(i, 3).value = "Virement") Then
+            ElseIf (Cells(r, 3).value = "Virement") Then
                 .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(r, 5).value, subsTable)
             Else
-                .Range(1, descCol).value = simplifyDescription(Cells(i, 3).value & " " & Cells(r, 5).value & " " & Cells(r, 6).value, subsTable)
+                .Range(1, descCol).value = simplifyDescription(Cells(r, 3).value & " " & Cells(r, 5).value & " " & Cells(r, 6).value, subsTable)
             End If
         End With
         r = r + 1
