@@ -34,7 +34,7 @@ Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optio
                            Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
                            Optional aInB As Boolean = False, Optional aTax As Double = 0) As Account
     Set NewAccount = New Account
-    If Not NewAccount.Create(aId, aCur, aType, aAvail, aNbr, aBank, aInB, aTax) Then
+    If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax) Then
         Set NewAccount = Nothing
     End If
 End Function
