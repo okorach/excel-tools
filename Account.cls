@@ -73,10 +73,10 @@ Public Function Load(accountId As String) As Boolean
     Load = True
 End Function
 
-Public Function Create(accountId As String, aNbr As String, aBank As String, _
-                       Optional aCur As String = vbNullString, _
-                       Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
-                       Optional aInB As Boolean = False, Optional aTax As Double = 0) As Boolean
+Public Function Create(accId As String, accNbr As String, accBank As String, _
+                       Optional accCur As String = vbNullString, _
+                       Optional accType As String = vbNullString, Optional accAvail As Integer = 0, _
+                       Optional accInB As Boolean = False, Optional accTax As Double = 0) As Boolean
          
     Call FreezeDisplay
     
@@ -89,36 +89,46 @@ Public Function Create(accountId As String, aNbr As String, aBank As String, _
     End If
 
     
-    If aCur = vbNullString Then
-        aCur = GetGlobalParam("DefaultCurrency")
+    If accCur = vbNullString Then
+        accCur = GetGlobalParam("DefaultCurrency")
     End If
-    If aType = vbNullString Then
-        aType = "Courant"
+    If accType = vbNullString Then
+        accType = "Courant"
     End If
 
-    tbl.Insert accountId, aNumber, 2
-    tbl.Update accountId, aId, 3
-    tbl.Update accountId, aBank, 4
-    tbl.Update accountId, aAvail, 5
-    tbl.Update accountId, GetLabel("k.AccountOpen"), 6
-    tbl.Update accountId, aCur, 7
-    tbl.Update accountId, aType, 8
-    tbl.Update accountId, aInB, 9
-    tbl.Update accountId, aTax, 10
+    aId = accId
+    aNumber = accNbr
+    aType = accType
+    aBank = accBank
+    aCurrency = accCur
+    aType = accType
+    aAvail = accAvail
+    aInB = accInB
+    aTax = accTax
+    
+    tbl.Insert aId, aNumber, 2
+    tbl.Update aId, aId, 3
+    tbl.Update aId, aBank, 4
+    tbl.Update aId, aAvail, 5
+    tbl.Update aId, GetLabel("k.AccountOpen"), 6
+    tbl.Update aId, aCurrency, 7
+    tbl.Update aId, aType, 8
+    tbl.Update aId, aInB, 9
+    tbl.Update aId, aTax, 10
 
     Sheets.Add
-    ActiveSheet.name = accountId
+    ActiveSheet.Name = aId
     Set ws = ActiveSheet
-    Call addBalanceTable
-    Call addStandardButtons
+    addBalanceTable
+    addStandardButtons
     If aType = GetLabel("k.accountStandard") Then
-        Call addImportButton
+        addImportButton
     Else
-        Call addDepositTable
-        Call addInterestTable
-        Call addInterestButtons
+        addDepositTable
+        addInterestTable
+        addInterestButtons
     End If
-    Me.Format
+    FormatMe
     Call UnfreezeDisplay
     Create = True
 End Function
@@ -141,7 +151,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     Call FreezeDisplay
     
     Dim exportFrom As String, exportTo As String
-    exportFrom = ActiveWorkbook.name
+    exportFrom = ActiveWorkbook.Name
     
     Dim defaultCurrency As String
     defaultCurrency = GetGlobalParam("DefaultCurrency")
@@ -152,7 +162,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     
     ' Create blank workbook and copy data on that workbook to save as CSV
     Workbooks.Add (xlWBATWorksheet)
-    exportTo = ActiveWorkbook.name
+    exportTo = ActiveWorkbook.Name
     
     ' Paste account transactions starting from row 2
     Workbooks(exportTo).Activate
@@ -223,7 +233,7 @@ End Sub
 Private Sub addStandardButtons()
     For Each btnName In Array("BtnHome", "BtnPrev5", "BtnPrev", "BtnNext", "BtnNext5", "BtnTop", "BtnBottom", "BtnFormat", "BtnSort")
         If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
+            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
         End If
     Next btnName
 End Sub
@@ -231,7 +241,7 @@ End Sub
 Private Sub addInterestButtons()
     For Each btnName In Array("BtnInterest", "BtnAddEntry")
         If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
+            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
         End If
     Next btnName
 End Sub
@@ -239,7 +249,7 @@ End Sub
 Private Sub addImportButton()
     For Each btnName In Array("BtnImport")
         If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
+            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
         End If
     Next btnName
 End Sub
@@ -249,7 +259,7 @@ Private Sub addBalanceTable()
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     ' TODO: Don't create table if already exists
     ws.Range("A11:A12").Select
-    ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).Name = tblName
 
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium2"
@@ -258,19 +268,19 @@ Private Sub addBalanceTable()
         lblBalance = GetLabel("k.accountBalance")
         lblDate = GetLabel("k.date")
         lblSubcat = GetLabel("k.subcategory")
-        .ListColumns(1).name = lblDate
-        .ListColumns(2).name = lblAmount
-        .ListColumns(3).name = lblBalance
-        .ListColumns(4).name = GetLabel("k.description")
-        .ListColumns(5).name = lblSubcat
+        .ListColumns(1).Name = lblDate
+        .ListColumns(2).Name = lblAmount
+        .ListColumns(3).Name = lblBalance
+        .ListColumns(4).Name = GetLabel("k.description")
+        .ListColumns(5).Name = lblSubcat
         If aType = GetLabel("k.accountStandard") Then
             .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
-            .ListColumns(6).name = GetLabel("k.category")
+            .ListColumns(6).Name = GetLabel("k.category")
             .ListRows(1).Range(1, 6).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
             If aInBudget Then
                 .ListColumns.Add
-                .ListColumns(7).name = GetLabel("k.inBudget")
+                .ListColumns(7).Name = GetLabel("k.inBudget")
             End If
         Else
             .ListRows(1).Range(1, 2).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
@@ -278,8 +288,8 @@ Private Sub addBalanceTable()
         If aCurrency <> GetGlobalParam("DefaultCurrency") Then
             lblAmount = lblAmount & " " & aCurrency
             lblBalance = lblBalance & " " & aCurrency
-            .ListColumns.Add(4).name = lblAmount
-            .ListColumns.Add(5).name = lblBalance
+            .ListColumns.Add(4).Name = lblAmount
+            .ListColumns.Add(5).Name = lblBalance
             If aType = GetLabel("k.accountStandard") Then
                 .ListRows(1).Range(1, 5).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             Else
@@ -302,11 +312,11 @@ Private Sub addDepositTable()
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
         r = "$I$10:$J$11"
     End If
-    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium4"
-        .ListColumns(1).name = GetLabel("k.date")
-        .ListColumns(2).name = GetLabel("k.amount")
+        .ListColumns(1).Name = GetLabel("k.date")
+        .ListColumns(2).Name = GetLabel("k.amount")
     End With
     Set oDepositsTable = ws.ListObjects(tblName)
 End Sub
@@ -321,12 +331,12 @@ Private Sub addInterestTable()
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
         r = "$I$1:$K$6"
     End If
-    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium5"
-        .ListColumns(1).name = GetLabel("k.period")
-        .ListColumns(2).name = GetLabel("k.grossYield")
-        .ListColumns(3).name = GetLabel("k.netYield")
+        .ListColumns(1).Name = GetLabel("k.period")
+        .ListColumns(2).Name = GetLabel("k.grossYield")
+        .ListColumns(3).Name = GetLabel("k.netYield")
         .ListRows(1).Range(1, 1).value = GetLabel("k.thisYear")
         .ListRows(2).Range(1, 1).value = GetLabel("k.lastYear")
         .ListRows(3).Range(1, 1).value = GetLabel("k.last3Years")
@@ -368,24 +378,24 @@ Public Function Exists() As Boolean
     Exists = (SheetExists(aId) And accounts.KeyExists(aId))
 End Function
 
-Public Function Id() As String
+Property Get Id() As String
     Id = aId
-End Function
-Public Function AccountNumber() As String
+End Property
+Property Get Number() As String
     Number = aNumber
-End Function
-Public Function AccountName() As String
-    AccountName = aName
-End Function
-Public Function Bank() As String
+End Property
+Property Get Name() As String
+    Name = aName
+End Property
+Property Get Bank() As String
     Bank = aBank
-End Function
-Public Function Availability() As String
+End Property
+Property Get Availability() As String
     Availability = aAvail
-End Function
-Public Function AccountStatus() As String
-    AccountStatus = aStatus
-End Function
+End Property
+Property Get Status() As String
+    Status = aStatus
+End Property
 Public Function IsOpen() As Boolean
     IsOpen = (aStatus = GetLabel("k.accountOpen"))
 End Function
@@ -398,13 +408,16 @@ End Function
 Public Function AccountType() As String
     AccountType = aType
 End Function
-Public Function IsInBudget() As Boolean
+Property Get IsInBudget() As Boolean
     inBudget = aInBudget
-End Function
-Public Function TaxRate() As Double
+End Property
+Property Get TaxRate() As Double
     TaxRate = aTaxRate
-End Function
+End Property
 
+Property Get MyCurrency() As String
+    MyCurrency = aCurrency
+End Property
 
 Private Sub AddBalanceRow()
     If oBalanceTable Is Nothing Then
@@ -498,33 +511,33 @@ End Function
 Private Function accountTable(accountSection As String) As ListObject
     Dim i As Long
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
+        If LCase$(ws.ListObjects(i).Name) Like "*_" & accountSection Then
             Set accountTable = ws.ListObjects(i)
             Exit For
         End If
     Next i
 End Function
 
-Public Function DepositTable() As ListObject
+Property Get DepositTable() As ListObject
     If oDepositsTable Is Nothing Then
         Set oDepositsTable = accountTable(DEPOSIT_TABLE_NAME)
     End If
     Set DepositTable = oDepositsTable
-End Function
+End Property
 
-Public Function BalanceTable() As ListObject
+Property Get BalanceTable() As ListObject
     If oBalanceTable Is Nothing Then
         Set oBalanceTable = accountTable(BALANCE_TABLE_NAME)
     End If
     Set BalanceTable = oBalanceTable
-End Function
+End Property
 
-Public Function InterestTable() As ListObject
+Property Get InterestTable() As ListObject
     If oInterestTable Is Nothing Then
         Set oInterestTable = accountTable(INTEREST_TABLE_NAME)
     End If
     Set InterestTable = oInterestTable
-End Function
+End Property
 
 '----------------------------------------------------------------------------
 ' Table as Indexes
@@ -547,7 +560,7 @@ Private Sub ExportMetadata(targetWs As Worksheet, nbrTransactions As Long, Optio
     ' Copy metadata on row 1
     targetWs.Range("A1") = "ExportDate=" & Format(Now(), "YYYY-mm-dd HH:MM:SS")
     targetWs.Range("B1") = "AccountId=" & aId
-    targetWs.Range("C1") = "AccountNumber=" & aNbr
+    targetWs.Range("C1") = "AccountNumber=" & aNumber
     targetWs.Range("D1") = "Bank=" & aBank
     targetWs.Range("E1") = "Availability=" & CStr(aAvail)
     targetWs.Range("F1") = "Currency=" & aCurrency
@@ -567,7 +580,7 @@ Private Function asArray(accountSection As String) As Variant
     Dim ws As Worksheet
     Set accountArray = Nothing
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
+        If LCase$(ws.ListObjects(i).Name) Like "*_" & accountSection Then
             asArray = GetTableAsArray(ws.ListObjects(i))
             Exit For
         End If
@@ -634,7 +647,7 @@ Private Sub formatBalanceTable()
     If oBalanceTable Is Nothing Then
         Exit Sub
     End If
-    oBalanceTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
+    oBalanceTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oBalanceTable, "TableStyleMedium2")
     Dim col As Long
     col = TableColNbrFromName(oBalanceTable, GetLabel(DATE_KEY))
@@ -707,7 +720,7 @@ Private Sub formatDepositTable()
     If oDepositsTable Is Nothing Then
         Exit Sub
     End If
-    oDepositsTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
+    oDepositsTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oDepositsTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oDepositsTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oDepositsTable, 2, EUR_FORMAT)
@@ -717,7 +730,7 @@ Private Sub formatInterestTable()
     If oInterestTable Is Nothing Then
         Exit Sub
     End If
-    oInterestTable.name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
+    oInterestTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oInterestTable, "TableStyleMedium5")
     Call SetTableColumnFormat(oInterestTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oInterestTable, 3, INTEREST_FORMAT)
