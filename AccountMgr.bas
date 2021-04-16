@@ -239,7 +239,7 @@ Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
 End Sub
 
 Public Function getAccountId(ws As Worksheet) As String
-    getAccountId = ws.name
+    getAccountId = ws.Name
 End Function
 
 Public Sub AccountRefreshOpenList()
@@ -305,7 +305,7 @@ Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     If VarType(accountIdOrWs) = vbString Then
         accountId = accountIdOrWs
     Else
-        accountId = accountIdOrWs.name
+        accountId = accountIdOrWs.Name
     End If
     Dim accounts As KeyedTable
     Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
@@ -326,5 +326,4 @@ End Function
 Private Function getAccountSheet(accountId As String) As Worksheet
     Set getAccountSheet = ThisWorkbook.Sheets(accountId)
 End Function
-
 
