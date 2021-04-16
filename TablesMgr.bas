@@ -66,10 +66,10 @@ End Sub
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
                      Optional sortCol2 As String = vbNullString, Optional sortOrder2 As XlSortOrder = xlDescending)
     oTable.Sort.SortFields.Clear
-    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
+    oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
         DataOption:=xlSortNormal
     If LenB(sortCol2) > 0 Then
-        oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
+        oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
              DataOption:=xlSortNormal
     End If
     With oTable.Sort
@@ -364,7 +364,7 @@ Public Sub ClearTableRow(oTable As ListObject, rowNbr As Long)
     Next j
 End Sub
 
-Private Function TableIndex(likeString As String, Optional ws As Worksheet = Nothing, Optional wb As Workbook = Nothing) As Integer
+Public Function TableIndex(likeString As String, Optional ws As Worksheet = Nothing, Optional wb As Workbook = Nothing) As Integer
     If wb Is Nothing Then
         wb = ActiveWorkbook
     End If
@@ -374,7 +374,7 @@ Private Function TableIndex(likeString As String, Optional ws As Worksheet = Not
     Dim i As Long
     accountTableIndex = 0
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like "*_" & likeString Then
+        If LCase$(ws.ListObjects(i).Name) Like "*_" & likeString Then
             TableIndex = i
             Exit For
         End If

@@ -11,7 +11,7 @@ Public Sub BtnSetProperties(oBtn As Shape, Optional font As String = vbNullStrin
         Selection.Characters.text = text
     End If
     If font <> vbNullString Then
-        Selection.Characters.font.name = font
+        Selection.Characters.font.Name = font
     End If
     If fontSize <> 0 Then
         Selection.Characters.font.size = fontSize
@@ -38,15 +38,15 @@ Public Sub BtnSetProperties(oBtn As Shape, Optional font As String = vbNullStrin
     'End With
 End Sub
 
-Public Sub BtnAdd(ws As Worksheet, name As String, action As String, Optional text As String = vbNullString, _
+Public Sub BtnAdd(ws As Worksheet, Name As String, action As String, Optional text As String = vbNullString, _
     Optional size As Integer = 0, Optional font As String = vbNullString, Optional fontSize As Integer = 18, _
     Optional X As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20)
     Dim oBtn As Shape
     ws.Buttons.Add(X, y, w, h).Select
     Set oBtn = ws.Shapes(ws.Shapes.Count)
-    oBtn.name = name
+    oBtn.Name = Name
     If text = vbNullString Then
-        text = name
+        text = Name
     End If
     Call BtnSetProperties(oBtn, text:=text, font:=font, fontSize:=fontSize, action:=action)
 End Sub
@@ -73,9 +73,9 @@ Public Sub ShapePlacement(oShape As Shape, Optional left As Integer = -1, Option
     End With
 End Sub
 
-Public Function ShapeFind(ws As Worksheet, name As String) As Shape
+Public Function ShapeFind(ws As Worksheet, Name As String) As Shape
     For Each s In ws.Shapes
-        If s.name = name Then
+        If s.Name = Name Then
             Set ShapeFind = s
             Exit For
         End If
@@ -83,6 +83,6 @@ Public Function ShapeFind(ws As Worksheet, name As String) As Shape
     ' Return Nothing if not found
 End Function
 
-Public Function ShapeExist(ws As Worksheet, name As String) As Boolean
-    ShapeExist = Not (ShapeFind(ws, name) Is Nothing)
+Public Function ShapeExist(ws As Worksheet, Name As String) As Boolean
+    ShapeExist = Not (ShapeFind(ws, Name) Is Nothing)
 End Function
