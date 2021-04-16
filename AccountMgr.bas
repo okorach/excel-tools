@@ -31,7 +31,7 @@ Public Sub MergeAccounts(columnKeys As Variant)
                 Set tbl = oAccount.BalanceTable()
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
-                    arr1d = Create1DArray(tbl.ListRows.Count, oAccount.AccountName())
+                    arr1d = Create1DArray(tbl.ListRows.Count, oAccount.Name)
                 ElseIf (colKey = IN_BUDGET_KEY And Not oAccount.IsInBudget()) Then
                     arr1d = Create1DArray(tbl.ListRows.Count, 0)
                 Else
@@ -246,22 +246,22 @@ Public Sub AccountRefreshOpenList()
     Dim OpenStr As String
     Call FreezeDisplay
     OpenStr = GetLabel("k.accountOpen")
-    Call TruncateTable(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS))
-    With Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS)
-        For Each row In Sheets(ACCOUNTS_SHEET).ListObjects(TABLE_ACCOUNTS).ListRows
+    Call TruncateTable(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE))
+    With Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE)
+        For Each row In Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).ListRows
             If row.Range.Cells(1, ACCOUNT_STATUS_COL).value = OpenStr Then
                 .ListRows.Add ' Add 1 row at the end, then extend
                 .ListRows(.ListRows.Count).Range.Cells(1, 1).value = row.Range.Cells(1, ACCOUNT_KEY_COL).value
             End If
-        Next i
+        Next row
     End With
-    ActiveSheet.Shapes("Drop Down 2").Select
-    With Selection
-        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects(TABLE_OPEN_ACCOUNTS).ListRows.Count + 1)
-        .LinkedCell = Names("selectedAccount").RefersToRange
-        .DropDownLines = 15
-        .Display3DShading = True
-    End With
+'    ActiveSheet.Shapes("Drop Down 2").Select
+'    With Selection
+'        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows.Count + 1)
+'        .LinkedCell = Names("selectedAccount").RefersToRange
+'        .DropDownLines = 15
+'        .Display3DShading = True
+'    End With
     Call UnfreezeDisplay
 End Sub
 
