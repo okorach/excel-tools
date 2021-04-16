@@ -255,6 +255,7 @@ Public Sub AccountRefreshOpenList()
             End If
         Next row
     End With
+' FIXME / TODO - Fix the below
 '    ActiveSheet.Shapes("Drop Down 2").Select
 '    With Selection
 '        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows.Count + 1)
