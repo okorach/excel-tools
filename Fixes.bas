@@ -17,18 +17,18 @@ Public Sub FixWorksheet(ws As Worksheet)
 
     Dim i As Long
     Dim wsName As String
-    wsName = Replace(Replace(Replace(LCase$(ws.name), " ", "_"), "é", "e"), "è", "e")
+    wsName = Replace(Replace(Replace(LCase$(ws.Name), " ", "_"), "é", "e"), "è", "e")
     For i = 1 To ws.ListObjects.Count
         Dim oName As String
-        oName = LCase$(ws.ListObjects(i).name)
+        oName = LCase$(ws.ListObjects(i).Name)
         If oName Like "*yield*" Or oName Like "*interest*" Then
-            ws.ListObjects(i).name = wsName & "_" & INTEREST_TABLE_NAME
+            ws.ListObjects(i).Name = wsName & "_" & INTEREST_TABLE_NAME
             ws.ListObjects(i).DisplayName = wsName & "_" & INTEREST_TABLE_NAME
         ElseIf oName Like "*transaction*" Or oName Like "*balance*" Then
-            ws.ListObjects(i).name = wsName & "_" & BALANCE_TABLE_NAME
+            ws.ListObjects(i).Name = wsName & "_" & BALANCE_TABLE_NAME
             ws.ListObjects(i).DisplayName = wsName & "_" & BALANCE_TABLE_NAME
         ElseIf oName Like "*deposit*" Or oName = wsName & "_" Then
-            ws.ListObjects(i).name = wsName & "_" & DEPOSIT_TABLE_NAME
+            ws.ListObjects(i).Name = wsName & "_" & DEPOSIT_TABLE_NAME
             ws.ListObjects(i).DisplayName = wsName & "_" & DEPOSIT_TABLE_NAME
         End If
     Next i
@@ -37,5 +37,4 @@ End Sub
 Public Sub FixButtons(ws As Worksheet)
     ' For the future
 End Sub
-
 
