@@ -118,16 +118,23 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     Sheets.Add
     ActiveSheet.name = aId
     Set ws = ActiveSheet
+    ws.Cells.RowHeight = 13
+    ws.Rows.font.size = 10
+    
     addBalanceTable
+    formatBalanceTable
+    
     addStandardButtons
     If aType = GetLabel("k.accountStandard") Then
         addImportButton
     Else
         addDepositTable
+        formatDepositTable
         addInterestTable
+        formatInterestTable
         addInterestButtons
     End If
-    FormatMe
+    ws.Range("A1").Select
     Call UnfreezeDisplay
     Create = True
 End Function
@@ -360,7 +367,7 @@ Public Sub FormatMe()
     Call formatBalanceTable
     Call formatDepositTable
     Call formatInterestTable
-    Call formatAccountButtons
+    Call formatButtons
 End Sub
 
 
@@ -604,17 +611,8 @@ End Function
 ' Private formatting functions
 '----------------------------------------------------------------------------
 
-Private Sub formatAccountButtons()
-    If ws.Shapes.Count <= 0 Then
-        Exit Sub
-    End If
-    Dim sbw As Integer
-    sbw = 40
-    Dim i As Long
-    i = 0
-    Dim s As Shape
-
-    For Each btnData In Array( _
+Private Sub formatButtons()
+    Call BtnFormatByStringArray(ws, Array( _
         BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
         , BTN_PREV_5_NAME & "," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
         , BTN_PREV_NAME & "," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
@@ -627,15 +625,8 @@ Private Sub formatAccountButtons()
         , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
         , BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
         , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
-        )
-        values = Split(btnData, ",", -1, vbTextCompare)
-        Set s = ShapeFind(ws, CStr(values(0)))
-        If Not s Is Nothing Then
-            Call BtnSetProperties(s, text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
-                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
-        End If
-    Next btnData
+        ) _
+    )
     ws.Range("A1").Select
     
 '    ElseIf (s.Type = msoFormControl) Then

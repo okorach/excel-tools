@@ -39,6 +39,7 @@ Public Const BTN_INTERESTS_NAME As String = "BtnInterests"
 Public Const BTN_HOME_X As Integer = 200
 Public Const BTN_HOME_Y As Integer = 10
 Public Const BTN_HEIGHT As Integer = 30
+Public Const BTN_WIDTH As Integer = 40
 
 
 Sub SetBtnMacro()
@@ -98,7 +99,18 @@ Public Sub BtnAddByString(ws As Worksheet, stringData As String)
     If Not ShapeExist(ws, CStr(values(0))) Then
         Dim s As Shape
         Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-        Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
+        Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * BTN_WIDTH, _
+            BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
+    End If
+End Sub
+
+Public Sub BtnFormatByString(ws As Worksheet, stringData As String)
+    values = Split(stringData, ",", -1, vbTextCompare)
+    Dim s As Shape
+    Set s = ShapeFind(ws, CStr(values(0)))
+    If Not s Is Nothing Then
+        Call BtnSetProperties(s, text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
+        Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * BTN_WIDTH, _
             BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
     End If
 End Sub
@@ -109,6 +121,11 @@ Public Sub BtnAddByStringArray(ws As Worksheet, btnArr As Variant)
     Next btnData
 End Sub
 
+Public Sub BtnFormatByStringArray(ws As Worksheet, btnArr As Variant)
+    For Each btnData In btnArr
+        Call BtnFormatByString(ws, CStr(btnData))
+    Next btnData
+End Sub
 
 '------------------------------------------------------------------------------
 ' Places a shape (a button for instance) on given X, Y coordinates
