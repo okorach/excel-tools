@@ -20,21 +20,6 @@ Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
 Public Const DATE_FORMAT = "m/d/yyyy"
 
 
-Public Const BTN_HOME_X As Integer = 200
-Public Const BTN_HOME_Y As Integer = 10
-Public Const BTN_HEIGHT As Integer = 30
-
-Public Const BTN_HOME_TEXT As String = "9"
-Public Const BTN_PREV_5_TEXT As String = "7"
-Public Const BTN_PREV_TEXT As String = "3"
-Public Const BTN_NEXT_TEXT As String = "4"
-Public Const BTN_NEXT_5_TEXT As String = "8"
-Public Const BTN_BOTTOM_TEXT As String = "6"
-Public Const BTN_TOP_TEXT As String = "5"
-Public Const BTN_SORT_TEXT As String = "~"
-Public Const BTN_IMPORT_TEXT As String = "G"
-Public Const BTN_ADD_ROW_TEXT As String = "+1"
-Public Const BTN_FORMAT_TEXT As String = "Format"
 
 ' Constants defining structure of global accounts table
 Public Const ACCOUNT_KEY_COL As Integer = 1

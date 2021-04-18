@@ -1,4 +1,46 @@
 Attribute VB_Name = "ButtonsMgr"
+
+Public Const BTN_HOME_NAME As String = "BtnHome"
+Public Const BTN_HOME_TEXT As String = "9"
+
+Public Const BTN_PREV_5_NAME As String = "BtnPrev5"
+Public Const BTN_PREV_5_TEXT As String = "7"
+
+Public Const BTN_PREV_NAME As String = "BtnPrev"
+Public Const BTN_PREV_TEXT As String = "3"
+
+Public Const BTN_NEXT_NAME As String = "BtnNext"
+Public Const BTN_NEXT_TEXT As String = "4"
+
+Public Const BTN_NEXT_5_NAME As String = "BtnNext5"
+Public Const BTN_NEXT_5_TEXT As String = "8"
+
+Public Const BTN_BOTTOM_NAME As String = "BtnBottom"
+Public Const BTN_BOTTOM_TEXT As String = "6"
+
+Public Const BTN_TOP_NAME As String = "BtnTop"
+Public Const BTN_TOP_TEXT As String = "5"
+
+Public Const BTN_SORT_NAME As String = "BtnSort"
+Public Const BTN_SORT_TEXT As String = "~"
+
+Public Const BTN_IMPORT_NAME As String = "BtnImport"
+Public Const BTN_IMPORT_TEXT As String = "G"
+
+Public Const BTN_ADD_ROW_NAME As String = "BtnAddEntry"
+Public Const BTN_ADD_ROW_TEXT As String = "+1"
+
+Public Const BTN_FORMAT_NAME As String = "BtnFormat"
+Public Const BTN_FORMAT_TEXT As String = "Format"
+
+Public Const BTN_INTERESTS_NAME As String = "BtnInterests"
+'Public Const BTN_INTERESTS_TEXT As String = Chr$(143)
+
+Public Const BTN_HOME_X As Integer = 200
+Public Const BTN_HOME_Y As Integer = 10
+Public Const BTN_HEIGHT As Integer = 30
+
+
 Sub SetBtnMacro()
     ActiveSheet.Shapes("BtnHome").Select
     Selection.OnAction = "ThisWorkbook.GoToSolde"
@@ -11,7 +53,7 @@ Public Sub BtnSetProperties(oBtn As Shape, Optional font As String = vbNullStrin
         Selection.Characters.text = text
     End If
     If font <> vbNullString Then
-        Selection.Characters.font.Name = font
+        Selection.Characters.font.name = font
     End If
     If fontSize <> 0 Then
         Selection.Characters.font.size = fontSize
@@ -38,18 +80,17 @@ Public Sub BtnSetProperties(oBtn As Shape, Optional font As String = vbNullStrin
     'End With
 End Sub
 
-Public Sub BtnAdd(ws As Worksheet, Name As String, action As String, Optional text As String = vbNullString, _
+Public Function BtnAdd(ws As Worksheet, name As String, action As String, Optional text As String = vbNullString, _
     Optional size As Integer = 0, Optional font As String = vbNullString, Optional fontSize As Integer = 18, _
-    Optional X As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20)
-    Dim oBtn As Shape
+    Optional X As Integer = 10, Optional y As Integer = 10, Optional w As Integer = 30, Optional h As Integer = 20) As Shape
     ws.Buttons.Add(X, y, w, h).Select
-    Set oBtn = ws.Shapes(ws.Shapes.Count)
-    oBtn.Name = Name
+    Set BtnAdd = ws.Shapes(ws.Shapes.Count)
+    BtnAdd.name = name
     If text = vbNullString Then
-        text = Name
+        text = name
     End If
-    Call BtnSetProperties(oBtn, text:=text, font:=font, fontSize:=fontSize, action:=action)
-End Sub
+    Call BtnSetProperties(BtnAdd, text:=text, font:=font, fontSize:=fontSize, action:=action)
+End Function
 
 
 '------------------------------------------------------------------------------
@@ -73,9 +114,9 @@ Public Sub ShapePlacement(oShape As Shape, Optional left As Integer = -1, Option
     End With
 End Sub
 
-Public Function ShapeFind(ws As Worksheet, Name As String) As Shape
+Public Function ShapeFind(ws As Worksheet, name As String) As Shape
     For Each s In ws.Shapes
-        If s.Name = Name Then
+        If s.name = name Then
             Set ShapeFind = s
             Exit For
         End If
@@ -83,6 +124,6 @@ Public Function ShapeFind(ws As Worksheet, Name As String) As Shape
     ' Return Nothing if not found
 End Function
 
-Public Function ShapeExist(ws As Worksheet, Name As String) As Boolean
-    ShapeExist = Not (ShapeFind(ws, Name) Is Nothing)
+Public Function ShapeExist(ws As Worksheet, name As String) As Boolean
+    ShapeExist = Not (ShapeFind(ws, name) Is Nothing)
 End Function
