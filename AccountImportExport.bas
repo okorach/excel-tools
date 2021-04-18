@@ -419,7 +419,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Dim offset As Integer
     offset = 0
     If cur <> GetGlobalParam("DefaultCurrency", Workbooks(importTo)) Then
-        offset = 2
+        offset = BL_FOREIGN_OFFSET
     End If
 
     Dim balanceTbl As ListObject, depositsTbl As ListObject
@@ -434,7 +434,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Range("A2:A" & lastRow).Select
     Selection.Copy
     Workbooks(importTo).Activate
-    balanceTbl.ListRows(1).Range(1, 1).Select
+    balanceTbl.ListRows(1).Range(1, BL_DATE_COL).Select
     Selection.PasteSpecial Paste:=xlPasteValues
     modal.Update
     
@@ -442,7 +442,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Range("B2:B" & lastRow).Select
     Selection.Copy
     Workbooks(importTo).Activate
-    balanceTbl.ListRows(1).Range(1, 2 + offset).Select
+    balanceTbl.ListRows(1).Range(1, BL_AMOUNT_COL + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
     modal.Update
 
@@ -450,7 +450,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Range("C2:C" & lastRow).Select
     Selection.Copy
     Workbooks(importTo).Activate
-    balanceTbl.ListRows(1).Range(1, 3 + offset).Select
+    balanceTbl.ListRows(1).Range(1, BL_BALANCE_COL + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
     modal.Update
 
@@ -458,7 +458,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Range("D2:D" & lastRow).Select
     Selection.Copy
     Workbooks(importTo).Activate
-    balanceTbl.ListRows(1).Range(1, 4 + offset).Select
+    balanceTbl.ListRows(1).Range(1, BL_DESC_COL + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
     modal.Update
 
@@ -466,7 +466,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
     Range("E2:E" & lastRow).Select
     Selection.Copy
     Workbooks(importTo).Activate
-    balanceTbl.ListRows(1).Range(1, 5 + offset).Select
+    balanceTbl.ListRows(1).Range(1, BL_SUBCATEG_COL + offset).Select
     Selection.PasteSpecial Paste:=xlPasteValues
     modal.Update
 
@@ -478,7 +478,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         Range("A" & firstRow & ":A" & lastRow).Select
         Selection.Copy
         Workbooks(importTo).Activate
-        depositsTbl.ListRows(1).Range(1, 1).Select
+        depositsTbl.ListRows(1).Range(1, DP_DATE_COL).Select
         Selection.PasteSpecial Paste:=xlPasteValues
         modal.Update
 
@@ -486,7 +486,7 @@ Public Sub ImportGeneric(accountId As String, fileToOpen As Variant)
         Range("B" & firstRow & ":B" & lastRow).Select
         Selection.Copy
         Workbooks(importTo).Activate
-        depositsTbl.ListRows(1).Range(1, 2).Select
+        depositsTbl.ListRows(1).Range(1, DP_AMOUNT_COL).Select
         Selection.PasteSpecial Paste:=xlPasteValues
         modal.Update
     Else
@@ -561,8 +561,6 @@ End Sub
 
 
 
-
-
 Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nbrTransactions As Long, Optional nbrDeposits As Long = 0)
     ' Copy metadata on row 1
     targetWs.Range("A1") = "ExportDate=" & Format$(Now(), "YYYY-mm-dd HH:MM:SS")
@@ -570,9 +568,6 @@ Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nb
     targetWs.Range("C1") = "AccountNumber=" & AccountNumber(accountId)
     targetWs.Range("D1") = "Bank=" & AccountBank(accountId)
     avail = AccountAvailability(accountId)
-    If avail = "Immédiate" Then
-        avail = 0
-    End If
     targetWs.Range("E1") = "Availability=" & avail
     targetWs.Range("F1") = "Currency=" & AccountCurrency(accountId)
     targetWs.Range("G1") = "Type=" & AccountType(accountId)
