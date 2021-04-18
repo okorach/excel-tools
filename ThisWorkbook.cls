@@ -17,7 +17,7 @@ End Sub
 
 Public Sub GoToAccount()
     Dim oAccount As Account
-    oAccount = LoadAccount(getSelectedAccount())
+    Set oAccount = LoadAccount(getSelectedAccount())
     If Not oAccount Is Nothing Then
         Sheets(oAccount.Id()).Activate
     End If

@@ -3,10 +3,6 @@ Public Const INTEREST_CALC_SHEET As String = "Interests"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const BALANCE_SHEET As String = "Solde"
-
-Public Const INTEREST_TABLE As String = "AccountsInterests"
-Public Const BALANCE_HISTORY_TABLE As String = "TableBalanceHistory"
-Public Const DEPOSITS_HISTORY_TABLE As String = "TableDepositHistory"
 Public Const ACCOUNTS_TABLE As String = "tblAccounts"
 Public Const OPEN_ACCOUNTS_TABLE As String = "tblOpenAccounts"
 Public Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
@@ -40,6 +36,7 @@ Public Const BTN_IMPORT_TEXT As String = "G"
 Public Const BTN_ADD_ROW_TEXT As String = "+1"
 Public Const BTN_FORMAT_TEXT As String = "Format"
 
+' Constants defining structure of global accounts table
 Public Const ACCOUNT_KEY_COL As Integer = 1
 Public Const ACCOUNT_NBR_COL As Integer = 2
 Public Const ACCOUNT_NAME_COL As Integer = 3
@@ -51,3 +48,28 @@ Public Const ACCOUNT_TYPE_COL As Integer = 8
 Public Const ACCOUNT_BUDGET_COL As Integer = 9
 Public Const ACCOUNT_TAX_COL As Integer = 10
 
+
+
+' Constants defining structure of account balance table
+Public Const BL_DATE_COL As Integer = 1
+Public Const BL_AMOUNT_COL As Integer = 2
+Public Const BL_BALANCE_COL As Integer = 3
+Public Const BL_FOREIGN_AMOUNT_COL = 4
+Public Const BL_FOREIGN_BALANCE_COL = 5
+Public Const BL_DESC_COL = 4
+Public Const BL_SUBCATEG_COL = 5
+Public Const BL_CATEG_COL = 6
+Public Const BL_BUDGET_COL = 7
+Public Const BL_FOREIGN_OFFSET = 2
+
+' Constants defining structure of account deposits table
+Public Const DP_DATE_COL As Integer = 1
+Public Const DP_AMOUNT_COL As Integer = 2
+
+' Constants defining structure of account interests table
+Public Const IT_PERIOD_COL As Integer = 1
+Public Const IT_GROSS_INTEREST_COL As Integer = 2
+Public Const IT_NET_INTEREST_COL As Integer = 3
+
+
+Public Const AVAILABILITY_IMMEDIATE = 0

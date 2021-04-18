@@ -2,7 +2,7 @@ Attribute VB_Name = "Interests"
 Public Sub InterestsCalcHere()
     Call FreezeDisplay
     Dim oAccount As Account
-    oAccount = LoadAccount(getAccountId(ActiveSheet))
+    Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     If Not oAccount Is Nothing Then
         oAccount.CalcInterests
     End If
@@ -34,9 +34,11 @@ Public Sub InterestsCalcAll()
     Dim ws As Worksheet
     For Each ws In Worksheets
         Dim oAccount As Account
-        oAccount = LoadAccount(getAccountId(ws))
-        If oAccount Is Not Nothing And oAccount.IsOpen() And oAccount.HasInterests() Then
-            Call oAccount.CalcInterests
+        Set oAccount = LoadAccount(getAccountId(ws))
+        If Not (oAccount Is Nothing) Then
+            If oAccount.IsOpen() And oAccount.HasInterests() Then
+                Call oAccount.CalcInterests
+            End If
         End If
         modal.Update
     Next ws

@@ -16,7 +16,7 @@ Private aStatus As String
 Private aCurrency As String
 Private aType As String
 Private aInBudget As Boolean
-Private aTaxRate As String
+Private aTaxRate As Double
 Private aInterestPeriod As Integer
 Private ws As Worksheet
 Private oBalanceTable As ListObject
@@ -29,7 +29,7 @@ Private Sub Class_Initialize()
     aName = vbNullString
     aNumber = vbNullString
     aBank = vbNullString
-    aAvail = 0
+    aAvail = AVAILABILITY_IMMEDIATE
     aStatus = vbNullString
     aCurrency = vbNullString
     aType = vbNullString
@@ -51,15 +51,15 @@ Public Function Load(accountId As String) As Boolean
         Load = False
         Exit Function
     End If
-    aNumber = CStr(tbl.Lookup(aId, 2))
-    aName = CStr(tbl.Lookup(aId, 3))
-    aBank = CStr(tbl.Lookup(aId, 4))
-    aAvail = CInt(tbl.Lookup(aId, 5))
-    aStatus = CStr(tbl.Lookup(aId, 6))
-    aCurrency = CStr(tbl.Lookup(aId, 7))
-    aType = CStr(tbl.Lookup(aId, 8))
-    aInBudget = CBool(tbl.Lookup(aId, 9))
-    aTaxRate = CDbl(tbl.Lookup(aId, 10))
+    aNumber = CStr(tbl.Lookup(aId, ACCOUNT_NUMBER_COL))
+    aName = CStr(tbl.Lookup(aId, ACCOUNT_NAME_COL))
+    aBank = CStr(tbl.Lookup(aId, ACCOUNT_BANK_COL))
+    aAvail = CInt(tbl.Lookup(aId, ACCOUNT_AVAIL_COL))
+    aStatus = CStr(tbl.Lookup(aId, ACCOUNT_STATUS_COL))
+    aCurrency = CStr(tbl.Lookup(aId, ACCOUNT_CURRENCY_COL))
+    aType = CStr(tbl.Lookup(aId, ACCOUNT_TYPE_COL))
+    aInBudget = CBool(tbl.Lookup(aId, ACCOUNT_BUDGET_COL))
+    aTaxRate = CDbl(tbl.Lookup(aId, ACCOUNT_TAX_COL))
     
     Dim accountTypes As KeyedTable
     Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
@@ -224,7 +224,7 @@ Public Sub CalcInterests()
         Exit Sub
     End If
     Dim oInterests As Interest
-    oInterests = NewInterest(aId, GetTableAsArray(oBalanceTable, Array(DATE_COL, BALANCE_COL)), GetTableAsArray(oDepositsTable), aInterestPeriod)
+    Set oInterests = NewInterest(aId, balanceHistory, GetTableAsArray(oDepositsTable), aInterestPeriod)
     oInterests.Calc
     Dim b As Boolean
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
@@ -268,35 +268,36 @@ Private Sub addBalanceTable()
         lblBalance = GetLabel("k.accountBalance")
         lblDate = GetLabel("k.date")
         lblSubcat = GetLabel("k.subcategory")
-        .ListColumns(1).Name = lblDate
-        .ListColumns(2).Name = lblAmount
-        .ListColumns(3).Name = lblBalance
-        .ListColumns(4).Name = GetLabel("k.description")
-        .ListColumns(5).Name = lblSubcat
+        .ListColumns(BL_DATE_COL).Name = lblDate
+        .ListColumns(BL_AMOUNT_COL).Name = lblAmount
+        .ListColumns(BL_BALANCE_COL).Name = lblBalance
+        .ListColumns(BL_DESC_COL).Name = GetLabel("k.description")
+        .ListColumns(BL_SUBCATEG_COL).Name = lblSubcat
         If aType = GetLabel("k.accountStandard") Then
-            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
-            .ListColumns(6).Name = GetLabel("k.category")
-            .ListRows(1).Range(1, 6).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
+            .ListColumns(BL_CATEG_COL).Name = GetLabel("k.category")
+            .ListRows(1).Range(1, BL_CATEG_COL).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
             If aInBudget Then
                 .ListColumns.Add
-                .ListColumns(7).Name = GetLabel("k.inBudget")
+                .ListColumns(BL_BUDGET_COL).Name = GetLabel("k.inBudget")
             End If
         Else
-            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
+            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
         End If
         If aCurrency <> GetGlobalParam("DefaultCurrency") Then
             lblAmount = lblAmount & " " & aCurrency
             lblBalance = lblBalance & " " & aCurrency
-            .ListColumns.Add(4).Name = lblAmount
-            .ListColumns.Add(5).Name = lblBalance
+            .ListColumns.Add(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).Name = lblAmount
+            .ListColumns.Add(BL_BALANCE_COL + BL_FOREIGN_OFFSET).Name = lblBalance
             If aType = GetLabel("k.accountStandard") Then
-                .ListRows(1).Range(1, 5).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
+                .ListRows(1).Range(1, BL_BALANCE_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             Else
-                .ListRows(1).Range(1, 4).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
+                .ListRows(1).Range(1, BL_AMOUNT_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
             End If
-            .ListRows(1).Range(1, 2).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
-            .ListRows(1).Range(1, 3).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
+            ' TODO allow other currencies than CHF
+            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
+            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
         End If
     End With
     Set oBalanceTable = ws.ListObjects(tblName)
@@ -315,8 +316,8 @@ Private Sub addDepositTable()
     ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium4"
-        .ListColumns(1).Name = GetLabel("k.date")
-        .ListColumns(2).Name = GetLabel("k.amount")
+        .ListColumns(BL_DATE_COL).Name = GetLabel("k.date")
+        .ListColumns(BL_AMOUNT_COL).Name = GetLabel("k.amount")
     End With
     Set oDepositsTable = ws.ListObjects(tblName)
 End Sub
@@ -334,14 +335,14 @@ Private Sub addInterestTable()
     ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium5"
-        .ListColumns(1).Name = GetLabel("k.period")
-        .ListColumns(2).Name = GetLabel("k.grossYield")
-        .ListColumns(3).Name = GetLabel("k.netYield")
-        .ListRows(1).Range(1, 1).value = GetLabel("k.thisYear")
-        .ListRows(2).Range(1, 1).value = GetLabel("k.lastYear")
-        .ListRows(3).Range(1, 1).value = GetLabel("k.last3Years")
-        .ListRows(4).Range(1, 1).value = GetLabel("k.last5Years")
-        .ListRows(5).Range(1, 1).value = GetLabel("k.allTime")
+        .ListColumns(IT_PERIOD_COL).Name = GetLabel("k.period")
+        .ListColumns(IT_GROSS_INTEREST_COL).Name = GetLabel("k.grossYield")
+        .ListColumns(IT_NET_INTEREST_COL).Name = GetLabel("k.netYield")
+        .ListRows(1).Range(1, IT_PERIOD_COL).value = GetLabel("k.thisYear")
+        .ListRows(2).Range(1, IT_PERIOD_COL).value = GetLabel("k.lastYear")
+        .ListRows(3).Range(1, IT_PERIOD_COL).value = GetLabel("k.last3Years")
+        .ListRows(4).Range(1, IT_PERIOD_COL).value = GetLabel("k.last5Years")
+        .ListRows(5).Range(1, IT_PERIOD_COL).value = GetLabel("k.allTime")
     End With
     Set oInterestTable = ws.ListObjects(tblName)
 End Sub
@@ -450,7 +451,7 @@ Public Function DepositsHistory() As Variant
 End Function
 
 
-Public Function BalanceHistory(Optional sampling As String = "Yearly") As Variant
+Private Function balanceHistory(Optional sampling As String = "Yearly") As Variant
     Dim histAll() As Variant
     Dim histSampled() As Variant
     Dim nbYears As Long
@@ -460,7 +461,7 @@ Public Function BalanceHistory(Optional sampling As String = "Yearly") As Varian
     Dim lastYear As Long
     Dim lastBalance As Double
     Dim histSize As Long
-    histAll = balanceAsArray(aId)
+    histAll = balanceAsArray
     histSize = UBound(histAll, 1)
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
     ReDim histSampled(1 To nbYears, 1 To 2)
@@ -469,15 +470,15 @@ Public Function BalanceHistory(Optional sampling As String = "Yearly") As Varian
     lastBalance = 0
     j = 1
     For i = 1 To histSize
-        m = Month(histAll(i, 1))
-        y = Year(histAll(i, 1))
+        m = Month(histAll(i, BL_DATE_COL))
+        y = Year(histAll(i, BL_DATE_COL))
         If sampling = "Monthly" And m <> lastMonth Then
-            d = Day(histAll(i, 1))
+            d = Day(histAll(i, BL_DATE_COL))
             histSampled(j, 1) = DateSerial(y, m, 1)
             If d <> 1 Then
                 histSampled(j, 2) = lastBalance
             Else
-                histSampled(j, 2) = histAll(i, 3)
+                histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
             End If
             j = j + 1
         ElseIf sampling = "Yearly" And y <> lastYear Then
@@ -490,14 +491,14 @@ Public Function BalanceHistory(Optional sampling As String = "Yearly") As Varian
         End If
         firstEntry = False
         lastMonth = m
-        lastBalance = histAll(i, 3)
+        lastBalance = histAll(i, BL_BALANCE_COL)
         lastYear = y
     Next i
     If sampling = "Yearly" Then
         histSampled(j, 1) = histAll(histSize, 1)
         histSampled(j, 2) = lastBalance
     End If
-    BalanceHistory = histSampled
+    balanceHistory = histSampled
 End Function
 
 
@@ -576,22 +577,21 @@ End Sub
 ' Table as Arrays
 '----------------------------------------------------------------------------
 Private Function asArray(accountSection As String) As Variant
-    Dim i As Long
-    Dim ws As Worksheet
-    Set accountArray = Nothing
-    For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like "*_" & accountSection Then
-            asArray = GetTableAsArray(ws.ListObjects(i))
+    Set asArray = Nothing
+    Dim o As ListObject
+    For Each o In ws.ListObjects
+        If LCase$(o.Name) Like "*_" & accountSection Then
+            asArray = GetTableAsArray(o)
             Exit For
         End If
-    Next i
+    Next o
 End Function
 
-Private Function depositsAsArray(accountId As String) As Variant
+Private Function depositsAsArray() As Variant
     depositsAsArray = asArray(DEPOSIT_TABLE_NAME)
 End Function
 
-Private Function balanceAsArray(accountId As String) As Variant
+Private Function balanceAsArray() As Variant
     balanceAsArray = asArray(BALANCE_TABLE_NAME)
 End Function
 
