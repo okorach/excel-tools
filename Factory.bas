@@ -23,19 +23,4 @@ Public Function NewKeyedTable(oTable As ListObject) As KeyedTable
 End Function
 
 
-Public Function LoadAccount(accountId As String) As Account
-    Set LoadAccount = New Account
-    If Not LoadAccount.Load(accountId) Then
-        Set LoadAccount = Nothing
-    End If
-End Function
-
-Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optional aCur As String = vbNullString, _
-                           Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
-                           Optional aInB As Boolean = False, Optional aTax As Double = 0) As Account
-    Set NewAccount = New Account
-    If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax) Then
-        Set NewAccount = Nothing
-    End If
-End Function
 

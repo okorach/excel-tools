@@ -116,18 +116,25 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     tbl.Update aId, aTax, 10
 
     Sheets.Add
-    ActiveSheet.Name = aId
+    ActiveSheet.name = aId
     Set ws = ActiveSheet
+    ws.Cells.RowHeight = 13
+    ws.Rows.font.size = 10
+    
     addBalanceTable
+    formatBalanceTable
+    
     addStandardButtons
     If aType = GetLabel("k.accountStandard") Then
         addImportButton
     Else
         addDepositTable
+        formatDepositTable
         addInterestTable
+        formatInterestTable
         addInterestButtons
     End If
-    FormatMe
+    ws.Range("A1").Select
     Call UnfreezeDisplay
     Create = True
 End Function
@@ -142,15 +149,15 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
             Exit Sub
         End If
         csvFile = CStr(file)
-        If LCase$(Right$(csvFile, 3)) <> "csv" Then
-            csvFile = csvFile & "csv"
+        If LCase$(Right$(csvFile, 4)) <> ".csv" Then
+            csvFile = csvFile & ".csv"
         End If
     End If
 
     Call FreezeDisplay
     
     Dim exportFrom As String, exportTo As String
-    exportFrom = ActiveWorkbook.Name
+    exportFrom = ActiveWorkbook.name
     
     Dim defaultCurrency As String
     defaultCurrency = GetGlobalParam("DefaultCurrency")
@@ -161,7 +168,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     
     ' Create blank workbook and copy data on that workbook to save as CSV
     Workbooks.Add (xlWBATWorksheet)
-    exportTo = ActiveWorkbook.Name
+    exportTo = ActiveWorkbook.name
     
     ' Paste account transactions starting from row 2
     Workbooks(exportTo).Activate
@@ -229,28 +236,33 @@ Public Sub CalcInterests()
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
 End Sub
 
+
 Private Sub addStandardButtons()
-    For Each btnName In Array("BtnHome", "BtnPrev5", "BtnPrev", "BtnNext", "BtnNext5", "BtnTop", "BtnBottom", "BtnFormat", "BtnSort")
-        If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
-        End If
-    Next btnName
+    Call BtnAddByStringArray(ws, Array( _
+        BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
+        , BTN_PREV_5_NAME & "," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
+        , BTN_PREV_NAME & "," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
+        , BTN_NEXT_NAME & "," & BTN_NEXT_TEXT & ",GoToNext,Webdings,18,1,4,40" _
+        , BTN_NEXT_5_NAME & "," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
+        , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
+        , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
+        , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
+        , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
+        ) _
+    )
 End Sub
 
+
 Private Sub addInterestButtons()
-    For Each btnName In Array("BtnInterests", "BtnAddEntry")
-        If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
-        End If
-    Next btnName
+    Call BtnAddByStringArray(ws, Array( _
+        BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
+        , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
+        ) _
+    )
 End Sub
 
 Private Sub addImportButton()
-    For Each btnName In Array("BtnImport")
-        If Not ShapeExist(ws, CStr(btnName)) Then
-            Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
-        End If
-    Next btnName
+    Call BtnAddByString(ws, BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40")
 End Sub
 
 Private Sub addBalanceTable()
@@ -259,7 +271,7 @@ Private Sub addBalanceTable()
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     ' TODO: Don't create table if already exists
     ws.Range("A11:A12").Select
-    ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).Name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).name = tblName
 
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium2"
@@ -268,19 +280,19 @@ Private Sub addBalanceTable()
         lblBalance = GetLabel("k.accountBalance")
         lblDate = GetLabel("k.date")
         lblSubcat = GetLabel("k.subcategory")
-        .ListColumns(BL_DATE_COL).Name = lblDate
-        .ListColumns(BL_AMOUNT_COL).Name = lblAmount
-        .ListColumns(BL_BALANCE_COL).Name = lblBalance
-        .ListColumns(BL_DESC_COL).Name = GetLabel("k.description")
-        .ListColumns(BL_SUBCATEG_COL).Name = lblSubcat
+        .ListColumns(BL_DATE_COL).name = lblDate
+        .ListColumns(BL_AMOUNT_COL).name = lblAmount
+        .ListColumns(BL_BALANCE_COL).name = lblBalance
+        .ListColumns(BL_DESC_COL).name = GetLabel("k.description")
+        .ListColumns(BL_SUBCATEG_COL).name = lblSubcat
         If aType = GetLabel("k.accountStandard") Then
             .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
-            .ListColumns(BL_CATEG_COL).Name = GetLabel("k.category")
+            .ListColumns(BL_CATEG_COL).name = GetLabel("k.category")
             .ListRows(1).Range(1, BL_CATEG_COL).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
             If aInBudget Then
                 .ListColumns.Add
-                .ListColumns(BL_BUDGET_COL).Name = GetLabel("k.inBudget")
+                .ListColumns(BL_BUDGET_COL).name = GetLabel("k.inBudget")
             End If
         Else
             .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
@@ -289,8 +301,8 @@ Private Sub addBalanceTable()
         If aCurrency <> defaultCurrency Then
             lblAmount = lblAmount & " " & aCurrency
             lblBalance = lblBalance & " " & aCurrency
-            .ListColumns.Add(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).Name = lblAmount
-            .ListColumns.Add(BL_BALANCE_COL + BL_FOREIGN_OFFSET).Name = lblBalance
+            .ListColumns.Add(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).name = lblAmount
+            .ListColumns.Add(BL_BALANCE_COL + BL_FOREIGN_OFFSET).name = lblBalance
             If aType = GetLabel("k.accountStandard") Then
                 .ListRows(1).Range(1, BL_BALANCE_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             Else
@@ -313,11 +325,11 @@ Private Sub addDepositTable()
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
         r = "$I$10:$J$11"
     End If
-    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium4"
-        .ListColumns(BL_DATE_COL).Name = GetLabel("k.date")
-        .ListColumns(BL_AMOUNT_COL).Name = GetLabel("k.amount")
+        .ListColumns(BL_DATE_COL).name = GetLabel("k.date")
+        .ListColumns(BL_AMOUNT_COL).name = GetLabel("k.amount")
     End With
     Set oDepositsTable = ws.ListObjects(tblName)
 End Sub
@@ -332,12 +344,12 @@ Private Sub addInterestTable()
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
         r = "$I$1:$K$6"
     End If
-    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).Name = tblName
+    ws.ListObjects.Add(xlSrcRange, Range(r), , xlYes).name = tblName
     With ws.ListObjects(tblName)
         .TableStyle = "TableStyleMedium5"
-        .ListColumns(IT_PERIOD_COL).Name = GetLabel("k.period")
-        .ListColumns(IT_GROSS_INTEREST_COL).Name = GetLabel("k.grossYield")
-        .ListColumns(IT_NET_INTEREST_COL).Name = GetLabel("k.netYield")
+        .ListColumns(IT_PERIOD_COL).name = GetLabel("k.period")
+        .ListColumns(IT_GROSS_INTEREST_COL).name = GetLabel("k.grossYield")
+        .ListColumns(IT_NET_INTEREST_COL).name = GetLabel("k.netYield")
         .ListRows(1).Range(1, IT_PERIOD_COL).value = GetLabel("k.thisYear")
         .ListRows(2).Range(1, IT_PERIOD_COL).value = GetLabel("k.lastYear")
         .ListRows(3).Range(1, IT_PERIOD_COL).value = GetLabel("k.last3Years")
@@ -355,7 +367,7 @@ Public Sub FormatMe()
     Call formatBalanceTable
     Call formatDepositTable
     Call formatInterestTable
-    Call formatAccountButtons
+    Call formatButtons
 End Sub
 
 
@@ -385,8 +397,8 @@ End Property
 Property Get Number() As String
     Number = aNumber
 End Property
-Property Get Name() As String
-    Name = aName
+Property Get name() As String
+    name = aName
 End Property
 Property Get Bank() As String
     Bank = aBank
@@ -512,7 +524,7 @@ End Function
 Private Function accountTable(accountSection As String) As ListObject
     Dim i As Long
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like "*_" & accountSection Then
+        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
             Set accountTable = ws.ListObjects(i)
             Exit For
         End If
@@ -580,7 +592,7 @@ Private Function asArray(accountSection As String) As Variant
     Set asArray = Nothing
     Dim o As ListObject
     For Each o In ws.ListObjects
-        If LCase$(o.Name) Like "*_" & accountSection Then
+        If LCase$(o.name) Like "*_" & accountSection Then
             asArray = GetTableAsArray(o)
             Exit For
         End If
@@ -599,38 +611,22 @@ End Function
 ' Private formatting functions
 '----------------------------------------------------------------------------
 
-Private Sub formatAccountButtons()
-    If ws.Shapes.Count <= 0 Then
-        Exit Sub
-    End If
-    Dim sbw As Integer
-    sbw = 40
-    Dim i As Long
-    i = 0
-    Dim s As Shape
-
-    For Each btnData In Array( _
-        "BtnHome," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
-        , "BtnPrev5," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
-        , "BtnPrev," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
-        , "BtnNext," & BTN_NEXT_TEXT & ",GoToNext,Webdings,18,1,4,40" _
-        , "BtnNext5," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
-        , "BtnTop," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
-        , "BtnBottom," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
-        , "BtnSort," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
-        , "BtnImport," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
-        , "BtnAddEntry," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
-        , "BtnInterests," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
-        , "BtnFormat," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
-        )
-        values = Split(btnData, ",", -1, vbTextCompare)
-        Set s = ShapeFind(ws, CStr(values(0)))
-        If Not s Is Nothing Then
-            Call BtnSetProperties(s, text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
-                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
-        End If
-    Next btnData
+Private Sub formatButtons()
+    Call BtnFormatByStringArray(ws, Array( _
+        BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
+        , BTN_PREV_5_NAME & "," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
+        , BTN_PREV_NAME & "," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
+        , BTN_NEXT_NAME & "," & BTN_NEXT_TEXT & ",GoToNext,Webdings,18,1,4,40" _
+        , BTN_NEXT_5_NAME & "," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
+        , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
+        , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
+        , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
+        , BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
+        , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
+        , BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
+        , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
+        ) _
+    )
     ws.Range("A1").Select
     
 '    ElseIf (s.Type = msoFormControl) Then
@@ -647,7 +643,7 @@ Private Sub formatBalanceTable()
     If oBalanceTable Is Nothing Then
         Exit Sub
     End If
-    oBalanceTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
+    oBalanceTable.name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oBalanceTable, "TableStyleMedium2")
     Dim col As Long
     col = TableColNbrFromName(oBalanceTable, GetLabel(DATE_KEY))
@@ -720,7 +716,7 @@ Private Sub formatDepositTable()
     If oDepositsTable Is Nothing Then
         Exit Sub
     End If
-    oDepositsTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
+    oDepositsTable.name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oDepositsTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oDepositsTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oDepositsTable, 2, EUR_FORMAT)
@@ -730,7 +726,7 @@ Private Sub formatInterestTable()
     If oInterestTable Is Nothing Then
         Exit Sub
     End If
-    oInterestTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
+    oInterestTable.name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oInterestTable, "TableStyleMedium5")
     Call SetTableColumnFormat(oInterestTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oInterestTable, 3, INTEREST_FORMAT)

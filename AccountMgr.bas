@@ -31,7 +31,7 @@ Public Sub MergeAccounts(columnKeys As Variant)
                 Set tbl = oAccount.BalanceTable()
                 ' Loop on all accounts of the sheet
                 If (colKey = ACCOUNT_NAME_KEY) Then
-                    arr1d = Create1DArray(tbl.ListRows.Count, oAccount.Name)
+                    arr1d = Create1DArray(tbl.ListRows.Count, oAccount.name)
                 ElseIf (colKey = IN_BUDGET_KEY And Not oAccount.IsInBudget()) Then
                     arr1d = Create1DArray(tbl.ListRows.Count, 0)
                 Else
@@ -165,6 +165,23 @@ Public Sub AccountCreate()
 End Sub
 
 
+Public Function LoadAccount(accountId As String) As Account
+    Set LoadAccount = New Account
+    If Not LoadAccount.Load(accountId) Then
+        Set LoadAccount = Nothing
+    End If
+End Function
+
+Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optional aCur As String = vbNullString, _
+                           Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
+                           Optional aInB As Boolean = False, Optional aTax As Double = 0) As Account
+    Set NewAccount = New Account
+    If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax) Then
+        Set NewAccount = Nothing
+    End If
+End Function
+
+
 Public Sub AccountFormatHere()
     Call FreezeDisplay
     Dim oAccount As Account
@@ -239,7 +256,7 @@ Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
 End Sub
 
 Public Function getAccountId(ws As Worksheet) As String
-    getAccountId = ws.Name
+    getAccountId = ws.name
 End Function
 
 Public Sub AccountRefreshOpenList()
@@ -306,7 +323,7 @@ Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     If VarType(accountIdOrWs) = vbString Then
         accountId = accountIdOrWs
     Else
-        accountId = accountIdOrWs.Name
+        accountId = accountIdOrWs.name
     End If
     Dim accounts As KeyedTable
     Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
