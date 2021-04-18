@@ -46,7 +46,9 @@ Private Sub ValidateBtn_Click()
         taxStr = left$(taxStr, Len(taxStr) - 1)
         tax = CDbl(taxStr) / 100
     End If
-    Call AccountCreate(accountId:=CStr(FormItemAccountName.value), accCurrency:=CStr(CreateAccountFormCurrency.value), _
-        accType:=CStr(FormItemAccountType.value), bank:=CStr(CreateAccountFormBank.value), accNumber:=CStr(CreateAccountFormAccountNbr.value), _
-        avail:=CInt(CreateAccountFormAvailability.value), inBudget:=CreateAccountFormInBudget, taxRate:=tax)
+    Dim oAccount As Account
+    Set oAccount = NewAccount(aId:=CStr(FormItemAccountName.value), aNbr:=CStr(CreateAccountFormAccountNbr.value), aBank:=CStr(CreateAccountFormBank.value), _
+        aCur:=CStr(CreateAccountFormCurrency.value), aType:=CStr(FormItemAccountType.value), _
+        aAvail:=CInt(CreateAccountFormAvailability.value), aInB:=CreateAccountFormInBudget, aTax:=tax)
 End Sub
+
