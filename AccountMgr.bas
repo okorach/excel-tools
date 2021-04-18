@@ -257,26 +257,43 @@ Public Function getAccountId(ws As Worksheet) As String
 End Function
 
 Public Sub AccountRefreshOpenList()
-    Dim OpenStr As String
     Call FreezeDisplay
-    OpenStr = GetLabel("k.accountOpen")
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Refresh open accounts list", Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).ListRows.Count + 3)
+    'startTime = Now
     Call TruncateTable(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE))
+    'MsgBox ("Truncate duration = " & CStr(DateDiff("s", startTime, Now)))
+    modal.Update
     With Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE)
         For Each row In Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).ListRows
-            If row.Range.Cells(1, ACCOUNT_STATUS_COL).value = OpenStr Then
+            'startTime = Now
+            Dim oAccount As Account
+            Set oAccount = LoadAccount(row.Range(1, ACCOUNT_KEY_COL).value)
+            If oAccount.IsOpen Then
                 .ListRows.Add ' Add 1 row at the end, then extend
-                .ListRows(.ListRows.Count).Range.Cells(1, 1).value = row.Range.Cells(1, ACCOUNT_KEY_COL).value
+                .ListRows(.ListRows.Count).Range.Cells(1, 1).value = oAccount.Id
             End If
+            modal.Update
+            'MsgBox ("Add account " & oAccount.Id & " duration = " & CStr(DateDiff("s", startTime, Now)))
         Next row
     End With
-' FIXME / TODO - Fix the below
-'    ActiveSheet.Shapes("Drop Down 2").Select
-'    With Selection
-'        .ListFillRange = PARAMS_SHEET & "!$L$2:$L$" & CStr(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows.Count + 1)
-'        .LinkedCell = Names("selectedAccount").RefersToRange
-'        .DropDownLines = 15
-'        .Display3DShading = True
-'    End With
+
+    Dim refCell As String
+    refCell = Names("selectedAccount").RefersTo
+    refCell = Right$(refCell, LenB(refCell) - 1)
+    For Each wsName In Array(BALANCE_SHEET, BALANCE_PER_ACCOUNT_SHEET)
+        Sheets(wsName).Activate
+        Sheets(wsName).Shapes(ACCOUNT_SELECTOR).Select
+        With Selection
+            .ListFillRange = PARAMS_SHEET & "!$K$2:$K$" & CStr(Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows.Count + 1)
+            .LinkedCell = refCell
+            .DropDownLines = 15
+            .Display3DShading = True
+        End With
+        Sheets(wsName).Range("A1").Activate
+        modal.Update
+    Next wsName
+    Set modal = Nothing
     Call UnfreezeDisplay
 End Sub
 
