@@ -238,7 +238,7 @@ Private Sub addStandardButtons()
 End Sub
 
 Private Sub addInterestButtons()
-    For Each btnName In Array("BtnInterest", "BtnAddEntry")
+    For Each btnName In Array("BtnInterests", "BtnAddEntry")
         If Not ShapeExist(ws, CStr(btnName)) Then
             Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
         End If
