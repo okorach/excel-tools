@@ -229,8 +229,19 @@ Public Sub CalcInterests()
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
 End Sub
 
+Private Sub addButtons(btnArr As Variant)
+    For Each btnData In btnArr
+        values = Split(btnData, ",", -1, vbTextCompare)
+        If Not ShapeExist(ws, CStr(values(0))) Then
+            Dim s As Shape
+            Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
+            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
+                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
+        End If
+    Next btnData
+End Sub
 Private Sub addStandardButtons()
-    For Each btnData In Array( _
+    addButtons (Array( _
         BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
         , BTN_PREV_5_NAME & "," & BTN_PREV_5_TEXT & ",GoBack5,Webdings,18,1,2,40" _
         , BTN_PREV_NAME & "," & BTN_PREV_TEXT & ",GoToPrev,Webdings,18,1,3,40" _
@@ -240,42 +251,21 @@ Private Sub addStandardButtons()
         , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
         , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
         , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
-        )
-        values = Split(btnData, ",", -1, vbTextCompare)
-        If Not ShapeExist(ws, CStr(values(0))) Then
-            Dim s As Shape
-            Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
-                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
-        End If
-    Next btnData
+        ) _
+    )
 End Sub
 
+
 Private Sub addInterestButtons()
-    For Each btnData In Array( _
-            BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40", _
-            , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
-            )
-        values = Split(btnData, ",", -1, vbTextCompare)
-        If Not ShapeExist(ws, CStr(values(0))) Then
-            Dim s As Shape
-            Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
-                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
-        End If
-    Next btnData
+    addButtons (Array( _
+        BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
+        , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
+        ) _
+    )
 End Sub
 
 Private Sub addImportButton()
-    For Each btnData In Array(BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40")
-        values = Split(btnData, ",", -1, vbTextCompare)
-        If Not ShapeExist(ws, CStr(values(0))) Then
-            Dim s As Shape
-            Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
-            Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
-                BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
-        End If
-    Next btnData
+    addButtons (Array(BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40"))
 End Sub
 
 Private Sub addBalanceTable()
