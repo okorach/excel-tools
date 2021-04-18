@@ -142,8 +142,8 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
             Exit Sub
         End If
         csvFile = CStr(file)
-        If LCase$(Right$(csvFile, 3)) <> "csv" Then
-            csvFile = csvFile & "csv"
+        If LCase$(Right$(csvFile, 4)) <> ".csv" Then
+            csvFile = csvFile & ".csv"
         End If
     End If
 
