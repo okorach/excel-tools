@@ -296,8 +296,8 @@ Private Sub addBalanceTable()
             Else
                 .ListRows(1).Range(1, BL_AMOUNT_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
             End If
-            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "to" & defaultCurrency & ",2,TRUE)"
-            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "to" & defaultCurrency & ",2,TRUE)"
+            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
         End If
     End With
     Set oBalanceTable = ws.ListObjects(tblName)
