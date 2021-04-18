@@ -51,15 +51,15 @@ Public Function Load(accountId As String) As Boolean
         Load = False
         Exit Function
     End If
-    aNumber = CStr(tbl.Lookup(aId, 2))
-    aName = CStr(tbl.Lookup(aId, 3))
-    aBank = CStr(tbl.Lookup(aId, 4))
-    aAvail = CInt(tbl.Lookup(aId, 5))
-    aStatus = CStr(tbl.Lookup(aId, 6))
-    aCurrency = CStr(tbl.Lookup(aId, 7))
-    aType = CStr(tbl.Lookup(aId, 8))
-    aInBudget = CBool(tbl.Lookup(aId, 9))
-    aTaxRate = CDbl(tbl.Lookup(aId, 10))
+    aNumber = CStr(tbl.Lookup(aId, ACCOUNT_NUMBER_COL))
+    aName = CStr(tbl.Lookup(aId, ACCOUNT_NAME_COL))
+    aBank = CStr(tbl.Lookup(aId, ACCOUNT_BANK_COL))
+    aAvail = CInt(tbl.Lookup(aId, ACCOUNT_AVAIL_COL))
+    aStatus = CStr(tbl.Lookup(aId, ACCOUNT_STATUS_COL))
+    aCurrency = CStr(tbl.Lookup(aId, ACCOUNT_CURRENCY_COL))
+    aType = CStr(tbl.Lookup(aId, ACCOUNT_TYPE_COL))
+    aInBudget = CBool(tbl.Lookup(aId, ACCOUNT_BUDGET_COL))
+    aTaxRate = CDbl(tbl.Lookup(aId, ACCOUNT_TAX_COL))
     
     Dim accountTypes As KeyedTable
     Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
