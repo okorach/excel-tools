@@ -88,7 +88,6 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
         Exit Function
     End If
 
-    
     If accCur = vbNullString Then
         accCur = GetGlobalParam("DefaultCurrency")
     End If
@@ -239,7 +238,7 @@ Private Sub addStandardButtons()
 End Sub
 
 Private Sub addInterestButtons()
-    For Each btnName In Array("BtnInterest", "BtnAddEntry")
+    For Each btnName In Array("BtnInterests", "BtnAddEntry")
         If Not ShapeExist(ws, CStr(btnName)) Then
             Call BtnAdd(ws, Name:=CStr(btnName), action:="ThisWorkbook.GoToSolde")
         End If
@@ -256,6 +255,7 @@ End Sub
 
 Private Sub addBalanceTable()
     Dim tblName As String
+    Dim defaultCurrency As String
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     ' TODO: Don't create table if already exists
     ws.Range("A11:A12").Select
@@ -285,7 +285,8 @@ Private Sub addBalanceTable()
         Else
             .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
         End If
-        If aCurrency <> GetGlobalParam("DefaultCurrency") Then
+        defaultCurrency = GetGlobalParam("DefaultCurrency")
+        If aCurrency <> defaultCurrency Then
             lblAmount = lblAmount & " " & aCurrency
             lblBalance = lblBalance & " " & aCurrency
             .ListColumns.Add(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).Name = lblAmount
@@ -295,9 +296,8 @@ Private Sub addBalanceTable()
             Else
                 .ListRows(1).Range(1, BL_AMOUNT_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
             End If
-            ' TODO allow other currencies than CHF
-            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
-            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "],CHFtoEUR,2,TRUE)"
+            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
         End If
     End With
     Set oBalanceTable = ws.ListObjects(tblName)
@@ -647,7 +647,7 @@ Private Sub formatBalanceTable()
     If oBalanceTable Is Nothing Then
         Exit Sub
     End If
-    oBalanceTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
+    oBalanceTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
     Call SetTableStyle(oBalanceTable, "TableStyleMedium2")
     Dim col As Long
     col = TableColNbrFromName(oBalanceTable, GetLabel(DATE_KEY))
@@ -720,7 +720,7 @@ Private Sub formatDepositTable()
     If oDepositsTable Is Nothing Then
         Exit Sub
     End If
-    oDepositsTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
+    oDepositsTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
     Call SetTableStyle(oDepositsTable, "TableStyleMedium4")
     Call SetTableColumnFormat(oDepositsTable, 1, DATE_FORMAT)
     Call SetTableColumnFormat(oDepositsTable, 2, EUR_FORMAT)
@@ -730,7 +730,7 @@ Private Sub formatInterestTable()
     If oInterestTable Is Nothing Then
         Exit Sub
     End If
-    oInterestTable.Name = Replace(Replace(Replace(LCase$(accountId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
+    oInterestTable.Name = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
     Call SetTableStyle(oInterestTable, "TableStyleMedium5")
     Call SetTableColumnFormat(oInterestTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oInterestTable, 3, INTEREST_FORMAT)
