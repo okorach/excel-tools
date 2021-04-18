@@ -200,9 +200,6 @@ End Sub
 
 
 Public Sub AccountFormatAll()
-'
-'  Reformat all account sheets
-'
     Dim modal As ProgressBar
     Set modal = NewProgressBar("Formatting in progress", Worksheets.Count + 2)
     Call FreezeDisplay
@@ -284,36 +281,10 @@ Public Sub AccountRefreshOpenList()
 End Sub
 
 
-'-------------------------------------------------
-Public Function AccountExists(accountId As String) As Boolean
-    Dim accounts As KeyedTable
-    Set accounts = NewKeyedTable(Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE))
-    AccountExists = (SheetExists(accountId) And accounts.KeyExists(accountId))
-End Function
-
-
 Public Sub AddSavingsRow()
-    Call AddInvestmentRow(ActiveSheet.ListObjects(1))
-End Sub
-
-Private Sub AddInvestmentRow(oTable As ListObject)
-    oTable.ListRows.Add
-    nbRows = oTable.ListRows.Count
-    
-    col = TableColNbrFromName(oTable, GetLabel(DATE_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = Date
-    
-    col = TableColNbrFromName(oTable, GetLabel(BALANCE_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
-    
-    col = TableColNbrFromName(oTable, GetLabel(SUBCATEGORY_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
-    
-    col = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
-    
-    col = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
-    oTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
+    Dim oAccount As Account
+    Set oAccount = LoadAccount(getAccountId(ActiveSheet))
+    oAccount.AddBalanceRow
 End Sub
 
 

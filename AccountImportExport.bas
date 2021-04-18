@@ -544,19 +544,26 @@ Public Sub AccountExportAll()
             sFolder = .SelectedItems(1)
         End If
     End With
-
-    If LenB(sFolder) > 0 Then ' if a file was chosen
-        Call FreezeDisplay
-        For Each ws In Worksheets
-            If IsAnAccount(ws.name) Then
-                filename = sFolder & "\" & ws.name & ".csv"
-                Call AccountExport(ws.name, filename, True)
-            End If
-        Next ws
-        Call UnfreezeDisplay
-    Else
+    If LenB(sFolder) = 0 Then ' if no directory was chosen
         Call ErrorMessage("k.warningExportCancelled")
+        Exit Sub
     End If
+    
+    Dim modal As ProgressBar
+    Dim ws As Worksheet
+    Set modal = NewProgressBar("Export all accounts in progress", Worksheets.Count)
+    Call FreezeDisplay
+    For Each ws In Worksheets
+        Dim oAccount As Account
+        Set oAccount = LoadAccount(getAccountId(ws))
+        If Not (oAccount Is Nothing) Then
+            filename = sFolder & "\" & ws.name & ".csv"
+            Call oAccount.Export(csvFile:=filename, silent:=True)
+        End If
+        modal.Update
+    Next ws
+    Set modal = Nothing
+    Call UnfreezeDisplay
 End Sub
 
 

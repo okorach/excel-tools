@@ -149,14 +149,16 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
             Exit Sub
         End If
         csvFile = CStr(file)
-        If LCase$(Right$(csvFile, 4)) <> ".csv" Then
-            csvFile = csvFile & ".csv"
+        If LCase$(Right$(csvFile, 3)) <> "csv" Then
+            csvFile = csvFile & "csv"
         End If
     End If
 
-    Call FreezeDisplay
+    ' Call FreezeDisplay
     
     Dim exportFrom As String, exportTo As String
+    Dim wb As Workbook
+    ws.Activate
     exportFrom = ActiveWorkbook.name
     
     Dim defaultCurrency As String
@@ -200,6 +202,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 
     ' Set universal format for dates and numbers
+    Workbooks(exportTo).Activate
     Range("A:A").NumberFormat = "YYYY-mm-dd"
     Range("B:E").NumberFormat = "General"
 
@@ -213,13 +216,17 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
 
     ' Save CSV file
     Workbooks(exportTo).Activate
+    If silent Then
+        Application.DisplayAlerts = False
+    End If
     ActiveWorkbook.SaveAs filename:=csvFile, fileformat:=xlCSV, CreateBackup:=False, local:=True
     Application.DisplayAlerts = False
     ActiveWorkbook.Close
     Application.DisplayAlerts = True
     
     Workbooks(exportFrom).ActiveSheet.Range("A1").Select
-    Call UnfreezeDisplay
+    
+    ' Call UnfreezeDisplay
     If Not silent Then
         MsgBox "File " & csvFile & " saved"
     End If
@@ -236,7 +243,27 @@ Public Sub CalcInterests()
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
 End Sub
 
+Public Sub AddBalanceRow()
+    Dim nbRows As Long
+    Dim offset As Integer
+    Dim previousRow As ListRow, lastRow As ListRow
 
+    oBalanceTable.ListRows.Add
+    nbRows = oBalanceTable.ListRows.Count
+    
+    Set previousRow = oBalanceTable.ListRows(nbRows - 1)
+    Set lastRow = oBalanceTable.ListRows(nbRows)
+    offset = 0
+    If aCurrency <> GetGlobalParam("DefaultCurrency") Then
+        offset = 2
+    End If
+    lastRow.Range(1, BL_DATE_COL).FormulaR1C1 = Date
+    lastRow.Range(1, BL_BALANCE_COL + offset).value = previousRow.Range(BL_BALANCE_COL + offset).value
+    lastRow.Range(1, BL_AMOUNT_COL + offset).FormulaR1C1 = previousRow.Range(BL_AMOUNT_COL + offset).FormulaR1C1
+    lastRow.Range(1, BL_DESC_COL + offset).FormulaR1C1 = previousRow.Range(BL_DESC_COL + offset).FormulaR1C1
+    lastRow.Range(1, BL_SUBCATEG_COL + offset).value = previousRow.Range(BL_SUBCATEG_COL + offset).value
+End Sub
+    
 Private Sub addStandardButtons()
     Call BtnAddByStringArray(ws, Array( _
         BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
@@ -431,32 +458,6 @@ End Property
 Property Get MyCurrency() As String
     MyCurrency = aCurrency
 End Property
-
-Private Sub AddBalanceRow()
-    If oBalanceTable Is Nothing Then
-        Exit Sub
-    End If
-    
-    oBalanceTable.ListRows.Add
-    nbRows = oTable.ListRows.Count
-    
-    col = TableColNbrFromName(oBalanceTable, GetLabel(DATE_KEY))
-    oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = Date
-    
-    col = TableColNbrFromName(oBalanceTable, GetLabel(BALANCE_KEY))
-    oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
-    
-    col = TableColNbrFromName(oBalanceTable, GetLabel(SUBCATEGORY_KEY))
-    oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows).value = oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).value
-    
-    col = TableColNbrFromName(oBalanceTable, GetLabel(AMOUNT_KEY))
-    oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
-    
-    col = TableColNbrFromName(oBalanceTable, GetLabel(DESCRIPTION_KEY))
-    oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows).FormulaR1C1 = oBalanceTable.ListColumns(col).DataBodyRange.Rows(nbRows - 1).FormulaR1C1
-End Sub
-
-
 
 Public Function DepositsHistory() As Variant
     DepositsHistory = depositsAsArray(aId)
@@ -731,5 +732,4 @@ Private Sub formatInterestTable()
     Call SetTableColumnFormat(oInterestTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oInterestTable, 3, INTEREST_FORMAT)
 End Sub
-
 
