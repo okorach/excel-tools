@@ -72,4 +72,4 @@ Public Const IT_GROSS_INTEREST_COL As Integer = 2
 Public Const IT_NET_INTEREST_COL As Integer = 3
 
 
-
+Public Const AVAILABILITY_IMMEDIATE = 0

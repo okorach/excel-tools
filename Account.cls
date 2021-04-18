@@ -29,7 +29,7 @@ Private Sub Class_Initialize()
     aName = vbNullString
     aNumber = vbNullString
     aBank = vbNullString
-    aAvail = 0
+    aAvail = AVAILABILITY_IMMEDIATE
     aStatus = vbNullString
     aCurrency = vbNullString
     aType = vbNullString
