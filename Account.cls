@@ -200,6 +200,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 
     ' Set universal format for dates and numbers
+    Workbooks(exportTo).Activate
     Range("A:A").NumberFormat = "YYYY-mm-dd"
     Range("B:E").NumberFormat = "General"
 
@@ -219,6 +220,7 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     Application.DisplayAlerts = True
     
     Workbooks(exportFrom).ActiveSheet.Range("A1").Select
+    
     Call UnfreezeDisplay
     If Not silent Then
         MsgBox "File " & csvFile & " saved"
@@ -731,5 +733,4 @@ Private Sub formatInterestTable()
     Call SetTableColumnFormat(oInterestTable, 2, INTEREST_FORMAT)
     Call SetTableColumnFormat(oInterestTable, 3, INTEREST_FORMAT)
 End Sub
-
 
