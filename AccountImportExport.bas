@@ -550,9 +550,11 @@ Public Sub AccountExportAll()
     End If
     
     Dim modal As ProgressBar
-    Dim ws As Worksheet
+    Dim ws As Worksheet, curWs As Worksheet
     Set modal = NewProgressBar("Export all accounts in progress", Worksheets.Count)
     Call FreezeDisplay
+    Set curWs = ActiveSheet
+
     For Each ws In Worksheets
         Dim oAccount As Account
         Set oAccount = LoadAccount(getAccountId(ws))
@@ -562,6 +564,7 @@ Public Sub AccountExportAll()
         End If
         modal.Update
     Next ws
+    curWs.Activate
     Set modal = Nothing
     Call UnfreezeDisplay
 End Sub
