@@ -93,6 +93,23 @@ Public Function BtnAdd(ws As Worksheet, name As String, action As String, Option
 End Function
 
 
+Public Sub BtnAddByString(ws As Worksheet, stringData As String)
+    values = Split(stringData, ",", -1, vbTextCompare)
+    If Not ShapeExist(ws, CStr(values(0))) Then
+        Dim s As Shape
+        Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
+        Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * sbw, _
+            BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
+    End If
+End Sub
+
+Public Sub BtnAddByStringArray(ws As Worksheet, btnArr As Variant)
+    For Each btnData In btnArr
+        Call BtnAddByString(ws, CStr(btnData))
+    Next btnData
+End Sub
+
+
 '------------------------------------------------------------------------------
 ' Places a shape (a button for instance) on given X, Y coordinates
 '------------------------------------------------------------------------------
