@@ -232,13 +232,13 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 End Sub
 
-Public Sub CalcInterests()
+Public Sub CalcInterests(Optional withModal As Boolean = True)
     If Not Me.HasInterests Then
         Exit Sub
     End If
     Dim oInterests As Interest
     Set oInterests = NewInterest(aId, balanceHistory, GetTableAsArray(oDepositsTable), aInterestPeriod)
-    oInterests.Calc
+    Call oInterests.Calc(withModal)
     Dim b As Boolean
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
 End Sub
@@ -293,10 +293,13 @@ Private Sub addImportButton()
 End Sub
 
 Private Sub addBalanceTable()
+    If Not (oBalanceTable Is Nothing) Then
+        Exit Sub
+    End If
     Dim tblName As String
     Dim defaultCurrency As String
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & BALANCE_TABLE_NAME
-    ' TODO: Don't create table if already exists
+    
     ws.Range("A11:A12").Select
     ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).name = tblName
 
@@ -335,8 +338,10 @@ Private Sub addBalanceTable()
             Else
                 .ListRows(1).Range(1, BL_AMOUNT_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
             End If
-            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
-            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+            .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = _
+                "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+            .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = _
+                "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
         End If
     End With
     Set oBalanceTable = ws.ListObjects(tblName)
@@ -344,9 +349,11 @@ End Sub
 
 
 Private Sub addDepositTable()
+    If Not (oDepositsTable Is Nothing) Then
+        Exit Sub
+    End If
     Dim tblName As String
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & DEPOSIT_TABLE_NAME
-    ' TODO: Don't create table if already exists
     Dim r As String
     r = "$G$10:$H$11"
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
@@ -363,9 +370,11 @@ End Sub
 
 
 Private Sub addInterestTable()
+    If Not (oInterestTable Is Nothing) Then
+        Exit Sub
+    End If
     Dim tblName As String
     tblName = Replace(Replace(Replace(LCase$(aId), " ", "_"), "é", "e"), "è", "e") & "_" & INTEREST_TABLE_NAME
-    ' TODO: Don't create table if already exists
     Dim r As String
     r = "$G$1:$I$6"
     If aCurrency <> GetGlobalParam("DefaultCurrency") Then
@@ -572,7 +581,7 @@ End Function
 
 Private Sub ExportMetadata(targetWs As Worksheet, nbrTransactions As Long, Optional nbrDeposits As Long = 0)
     ' Copy metadata on row 1
-    targetWs.Range("A1") = "ExportDate=" & Format(Now(), "YYYY-mm-dd HH:MM:SS")
+    targetWs.Range("A1") = "ExportDate=" & Format$(Now(), "YYYY-mm-dd HH:MM:SS")
     targetWs.Range("B1") = "AccountId=" & aId
     targetWs.Range("C1") = "AccountNumber=" & aNumber
     targetWs.Range("D1") = "Bank=" & aBank
