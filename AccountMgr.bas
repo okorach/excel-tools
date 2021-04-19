@@ -9,15 +9,18 @@ Public Const CATEGORY_KEY As String = "k.category"
 Public Const IN_BUDGET_KEY As String = "k.inBudget"
 Public Const SPREAD_KEY As String = "k.amountSpread"
 
-Public Sub MergeAccounts(columnKeys As Variant)
+Public Sub MergeAccounts(columnKeys As Variant, Optional aModal As ProgressBar = Nothing)
 
     Dim firstAccount As Boolean
     Dim ws As Worksheet
-
-    'Call FreezeDisplay
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Refresh in progress", (UBound(columnKeys) + 1) * Worksheets.Count)
-    
+        
+    If aModal Is Nothing Then
+        Call FreezeDisplay
+        Set modal = NewProgressBar("Refresh in progress", (UBound(columnKeys) + 1) * Worksheets.Count)
+    Else
+        Set modal = aModal
+    End If
     For Each colKey In columnKeys
         Dim col As String
         col = GetColName(colKey)
@@ -49,8 +52,9 @@ Public Sub MergeAccounts(columnKeys As Variant)
         Call SetTableColumn(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), col, totalColumn)
         Erase totalColumn
     Next colKey
-    Set modal = Nothing
-
+    If aModal Is Nothing Then
+        Set modal = Nothing
+    End If
     ' Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
     
 End Sub
@@ -151,11 +155,15 @@ End Sub
 
 Public Sub AccountsFullRefresh()
     ' startTime = Now
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Full refresh in progress", 6 * Worksheets.Count + 5)
     Call FreezeDisplay
     Call ResizeTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), 1)
-    Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY))
+    Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY), modal)
     Call GenBudget
+    modal.Update 2
     Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
+    modal.Update 3
     Call UnfreezeDisplay
     ' MsgBox ("Full refresh duration = " & CStr(DateDiff("s", startTime, Now)))
 End Sub
