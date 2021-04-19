@@ -46,7 +46,8 @@ Private Sub Class_Initialize()
     accountId = vbNullString
 End Sub
 
-Public Sub Init(accId As String, Optional balancesArray As Variant = Nothing, Optional depositsArray As Variant = Nothing, Optional period As Integer = 0)
+Public Sub Init(accId As String, Optional balancesArray As Variant = Nothing, Optional depositsArray As Variant = Nothing, _
+                Optional period As Integer = 0)
     accountId = accId
     balanceArr = balancesArray
     depositArr = depositsArray
@@ -88,9 +89,11 @@ Public Function Calc(Optional withModal As Boolean = True) As Variant
         ' Do calculations
         For i = 2 To .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count
             If calcPerPeriod Then
-                .Range(INTEREST_DATE_START_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_DATE_COL).DataBodyRange.Rows(i - 1).value
+                .Range(INTEREST_DATE_START_CELL).value = _
+                    .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_DATE_COL).DataBodyRange.Rows(i - 1).value
             Else
-                .Range(INTEREST_DATE_START_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_DATE_COL).DataBodyRange.Rows(1).value
+                .Range(INTEREST_DATE_START_CELL).value = _
+                    .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_DATE_COL).DataBodyRange.Rows(1).value
             End If
             .Range(INTEREST_DATE_STOP_CELL).value = .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_DATE_COL).DataBodyRange.Rows(i).value
             .Range(INTEREST_RATE_CELL).value = 0
