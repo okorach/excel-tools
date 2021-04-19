@@ -232,13 +232,13 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 End Sub
 
-Public Sub CalcInterests()
+Public Sub CalcInterests(Optional withModal As Boolean = True)
     If Not Me.HasInterests Then
         Exit Sub
     End If
     Dim oInterests As Interest
     Set oInterests = NewInterest(aId, balanceHistory, GetTableAsArray(oDepositsTable), aInterestPeriod)
-    oInterests.Calc
+    Call oInterests.Calc(withModal)
     Dim b As Boolean
     b = oInterests.Store(oInterestTable, aId, aTaxRate)
 End Sub

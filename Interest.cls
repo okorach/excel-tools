@@ -57,9 +57,10 @@ Public Sub Init(accId As String, Optional balancesArray As Variant = Nothing, Op
     InterestPeriod = period
 End Sub
 
-Public Function Calc(Optional modal As ProgressBar = Nothing) As Variant
+Public Function Calc(Optional withModal As Boolean = True) As Variant
     Dim calcPerPeriod As Boolean
     calcPerPeriod = True
+    Dim mymodal As ProgressBar
     With Sheets(INTEREST_CALC_SHEET)
         ' Load data to prepare calculation
         .Range("I1").value = accountId
@@ -80,10 +81,8 @@ Public Function Calc(Optional modal As ProgressBar = Nothing) As Variant
         ' Clear old calculated interest rates
         Call ClearTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), I_INT_INTERESTS_COL)
         
-        If modal Is Nothing Then
+        If withModal Then
             Set mymodal = NewProgressBar("Interest calculation", .ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1)
-        Else
-            Set mymodal = modal
         End If
         
         ' Do calculations
@@ -97,12 +96,14 @@ Public Function Calc(Optional modal As ProgressBar = Nothing) As Variant
             .Range(INTEREST_RATE_CELL).value = 0
             .Range(INTEREST_GOAL_SEEK_CELL).GoalSeek goal:=.Range(BALANCE_END_CELL).value, ChangingCell:=.Range(INTEREST_RATE_CELL)
             .ListObjects(BALANCE_HISTORY_TABLE).ListColumns(I_INT_INTERESTS_COL).DataBodyRange.Rows(i).value = .Range(INTEREST_RATE_CELL).value
-            mymodal.Update
+            If withModal Then
+                mymodal.Update
+            End If
         Next i
         calculatedInterests = GetTableColumn(.ListObjects(BALANCE_HISTORY_TABLE), I_INT_INTERESTS_COL)
         Calc = calculatedInterests
     End With
-    If modal Is Nothing Then
+    If withModal Then
         Set mymodal = Nothing
     End If
 End Function

@@ -4,7 +4,7 @@ Public Sub InterestsCalcHere()
     Dim oAccount As Account
     Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     If Not oAccount Is Nothing Then
-        oAccount.CalcInterests
+        Call oAccount.CalcInterests(True)
     End If
     Call UnfreezeDisplay
 End Sub
@@ -37,7 +37,7 @@ Public Sub InterestsCalcAll()
         Set oAccount = LoadAccount(getAccountId(ws))
         If Not (oAccount Is Nothing) Then
             If oAccount.IsOpen() And oAccount.HasInterests() Then
-                Call oAccount.CalcInterests
+                Call oAccount.CalcInterests(False)
             End If
         End If
         modal.Update
