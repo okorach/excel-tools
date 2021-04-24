@@ -30,8 +30,8 @@ Public Const BTN_IMPORT_TEXT As String = "G"
 Public Const BTN_ADD_ROW_NAME As String = "BtnAddEntry"
 Public Const BTN_ADD_ROW_TEXT As String = "+1"
 
-Public Const BTN_FORMAT_NAME As String = "BtnFormat"
-Public Const BTN_FORMAT_TEXT As String = "Format"
+Public Const BTN_EXPORT_NAME As String = "BtnExport"
+Public Const BTN_EXPORT_TEXT As String = "CSV"
 
 Public Const BTN_INTERESTS_NAME As String = "BtnInterests"
 'Public Const BTN_INTERESTS_TEXT As String = Chr$(143)
@@ -98,7 +98,8 @@ Public Sub BtnAddByString(ws As Worksheet, stringData As String)
     values = Split(stringData, ",", -1, vbTextCompare)
     If Not ShapeExist(ws, CStr(values(0))) Then
         Dim s As Shape
-        Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), font:=CStr(values(3)), fontSize:=CInt(values(4)))
+        Set s = BtnAdd(ws:=ws, name:=CStr(values(0)), text:=CStr(values(1)), action:=CStr(values(2)), _
+            font:=CStr(values(3)), fontSize:=CInt(values(4)))
         Call ShapePlacement(s, BTN_HOME_X + (CInt(values(6)) - 1) * BTN_WIDTH, _
             BTN_HOME_Y + (CInt(values(5)) - 1) * BTN_HEIGHT, CInt(values(7)) - 1, BTN_HEIGHT - 1)
     End If

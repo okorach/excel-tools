@@ -287,7 +287,7 @@ Private Sub addStandardButtons()
         , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
         , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
         , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
-        , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
+        , BTN_EXPORT_NAME & "," & BTN_EXPORT_TEXT & ",AccountExportHere,Arial,12,2,2,40" _
         ) _
     )
 End Sub
@@ -302,7 +302,7 @@ Private Sub addInterestButtons()
 End Sub
 
 Private Sub addImportButton()
-    Call BtnAddByString(ws, BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40")
+    Call BtnAddByString(ws, BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,3,40")
 End Sub
 
 Private Sub addBalanceTable()
@@ -656,10 +656,10 @@ Private Sub formatButtons()
         , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
         , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
         , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
-        , BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,2,40" _
-        , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,14,2,3,40" _
+        , BTN_EXPORT_NAME & "," & BTN_EXPORT_TEXT & ",AccountExportHere,Arial,12,2,2,40" _
+        , BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,3,40" _
+        , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,12,2,3,40" _
         , BTN_INTERESTS_NAME & "," & Chr$(143) & ",InterestsCalcHere,Webdings,18,2,4,40" _
-        , BTN_FORMAT_NAME & "," & BTN_FORMAT_TEXT & ",AccountFormatHere,Arial,18,2,5,80" _
         ) _
     )
     ws.Range("A1").Select
