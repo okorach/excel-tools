@@ -154,8 +154,11 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
         End If
     End If
 
-    ' Call FreezeDisplay
-    
+    Dim modal As ProgressBar
+    If Not silent Then
+        Call FreezeDisplay
+        Set modal = NewProgressBar("Export account...", 5)
+    End If
     Dim exportFrom As String, exportTo As String
     Dim wb As Workbook
     ws.Activate
@@ -176,7 +179,9 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     Workbooks(exportTo).Activate
     Range("A2").Select
     Selection.PasteSpecial Paste:=xlPasteValues
-
+    If Not silent Then
+        modal.Update
+    End If
     ' Delete useless category row
     If aCurrency = defaultCurrency Then
         For Each c In Array("F")
@@ -188,7 +193,9 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
             ActiveSheet.Columns(c).EntireColumn.Delete shift:=xlToLeft
         Next c
     End If
-
+    If Not silent Then
+        modal.Update
+    End If
     Workbooks(exportFrom).Activate
     ' If account has deposits (savings account), store them
     If Not oDepositsTable Is Nothing Then
@@ -200,7 +207,9 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
         Range("A" & CStr(rowNbr)).Select
         Selection.PasteSpecial Paste:=xlPasteValues
     End If
-
+    If Not silent Then
+        modal.Update
+    End If
     ' Set universal format for dates and numbers
     Workbooks(exportTo).Activate
     Range("A:A").NumberFormat = "YYYY-mm-dd"
@@ -213,7 +222,9 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     Else
         Call ExportMetadata(Workbooks(exportTo).ActiveSheet, oBalanceTable.ListRows.Count, oDepositsTable.ListRows.Count)
     End If
-
+    If Not silent Then
+        modal.Update
+    End If
     ' Save CSV file
     Workbooks(exportTo).Activate
     If silent Then
@@ -225,9 +236,11 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     Application.DisplayAlerts = True
     
     Workbooks(exportFrom).ActiveSheet.Range("A1").Select
-    
-    ' Call UnfreezeDisplay
+
     If Not silent Then
+        modal.Update
+        Call UnfreezeDisplay
+        Set modal = Nothing
         MsgBox "File " & csvFile & " saved"
     End If
 End Sub
