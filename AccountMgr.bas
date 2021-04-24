@@ -190,19 +190,12 @@ Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optio
 End Function
 
 
-Public Sub AccountFormatHere()
-    Call FreezeDisplay
-    Dim oAccount As Account
-    Set oAccount = LoadAccount(getAccountId(ActiveSheet))
-    oAccount.FormatMe
-    Call UnfreezeDisplay
-End Sub
-
-Public Sub AccountSortHere()
+Public Sub AccountSortAndFormatHere()
     Call FreezeDisplay
     Dim oAccount As Account
     Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     oAccount.Sort
+    oAccount.FormatMe
     Call UnfreezeDisplay
 End Sub
 

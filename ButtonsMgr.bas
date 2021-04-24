@@ -21,8 +21,8 @@ Public Const BTN_BOTTOM_TEXT As String = "6"
 Public Const BTN_TOP_NAME As String = "BtnTop"
 Public Const BTN_TOP_TEXT As String = "5"
 
-Public Const BTN_SORT_NAME As String = "BtnSort"
-Public Const BTN_SORT_TEXT As String = "~"
+Public Const BTN_SORT_AND_FORMAT_NAME As String = "BtnSort"
+Public Const BTN_SORT_AND_FORMAT_TEXT As String = "~"
 
 Public Const BTN_IMPORT_NAME As String = "BtnImport"
 Public Const BTN_IMPORT_TEXT As String = "G"
