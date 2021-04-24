@@ -3,6 +3,7 @@ Public Const INTEREST_CALC_SHEET As String = "Interests"
 Public Const MERGE_SHEET As String = "Comptes Merge"
 Public Const ACCOUNTS_SHEET As String = "Comptes"
 Public Const BALANCE_SHEET As String = "Solde"
+Public Const BALANCE_PER_ACCOUNT_SHEET As String = "Solde par compte"
 Public Const ACCOUNTS_TABLE As String = "tblAccounts"
 Public Const OPEN_ACCOUNTS_TABLE As String = "tblOpenAccounts"
 Public Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
@@ -14,12 +15,12 @@ Public Const DEPOSIT_TABLE_NAME As String = "deposit"
 Public Const INTEREST_TABLE_NAME As String = "interest"
 
 Public Const INTEREST_FORMAT As String = "0.0%"
-Public Const CHF_FORMAT = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
-Public Const EUR_FORMAT = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
-Public Const USD_FORMAT = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
-Public Const DATE_FORMAT = "m/d/yyyy"
+Public Const CHF_FORMAT As String = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
+Public Const EUR_FORMAT As String = "#,###,##0.00"" € "";-#,###,##0.00"" € "";0.00"" € """
+Public Const USD_FORMAT As String = "#,###,##0.00"" $ "";-#,###,##0.00"" $ "";0.00"" $ """
+Public Const DATE_FORMAT As String = "m/d/yyyy"
 
-
+Public Const ACCOUNT_SELECTOR As String = "AccountSelector"
 
 ' Constants defining structure of global accounts table
 Public Const ACCOUNT_KEY_COL As Integer = 1
