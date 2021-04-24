@@ -317,6 +317,7 @@ Private Sub addBalanceTable()
     ws.ListObjects.Add(xlSrcRange, Range("$A$10:$E$11"), , xlYes).name = tblName
 
     With ws.ListObjects(tblName)
+        .ShowTotals = True
         .TableStyle = "TableStyleMedium2"
         Dim lblAmount As String, lblBalance As String, lblDate As String, lblSubcat As String
         lblAmount = GetLabel("k.amount")
@@ -328,14 +329,18 @@ Private Sub addBalanceTable()
         .ListColumns(BL_BALANCE_COL).name = lblBalance
         .ListColumns(BL_DESC_COL).name = GetLabel("k.description")
         .ListColumns(BL_SUBCATEG_COL).name = lblSubcat
+        .ListColumns(BL_SUBCATEG_COL).TotalsCalculation = xlTotalsCalculationNone
+
         If aType = GetLabel("k.accountStandard") Then
             .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             .ListColumns.Add
             .ListColumns(BL_CATEG_COL).name = GetLabel("k.category")
+            .ListColumns(BL_CATEG_COL).TotalsCalculation = xlTotalsCalculationNone
             .ListRows(1).Range(1, BL_CATEG_COL).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
             If aInBudget Then
                 .ListColumns.Add
                 .ListColumns(BL_BUDGET_COL).name = GetLabel("k.inBudget")
+                .ListColumns(BL_BUDGET_COL).TotalsCalculation = xlTotalsCalculationNone
             End If
         Else
             .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
@@ -345,7 +350,9 @@ Private Sub addBalanceTable()
             lblAmount = lblAmount & " " & aCurrency
             lblBalance = lblBalance & " " & aCurrency
             .ListColumns.Add(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).name = lblAmount
+            .ListColumns(BL_AMOUNT_COL + BL_FOREIGN_OFFSET).TotalsCalculation = xlTotalsCalculationSum
             .ListColumns.Add(BL_BALANCE_COL + BL_FOREIGN_OFFSET).name = lblBalance
+            .ListColumns(BL_BALANCE_COL + BL_FOREIGN_OFFSET).TotalsCalculation = xlTotalsCalculationNone
             If aType = GetLabel("k.accountStandard") Then
                 .ListRows(1).Range(1, BL_BALANCE_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblAmount & "]+IF(ISNUMBER(R[-1]C),R[-1]C,0)"
             Else
@@ -355,7 +362,10 @@ Private Sub addBalanceTable()
                 "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
             .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = _
                 "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+        Else
+            .ListColumns(BL_AMOUNT_COL).TotalsCalculation = xlTotalsCalculationSum
         End If
+        .ListColumns(.ListColumns.Count).TotalsCalculation = xlTotalsCalculationNone
     End With
     Set oBalanceTable = ws.ListObjects(tblName)
 End Sub
@@ -377,6 +387,8 @@ Private Sub addDepositTable()
         .TableStyle = "TableStyleMedium4"
         .ListColumns(BL_DATE_COL).name = GetLabel("k.date")
         .ListColumns(BL_AMOUNT_COL).name = GetLabel("k.amount")
+        .ShowTotals = True
+        .ListColumns(BL_AMOUNT_COL).TotalsCalculation = xlTotalsCalculationSum
     End With
     Set oDepositsTable = ws.ListObjects(tblName)
 End Sub
