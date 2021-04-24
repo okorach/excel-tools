@@ -77,7 +77,7 @@ Sub ImportAny()
         If oAccount.MyCurrency = defaultCurrency Then
             amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY))
         Else
-            amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY) & " " & accCurrency)
+            amountCol = TableColNbrFromName(oTable, GetLabel(AMOUNT_KEY) & " " & oAccount.MyCurrency)
         End If
         descCol = TableColNbrFromName(oTable, GetLabel(DESCRIPTION_KEY))
         If (oAccount.Bank = "ING") Then
@@ -355,13 +355,13 @@ Sub ImportUBS(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, a
     Do While LenB(Cells(i, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            If Cells(iRow, 13) = "Solde prix prestations" Then
+            If Cells(i, 13) = "Solde prix prestations" Then
                 .Range(1, amountCol).value = 0
-            ElseIf LenB(Cells(iRow, 18).value) > 0 Then
+            ElseIf LenB(Cells(i, 18).value) > 0 Then
                 .Range(1, amountCol).value = toAmount(Cells(i, 18).value) ' Sous-montant column
-            ElseIf LenB(Cells(iRow, 19).value) > 0 Then
+            ElseIf LenB(Cells(i, 19).value) > 0 Then
                 .Range(1, amountCol).value = -toAmount(Cells(i, 19).value) ' Debit column
-            ElseIf LenB(Cells(iRow, 20).value) > 0 Then
+            ElseIf LenB(Cells(i, 20).value) > 0 Then
                 .Range(1, amountCol).value = toAmount(Cells(i, 20).value) ' Credit column
             Else
                 .Range(1, amountCol).value = 0
