@@ -62,7 +62,7 @@ Public Function Load(accountId As String) As Boolean
     aType = CStr(tbl.Lookup(aId, ACCOUNT_TYPE_COL))
     aInBudget = CBool(tbl.Lookup(aId, ACCOUNT_BUDGET_COL))
     aTaxRate = CDbl(tbl.Lookup(aId, ACCOUNT_TAX_COL))
-    aWebsite = CDbl(tbl.Lookup(aId, ACCOUNT_WEBSITE_COL))
+    aWebsite = CStr(tbl.Lookup(aId, ACCOUNT_WEBSITE_COL))
     
     Dim accountTypes As KeyedTable
     Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
