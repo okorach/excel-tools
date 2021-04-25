@@ -340,7 +340,7 @@ Private Sub addBalanceTable()
             .ListColumns.Add
             .ListColumns(BL_CATEG_COL).name = GetLabel("k.category")
             .ListColumns(BL_CATEG_COL).TotalsCalculation = xlTotalsCalculationNone
-            .ListRows(1).Range(1, BL_CATEG_COL).FormulaR1C1 = "=VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE)"
+            .ListRows(1).Range(1, BL_CATEG_COL).FormulaR1C1 = "=IF([" & lblSubcat & "]="""","""",VLOOKUP([" & lblSubcat & "],TableCategories,2,FALSE))"
             If aInBudget Then
                 .ListColumns.Add
                 .ListColumns(BL_BUDGET_COL).name = GetLabel("k.inBudget")
@@ -363,9 +363,9 @@ Private Sub addBalanceTable()
                 .ListRows(1).Range(1, BL_AMOUNT_COL + BL_FOREIGN_OFFSET).FormulaR1C1 = "=[" & lblBalance & "]-IF(ISNUMBER(R[-1]C[1]),R[-1]C[1],0)"
             End If
             .ListRows(1).Range(1, BL_AMOUNT_COL).FormulaR1C1 = _
-                "=[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+                "=IF([" & lblDate & "]="""","""",[" & lblAmount & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE))"
             .ListRows(1).Range(1, BL_BALANCE_COL).FormulaR1C1 = _
-                "=[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE)"
+                "=IF([" & lblDate & "]="""","""",[" & lblBalance & "]/VLOOKUP([" & lblDate & "]," & aCurrency & "2" & defaultCurrency & ",2,TRUE))"
         Else
             .ListColumns(BL_AMOUNT_COL).TotalsCalculation = xlTotalsCalculationSum
         End If
