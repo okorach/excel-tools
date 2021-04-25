@@ -40,6 +40,9 @@ Public Function Update(key As Variant, value As Variant, colNameOrNumber As Vari
         For Each row In .ListRows
             If row.Range.Cells(1, 1).value = key Then
                 row.Range.Cells(1, col).value = value
+                If VarType(value) = vbString And (left$(LCase$(CStr(value)), 7) = "http://" Or left$(LCase$(CStr(value)), 8) = "https://") Then
+                    table.Parent.Hyperlinks.Add row.Range.Cells(1, col), value
+                End If
                 Update = True
                 Exit Function
             End If
