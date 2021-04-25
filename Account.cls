@@ -105,7 +105,7 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     aCurrency = accCur
     aType = accType
     aAvail = accAvail
-    aInB = accInB
+    aInBudget = accInB
     aTax = accTax
     aWebsite = accWebsite
         
@@ -116,7 +116,7 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     tbl.Update aId, GetLabel("k.AccountOpen"), ACCOUNT_STATUS_COL
     tbl.Update aId, aCurrency, ACCOUNT_CURRENCY_COL
     tbl.Update aId, aType, ACCOUNT_TYPE_COL
-    tbl.Update aId, aInB, ACCOUNT_BUDGET_COL
+    tbl.Update aId, aInBudget, ACCOUNT_BUDGET_COL
     tbl.Update aId, aTax, ACCOUNT_TAX_COL
     tbl.Update aId, aWebsite, ACCOUNT_WEBSITE_COL
 
