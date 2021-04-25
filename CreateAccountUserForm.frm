@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} CreateAccountUserForm 
    Caption         =   "Create Account"
-   ClientHeight    =   5175
+   ClientHeight    =   5595
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   5280
@@ -18,6 +18,7 @@ Attribute VB_Exposed = False
 Private Sub CreateAccountFormCancelBtn_Click()
     CreateAccountUserForm.Hide
 End Sub
+
 
 Private Sub UserForm_Initialize()
     For Each row In Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE).ListRows
@@ -49,6 +50,7 @@ Private Sub ValidateBtn_Click()
     Dim oAccount As Account
     Set oAccount = NewAccount(aId:=CStr(FormItemAccountName.value), aNbr:=CStr(CreateAccountFormAccountNbr.value), _
         aBank:=CStr(CreateAccountFormBank.value), aCur:=CStr(CreateAccountFormCurrency.value), aType:=CStr(FormItemAccountType.value), _
-        aAvail:=CInt(CreateAccountFormAvailability.value), aInB:=CreateAccountFormInBudget, aTax:=tax)
+        aAvail:=CInt(CreateAccountFormAvailability.value), aInB:=CreateAccountFormInBudget, aTax:=tax, _
+        aWebsite:=CStr(CreateAccountFormWebSite.value))
 End Sub
 

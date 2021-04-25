@@ -18,6 +18,7 @@ Private aType As String
 Private aInBudget As Boolean
 Private aTaxRate As Double
 Private aInterestPeriod As Integer
+Private aWebsite As String
 Private ws As Worksheet
 Private oBalanceTable As ListObject
 Private oDepositsTable As ListObject
@@ -36,6 +37,7 @@ Private Sub Class_Initialize()
     aInBudget = False
     aTaxRate = vbNull
     aInterestPeriod = 0
+    aWebsite = vbNullString
     Set oBalanceTable = Nothing
     Set oDepositsTable = Nothing
     Set oInterestTable = Nothing
@@ -51,7 +53,7 @@ Public Function Load(accountId As String) As Boolean
         Load = False
         Exit Function
     End If
-    aNumber = CStr(tbl.Lookup(aId, ACCOUNT_NUMBER_COL))
+    aNumber = CStr(tbl.Lookup(aId, ACCOUNT_NBR_COL))
     aName = CStr(tbl.Lookup(aId, ACCOUNT_NAME_COL))
     aBank = CStr(tbl.Lookup(aId, ACCOUNT_BANK_COL))
     aAvail = CInt(tbl.Lookup(aId, ACCOUNT_AVAIL_COL))
@@ -60,6 +62,7 @@ Public Function Load(accountId As String) As Boolean
     aType = CStr(tbl.Lookup(aId, ACCOUNT_TYPE_COL))
     aInBudget = CBool(tbl.Lookup(aId, ACCOUNT_BUDGET_COL))
     aTaxRate = CDbl(tbl.Lookup(aId, ACCOUNT_TAX_COL))
+    aWebsite = CDbl(tbl.Lookup(aId, ACCOUNT_WEBSITE_COL))
     
     Dim accountTypes As KeyedTable
     Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
@@ -74,9 +77,9 @@ Public Function Load(accountId As String) As Boolean
 End Function
 
 Public Function Create(accId As String, accNbr As String, accBank As String, _
-                       Optional accCur As String = vbNullString, _
-                       Optional accType As String = vbNullString, Optional accAvail As Integer = 0, _
-                       Optional accInB As Boolean = False, Optional accTax As Double = 0) As Boolean
+                       Optional accCur As String = vbNullString, Optional accType As String = vbNullString, _
+                       Optional accAvail As Integer = 0, Optional accInB As Boolean = False, _
+                       Optional accTax As Double = 0, Optional accWebsite As String = vbNullString) As Boolean
          
     Call FreezeDisplay
     
@@ -104,16 +107,18 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     aAvail = accAvail
     aInB = accInB
     aTax = accTax
-    
-    tbl.Insert aId, aNumber, 2
-    tbl.Update aId, aId, 3
-    tbl.Update aId, aBank, 4
-    tbl.Update aId, aAvail, 5
-    tbl.Update aId, GetLabel("k.AccountOpen"), 6
-    tbl.Update aId, aCurrency, 7
-    tbl.Update aId, aType, 8
-    tbl.Update aId, aInB, 9
-    tbl.Update aId, aTax, 10
+    aWebsite = accWebsite
+        
+    tbl.Insert aId, aNumber, ACCOUNT_NBR_COL
+    tbl.Update aId, aId, ACCOUNT_NAME_COL
+    tbl.Update aId, aBank, ACCOUNT_BANK_COL
+    tbl.Update aId, aAvail, ACCOUNT_AVAIL_COL
+    tbl.Update aId, GetLabel("k.AccountOpen"), ACCOUNT_STATUS_COL
+    tbl.Update aId, aCurrency, ACCOUNT_CURRENCY_COL
+    tbl.Update aId, aType, ACCOUNT_TYPE_COL
+    tbl.Update aId, aInB, ACCOUNT_BUDGET_COL
+    tbl.Update aId, aTax, ACCOUNT_TAX_COL
+    tbl.Update aId, aWebsite, ACCOUNT_WEBSITE_COL
 
     Sheets.Add
     ActiveSheet.name = aId
@@ -286,7 +291,7 @@ Private Sub addStandardButtons()
         , BTN_NEXT_5_NAME & "," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
         , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
         , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
-        , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
+        , BTN_SORT_AND_FORMAT_NAME & "," & BTN_SORT_AND_FORMAT_TEXT & ",AccountSortAndFormatHere,Webdings,18,2,1,40" _
         , BTN_EXPORT_NAME & "," & BTN_EXPORT_TEXT & ",AccountExportHere,Arial,12,2,2,40" _
         ) _
     )
@@ -655,7 +660,7 @@ Private Sub formatButtons()
         , BTN_NEXT_5_NAME & "," & BTN_NEXT_5_TEXT & ",GoFwd5,Webdings,18,1,5,40" _
         , BTN_TOP_NAME & "," & BTN_TOP_TEXT & ",scrollToTop,Webdings,18,1,6,40" _
         , BTN_BOTTOM_NAME & "," & BTN_BOTTOM_TEXT & ",scrollToBottom,Webdings,18,1,7,40" _
-        , BTN_SORT_NAME & "," & BTN_SORT_TEXT & ",AccountSortHere,Webdings,18,2,1,40" _
+        , BTN_SORT_AND_FORMAT_NAME & "," & BTN_SORT_AND_FORMAT_TEXT & ",AccountSortAndFormatHere,Webdings,18,2,1,40" _
         , BTN_EXPORT_NAME & "," & BTN_EXPORT_TEXT & ",AccountExportHere,Arial,12,2,2,40" _
         , BTN_IMPORT_NAME & "," & BTN_IMPORT_TEXT & ",ImportAny,Webdings,18,2,3,40" _
         , BTN_ADD_ROW_NAME & "," & BTN_ADD_ROW_TEXT & ",AddSavingsRow,Arial,12,2,3,40" _

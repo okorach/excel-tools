@@ -182,9 +182,10 @@ End Function
 
 Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optional aCur As String = vbNullString, _
                            Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
-                           Optional aInB As Boolean = False, Optional aTax As Double = 0) As Account
+                           Optional aInB As Boolean = False, Optional aTax As Double = 0, _
+                           Optional aWebsite As String = vbNullString) As Account
     Set NewAccount = New Account
-    If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax) Then
+    If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax, aWebsite) Then
         Set NewAccount = Nothing
     End If
 End Function

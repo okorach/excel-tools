@@ -33,7 +33,7 @@ Public Const ACCOUNT_CURRENCY_COL As Integer = 7
 Public Const ACCOUNT_TYPE_COL As Integer = 8
 Public Const ACCOUNT_BUDGET_COL As Integer = 9
 Public Const ACCOUNT_TAX_COL As Integer = 10
-
+Public Const ACCOUNT_WEBSITE_COL As Integer = 11
 
 
 ' Constants defining structure of account balance table
