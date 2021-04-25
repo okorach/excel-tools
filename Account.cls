@@ -120,8 +120,7 @@ Public Function Create(accId As String, accNbr As String, accBank As String, _
     tbl.Update aId, aTax, ACCOUNT_TAX_COL
     tbl.Update aId, aWebsite, ACCOUNT_WEBSITE_COL
 
-    Sheets.Add
-    ActiveSheet.name = aId
+    Sheets.Add(After:=Sheets(Sheets.Count)).name = aId
     Set ws = ActiveSheet
     ws.Cells.RowHeight = 13
     ws.Rows.font.size = 10
