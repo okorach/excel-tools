@@ -249,15 +249,19 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 End Sub
 
-Public Sub CalcInterests(Optional withModal As Boolean = True)
+Public Sub CalcInterests(Optional modal As ProgressBar = Nothing)
     If Not Me.HasInterests Then
+        If Not (modal Is Nothing) Then
+            modal.Update 6
+        End If
         Exit Sub
     End If
     Dim oInterests As Interest
+    Dim interestRates As Variant
     Set oInterests = NewInterest(aId, balanceHistory, GetTableAsArray(oDepositsTable), aInterestPeriod)
-    Call oInterests.Calc(withModal)
+    interestRates = oInterests.CalcKeyInterests(modal)
     Dim b As Boolean
-    b = oInterests.Store(oInterestTable, aId, aTaxRate)
+    b = oInterests.StoreKeyInterests(oInterestTable, aId, aTaxRate)
 End Sub
 
 Public Sub AddBalanceRow()
