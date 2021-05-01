@@ -156,7 +156,7 @@ End Sub
 Public Sub AccountsFullRefresh()
     ' startTime = Now
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Full refresh in progress", 6 * Worksheets.Count + 5)
+    Set modal = NewProgressBar("Full refresh in progress", 6 * Worksheets.Count + 5, True)
     Call FreezeDisplay
     Call ResizeTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), 1)
     Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY), modal)
