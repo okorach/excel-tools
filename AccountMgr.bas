@@ -60,7 +60,7 @@ Public Sub MergeAccounts(columnKeys As Variant, Optional aModal As ProgressBar =
 End Sub
 
 
-Public Sub GenBudget()
+Public Sub GenBudget(Optional modal As ProgressBar = Nothing)
 
     Dim i As Long
     Dim newSize As Long
@@ -75,15 +75,31 @@ Public Sub GenBudget()
     Dim categCol() As Variant
     Dim spreadCol() As Variant
 
-    startTime = Now
-
     With Sheets(MERGE_SHEET)
         dateCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DATE_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
         accountCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(ACCOUNT_NAME_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
         amountCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(AMOUNT_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
         descCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DESCRIPTION_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
         categCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SUBCATEGORY_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
         spreadCol = GetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(IN_BUDGET_KEY))
+        If Not (modal Is Nothing) Then
+            modal.Update
+        End If
     End With
 
     Dim moreRows As Long
@@ -94,6 +110,9 @@ Public Sub GenBudget()
             moreRows = moreRows + divider - 1
         End If
     Next i
+    If Not (modal Is Nothing) Then
+        modal.Update 3
+    End If
     ReDim Preserve dateCol(1 To nbRows + moreRows)
     ReDim Preserve accountCol(1 To nbRows + moreRows)
     ReDim Preserve amountCol(1 To nbRows + moreRows)
@@ -129,6 +148,9 @@ Public Sub GenBudget()
             Next k
         End If
     Next i
+    If Not (modal Is Nothing) Then
+        modal.Update 10
+    End If
 
     With Sheets(MERGE_SHEET)
         Call ResizeTable(.ListObjects(ACCOUNT_MERGE_TABLE), nbRows + moreRows)
@@ -138,7 +160,13 @@ Public Sub GenBudget()
         Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(DESCRIPTION_KEY), descCol)
         Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SUBCATEGORY_KEY), categCol)
         Call SetTableColumn(.ListObjects(ACCOUNT_MERGE_TABLE), GetColName(SPREAD_KEY), spreadCol)
+        If Not (modal Is Nothing) Then
+            modal.Update 3
+        End If
         .PivotTables(1).PivotCache.Refresh
+        If Not (modal Is Nothing) Then
+            modal.Update 8
+        End If
     End With
 
 End Sub
@@ -156,14 +184,13 @@ End Sub
 Public Sub AccountsFullRefresh()
     ' startTime = Now
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Full refresh in progress", 6 * Worksheets.Count + 5, True)
+    Set modal = NewProgressBar("Full refresh in progress", 6 * Worksheets.Count + 35, True)
     Call FreezeDisplay
     Call ResizeTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), 1)
     Call MergeAccounts(Array(DATE_KEY, ACCOUNT_NAME_KEY, AMOUNT_KEY, DESCRIPTION_KEY, SUBCATEGORY_KEY, IN_BUDGET_KEY), modal)
-    Call GenBudget
-    modal.Update 2
+    Call GenBudget(modal)
     Call SortTable(Sheets(MERGE_SHEET).ListObjects(ACCOUNT_MERGE_TABLE), GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
-    modal.Update 3
+    modal.Update 5
     Call UnfreezeDisplay
     ' MsgBox ("Full refresh duration = " & CStr(DateDiff("s", startTime, Now)))
 End Sub
