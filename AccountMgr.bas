@@ -326,6 +326,27 @@ Public Function getSelectedAccount() As String
     getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows(selectedNbr).Range(1, 1)
 End Function
 
+Public Function AccountsCount(Optional openOnly As Boolean = True, Optional interestOnly As Boolean = False) As Integer
+Dim ws As Worksheet
+    AccountsCount = 0
+    For Each ws In Worksheets
+        Dim oAccount As Account
+        Set oAccount = LoadAccount(getAccountId(ws))
+        Dim addCount As Integer
+        addCount = 1
+        If oAccount Is Nothing Then
+            addCount = 0
+        Else
+            If openOnly And Not oAccount.IsOpen() Then
+                addCount = 0
+            End If
+            If interestOnly And Not oAccount.HasInterests() Then
+                addCount = 0
+            End If
+        End If
+        AccountsCount = AccountsCount + addCount
+    Next ws
+End Function
 
 '--------------------------------------------------------------------------
 ' Private methods
