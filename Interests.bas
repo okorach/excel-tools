@@ -29,20 +29,17 @@ End Sub
 
 Public Sub InterestsCalcAll()
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Interests calculation in progress", Worksheets.Count * 6)
+    Set modal = NewProgressBar("Interests calculation in progress", AccountsCount(openOnly:=True, interestOnly:=True) * 6)
     Call FreezeDisplay
     Dim ws As Worksheet
     For Each ws In Worksheets
         Dim oAccount As Account
         Set oAccount = LoadAccount(getAccountId(ws))
-        If oAccount Is Nothing Then
-            modal.Update 6
-        Else
+        If Not (oAccount Is Nothing) Then
             If oAccount.IsOpen() And oAccount.HasInterests() Then
                 Call oAccount.CalcInterests(modal)
             End If
         End If
-        modal.Update
     Next ws
     Call UnfreezeDisplay
     Set modal = Nothing
