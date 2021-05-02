@@ -252,7 +252,7 @@ End Sub
 Public Sub CalcInterests(Optional modal As ProgressBar = Nothing)
     If Not Me.HasInterests Then
         If Not (modal Is Nothing) Then
-            modal.Update 6
+            modal.Update 7
         End If
         Exit Sub
     End If
@@ -491,7 +491,7 @@ Public Function AccountType() As String
     AccountType = aType
 End Function
 Property Get IsInBudget() As Boolean
-    inBudget = aInBudget
+    IsInBudget = aInBudget
 End Property
 Property Get TaxRate() As Double
     TaxRate = aTaxRate
