@@ -37,6 +37,7 @@ Public Sub ResizeTable(oTable As ListObject, targetSize As Long)
             oTable.ListRows(nbRows + 1).Range.Resize(targetSize - nbRows - 1).Insert shift:=xlDown
         End If
     ElseIf nbRows > targetSize Then
+        oTable.AutoFilter.ShowAllData
         oTable.ListRows(targetSize + 1).Range.Resize(nbRows - targetSize).Delete shift:=xlUp
         'For i = nbRows To targetSize + 1 Step -1
         '    oTable.ListRows(i).Delete
@@ -66,10 +67,10 @@ End Sub
 Public Sub SortTable(oTable As ListObject, sortCol1 As String, Optional sortOrder1 As XlSortOrder = xlAscending, _
                      Optional sortCol2 As String = vbNullString, Optional sortOrder2 As XlSortOrder = xlDescending)
     oTable.Sort.SortFields.Clear
-    oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
+    oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol1 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder1, _
         DataOption:=xlSortNormal
     If LenB(sortCol2) > 0 Then
-        oTable.Sort.SortFields.Add key:=Range(oTable.Name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
+        oTable.Sort.SortFields.Add key:=Range(oTable.name & "[" & sortCol2 & "]"), SortOn:=xlSortOnValues, Order:=sortOrder2, _
              DataOption:=xlSortNormal
     End If
     With oTable.Sort
@@ -374,7 +375,7 @@ Public Function TableIndex(likeString As String, Optional ws As Worksheet = Noth
     Dim i As Long
     accountTableIndex = 0
     For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).Name) Like "*_" & likeString Then
+        If LCase$(ws.ListObjects(i).name) Like "*_" & likeString Then
             TableIndex = i
             Exit For
         End If
