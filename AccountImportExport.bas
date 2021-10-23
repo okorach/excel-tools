@@ -1,6 +1,13 @@
 Attribute VB_Name = "AccountImportExport"
 Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
+Private Const REVOLUT_CSV_DATE_FIELD = 2
+Private Const REVOLUT_CSV_DESC_FIELD1 = 0
+Private Const REVOLUT_CSV_DESC_FIELD2 = 4
+Private Const REVOLUT_CSV_AMOUNT_FIELD = 5
+Private Const REVOLUT_CSV_FEE_FIELD = 6
+
+
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
         str = Replace(Replace(str, ",", "."), "'", "")
@@ -48,7 +55,7 @@ Private Function toDate(str) As Date
 End Function
 Private Function isoToDate(str) As Date
     a = Split(str, "-", -1, vbTextCompare)
-    isoToDate = DateSerial(CInt(a(2)), CInt(a(1)), CInt(a(0)))
+    isoToDate = DateSerial(CInt(a(0)), CInt(a(1)), CInt(a(2)))
 End Function
 
 
@@ -263,6 +270,7 @@ CheckAmount:
 End Sub
 
 
+
 Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     ' Open file a first time to replace " , " and " ," by ";"
 
@@ -297,6 +305,9 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     End With
     Cells.Replace What:=" , ", Replacement:=";", LookAt:=xlPart
     Cells.Replace What:=", ", Replacement:=";", LookAt:=xlPart
+    Cells.Replace What:=",", Replacement:=";", LookAt:=xlPart
+    Cells.Replace What:=";""", Replacement:=";", LookAt:=xlPart
+    Cells.Replace What:="""", Replacement:="", LookAt:=xlPart
 
     Dim modal As ProgressBar
     Set modal = NewProgressBar("Import Revolut CSV in progress", GetLastNonEmptyRow())
@@ -310,18 +321,19 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
         With oTable.ListRows(oTable.ListRows.Count)
             Dim desc As String, comment As String
             Dim amount As Double
-            .Range(1, dateCol).value = toDate(Trim$(a(0)))
-            desc = Trim$(a(1))
-            If LenB(Trim$(a(2))) = 0 Then
-                amount = CDbl(Trim$(a(3)))
-                comment = Trim$(a(5))
-            Else
-                amount = -CDbl(Trim$(a(2)))
-                comment = Trim$(a(4))
+            dateAndTime = Split(Trim$(a(REVOLUT_CSV_DATE_FIELD)), " ", -1, vbTextCompare)
+            .Range(1, dateCol).value = isoToDate(dateAndTime(0))
+            desc = Trim$(a(REVOLUT_CSV_DESC_FIELD1))
+            comment = Trim$(a(REVOLUT_CSV_DESC_FIELD2))
+            amount = CDbl(Trim$(a(REVOLUT_CSV_AMOUNT_FIELD)))
+            fee = CDbl(Trim$(a(REVOLUT_CSV_FEE_FIELD)))
+            If fee <> 0 Then
+                amount = amount + fee
+                comment = comment & " (including fee of " & str(fee) & " €)"
             End If
             .Range(1, amountCol).value = amount
             If Len(comment) > 0 Then
-                .Range(1, descCol).value = simplifyDescription(desc & " --> " & comment, subsTable)
+                .Range(1, descCol).value = simplifyDescription(desc & " " & comment, subsTable)
             Else
                 .Range(1, descCol).value = simplifyDescription(desc, subsTable)
             End If
@@ -554,7 +566,7 @@ Public Sub AccountExportAll()
     Set modal = NewProgressBar("Export all accounts in progress", Worksheets.Count)
     Call FreezeDisplay
     Set curWs = ActiveSheet
-
+    
     For Each ws In Worksheets
         Dim oAccount As Account
         Set oAccount = LoadAccount(getAccountId(ws))
