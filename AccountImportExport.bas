@@ -7,6 +7,9 @@ Private Const REVOLUT_CSV_DESC_FIELD2 = 4
 Private Const REVOLUT_CSV_AMOUNT_FIELD = 5
 Private Const REVOLUT_CSV_FEE_FIELD = 6
 
+Private Const BOURSORAMA_CSV_DATE_FIELD = 2
+Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 6
+Private Const BOURSORAMA_CSV_DESC_FIELD = 3
 
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
@@ -95,6 +98,8 @@ Sub ImportAny()
             Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (oAccount.Bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
+        ElseIf (oAccount.Bank = "Boursorama") Then
+            Call ImportBoursorama(oTable, fileToOpen, dateCol, amountCol, descCol)
         Else
             Call UnfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
@@ -217,6 +222,64 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 End Sub
 
 '------------------------------------------------------------------------------
+' Boursorama
+'------------------------------------------------------------------------------
+Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
+    subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
+    Workbooks.Add
+    With ActiveSheet.QueryTables.Add(Connection:= _
+        "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
+        .name = "import"
+        .FieldNames = True
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .saveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .TextFilePromptOnRefresh = False
+        .TextFilePlatform = 65001
+        .TextFileStartRow = 1
+        .TextFileParseType = xlDelimited
+        .TextFileTextQualifier = xlTextQualifierDoubleQuote
+        .TextFileConsecutiveDelimiter = False
+        .TextFileTabDelimiter = False
+        .TextFileSemicolonDelimiter = True
+        .TextFileCommaDelimiter = False
+        .TextFileSpaceDelimiter = False
+        .TextFileColumnDataTypes = Array(1)
+        .TextFileTrailingMinusNumbers = True
+        .Refresh BackgroundQuery:=False
+    End With
+
+    Dim modal As ProgressBar
+    Set modal = NewProgressBar("Import Boursorama CSV in progress", GetLastNonEmptyRow())
+    modal.Update
+
+    Dim i As Long
+    i = 2
+    Do While LenB(Cells(i, 1).value) > 0
+        a = Split(Cells(i, 1).value, ";", -1, vbTextCompare)
+        oTable.ListRows.Add
+        With oTable.ListRows(oTable.ListRows.Count)
+            Dim desc As String, comment As String
+            Dim amount As Double
+            .Range(1, dateCol).value = Cells(i, BOURSORAMA_CSV_DATE_FIELD)
+            .Range(1, amountCol).value = toAmount(Cells(i, BOURSORAMA_CSV_AMOUNT_FIELD))
+            desc = Trim$(Cells(i, BOURSORAMA_CSV_DESC_FIELD))
+            .Range(1, descCol).value = simplifyDescription(desc, subsTable)
+        End With
+        i = i + 1
+        modal.Update
+    Loop
+    ActiveWorkbook.Close SaveChanges:=False
+    Set modal = Nothing
+End Sub
+
+'------------------------------------------------------------------------------
 ' Revolut
 '------------------------------------------------------------------------------
 
@@ -329,7 +392,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
             fee = CDbl(Trim$(a(REVOLUT_CSV_FEE_FIELD)))
             If fee <> 0 Then
                 amount = amount + fee
-                comment = comment & " (including fee of " & str(fee) & " €)"
+                comment = comment & " (including fee of " & str(fee) & " ï¿½)"
             End If
             .Range(1, amountCol).value = amount
             If Len(comment) > 0 Then
