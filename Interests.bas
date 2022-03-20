@@ -29,7 +29,7 @@ End Sub
 
 Public Sub InterestsCalcAll()
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Interests calculation in progress", AccountsCount(openOnly:=True, interestOnly:=True) * 6)
+    Set modal = NewProgressBar("Interests calculation in progress", AccountsCount(openOnly:=True, interestOnly:=True) * 6, True)
     Call FreezeDisplay
     Dim ws As Worksheet
     For Each ws In Worksheets
