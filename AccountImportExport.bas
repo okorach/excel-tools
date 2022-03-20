@@ -221,9 +221,18 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     Set modal = Nothing
 End Sub
 
+Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
+    If LCase$(Right$(fileToOpen, 4)) = ".csv" Then
+        Call importRevolutCsv(oTable, fileToOpen, dateCol, amountCol, descCol)
+    Else
+        Call importRevolutXls(oTable, fileToOpen, dateCol, amountCol, descCol)
+    End If
+End Sub
+
 '------------------------------------------------------------------------------
 ' Boursorama
 '------------------------------------------------------------------------------
+
 Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Add
@@ -282,14 +291,6 @@ End Sub
 '------------------------------------------------------------------------------
 ' Revolut
 '------------------------------------------------------------------------------
-
-Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
-    If LCase$(Right$(fileToOpen, 4)) = ".csv" Then
-        Call importRevolutCsv(oTable, fileToOpen, dateCol, amountCol, descCol)
-    Else
-        Call importRevolutXls(oTable, fileToOpen, dateCol, amountCol, descCol)
-    End If
-End Sub
 
 Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     
@@ -392,7 +393,7 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
             fee = CDbl(Trim$(a(REVOLUT_CSV_FEE_FIELD)))
             If fee <> 0 Then
                 amount = amount + fee
-                comment = comment & " (including fee of " & str(fee) & " ï¿½)"
+                comment = comment & " (including fee of " & str(fee) & " ¤)"
             End If
             .Range(1, amountCol).value = amount
             If Len(comment) > 0 Then
