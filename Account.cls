@@ -283,7 +283,10 @@ Public Sub AddBalanceRow()
     lastRow.Range(1, BL_AMOUNT_COL + offset).FormulaR1C1 = previousRow.Range(BL_AMOUNT_COL + offset).FormulaR1C1
     lastRow.Range(1, BL_DESC_COL + offset).FormulaR1C1 = previousRow.Range(BL_DESC_COL + offset).FormulaR1C1
     lastRow.Range(1, BL_SUBCATEG_COL + offset).value = previousRow.Range(BL_SUBCATEG_COL + offset).value
-    ActiveWindow.ScrollRow = nbRows - 2
+    If nbRows > 20 Then
+        ActiveWindow.ScrollRow = nbRows - 10
+    End If
+    lastRow.Range(1, BL_BALANCE_COL + offset).Select
 End Sub
     
 Private Sub addStandardButtons()
