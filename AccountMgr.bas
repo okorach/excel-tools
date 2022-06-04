@@ -264,7 +264,7 @@ Public Sub AccountShowClosed()
 End Sub
 
 Public Sub GoToSolde()
-    Sheets(BALANCE_SHEET).Activate
+    Sheets(BALANCE_PER_ACCOUNT_SHEET).Activate
 End Sub
 
 '-------------------------------------------------
