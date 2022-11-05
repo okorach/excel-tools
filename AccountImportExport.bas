@@ -11,6 +11,13 @@ Private Const BOURSORAMA_CSV_DATE_FIELD = 2
 Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 6
 Private Const BOURSORAMA_CSV_DESC_FIELD = 3
 
+Private Const LCL_CSV_DATE_FIELD = 1
+Private Const LCL_CSV_AMOUNT_FIELD = 2
+Private Const LCL_CSV_TYPE_FIELD = 3
+Private Const LCL_CSV_DESC1_FIELD = 4
+Private Const LCL_CSV_DESC2_FIELD = 5
+Private Const LCL_CSV_DESC3_FIELD = 6
+
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
         str = Replace(Replace(str, ",", "."), "'", "")
@@ -52,10 +59,21 @@ Private Function toMonth(str) As Long
     End If
 End Function
 
-Private Function toDate(str) As Date
-    a = Split(str, " ", -1, vbTextCompare)
-    toDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
+Private Function ToDate(str) As Date
+    If InStr(str, " ") Then
+        a = Split(str, " ", -1, vbTextCompare)
+        ToDate = DateSerial(CInt(a(2)), toMonth(a(1)), CInt(a(0)))
+    ElseIf InStr(str, "/") Then
+        a = Split(str, "/", -1, vbTextCompare)
+        ' Assume DD/MM/YYYY
+        ToDate = DateSerial(CInt(a(2)), CInt(a(1)), CInt(a(0)))
+    ElseIf InStr(str, "-") Then
+        ToDate = isoToDate(str)
+    Else
+        ToDate = DateSerial(0, 0, 0)
+    End If
 End Function
+
 Private Function isoToDate(str) As Date
     a = Split(str, "-", -1, vbTextCompare)
     isoToDate = DateSerial(CInt(a(0)), CInt(a(1)), CInt(a(2)))
@@ -193,6 +211,8 @@ End Sub
 ' LCL
 '------------------------------------------------------------------------------
 
+
+
 Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
 
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
@@ -201,20 +221,43 @@ Public Sub ImportLCL(oTable As ListObject, fileToOpen As Variant, dateCol As Int
     Set modal = NewProgressBar("Import LCL in progress", GetLastNonEmptyRow() + 1)
     modal.Update
     
+    Dim csvIsSplit As Boolean
+    csvIsSplit = Not (Cells(1, 2).value = "")
     Dim r As Long
     r = 1
     Do While LenB(Cells(r + 1, 1).value) > 0
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
-            .Range(1, dateCol).value = DateValue(Cells(r, 1).value)
-            .Range(1, amountCol).value = toAmount(Cells(r, 2).value)
-            If (Cells(r, 3).value Like "Ch?que") Then
-                .Range(1, descCol).value = "Cheque " & simplifyDescription(CStr(Cells(r, 4).value), subsTable)
-            ElseIf (Cells(r, 3).value = "Virement") Then
-                .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(r, 5).value, subsTable)
+            If csvIsSplit Then
+                ' semicolon CSV cell separator did work
+                rawDate = DateValue(Cells(r, LCL_CSV_DATE_FIELD).value)
+                rawAmount = Cells(r, LCL_CSV_AMOUNT_FIELD).value
+                If (Cells(r, LCL_CSV_TYPE_FIELD).value Like "Ch?que") Then
+                    rawDesc = "Cheque " & simplifyDescription(CStr(Cells(r, LCL_CSV_DESC1_FIELD).value), subsTable)
+                ElseIf (Cells(r, LCL_CSV_TYPE_FIELD).value = "Virement") Then
+                    .Range(1, descCol).value = "Virement " & simplifyDescription(Cells(r, LCL_CSV_DESC2_FIELD).value, subsTable)
+                Else
+                    .Range(1, descCol).value = simplifyDescription(Cells(r, LCL_CSV_TYPE_FIELD).value & " " & Cells(r, LCL_CSV_DESC2_FIELD).value & " " & Cells(r, LCL_CSV_DESC3_FIELD).value, subsTable)
+                End If
             Else
-                .Range(1, descCol).value = simplifyDescription(Cells(r, 3).value & " " & Cells(r, 5).value & " " & Cells(r, 6).value, subsTable)
+                ' semicolon CSV cell separator did not work
+                Dim a() As String
+                a = Split(Cells(r, 1).value, ";", -1, vbTextCompare)
+                rawDate = ToDate(Trim$(a(LCL_CSV_DATE_FIELD - 1)))
+                rawAmount = toAmount(Trim$(a(LCL_CSV_AMOUNT_FIELD - 1)))
+                Dim des As String
+                If (a(LCL_CSV_TYPE_FIELD - 1) Like "Ch?que") Then
+                    rawDesc = "Cheque " & simplifyDescription(a(LCL_CSV_DESC1_FIELD - 1), subsTable)
+                ElseIf (a(LCL_CSV_TYPE_FIELD - 1) = "Virement") Then
+                    rawDesc = "Virement " & simplifyDescription(a(LCL_CSV_DESC2_FIELD - 1), subsTable)
+                Else
+                    rawDesc = simplifyDescription(a(LCL_CSV_TYPE_FIELD - 1) & " " & a(LCL_CSV_DESC2_FIELD - 1) & " " & a(LCL_CSV_DESC3_FIELD - 1), subsTable)
+                End If
+
             End If
+            .Range(1, dateCol).value = rawDate
+            .Range(1, amountCol).value = toAmount(rawAmount)
+            .Range(1, descCol).value = rawDesc
         End With
         r = r + 1
         modal.Update
@@ -308,25 +351,20 @@ Private Sub importRevolutXls(oTable As ListObject, fileToOpen As Variant, dateCo
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             On Error GoTo ErrDate
-            .Range(1, dateCol).value = DateValue(Trim$(Cells(i, 1).value))
+            .Range(1, dateCol).value = DateValue(Trim$(Cells(i, 4).value))
             GoTo CheckAmount
 ErrDate:
-            .Range(1, dateCol).value = toDate(Trim$(Cells(i, 1).value))
+            d = Split(Trim$(Cells(i, 4).value), " ", -1, vbTextCompare)
+            .Range(1, dateCol).value = ToDate(d(1))
 CheckAmount:
             Dim desc As String
-            desc = vbNullString
-            If LenB(Trim$(Cells(i, 3).value)) = 0 Then
-                .Range(1, amountCol).value = toAmount(Trim$(Cells(i, 4).value))
-                If LenB(Trim$(Cells(i, 6).value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(i, 6).value) & " : ", subsTable)
-                End If
-            Else
-                .Range(1, amountCol).value = -toAmount(Trim$(Cells(i, 3).value))
-                If LenB(Trim$(Cells(i, 5).value)) > 0 Then
-                    desc = simplifyDescription(Trim$(Cells(i, 5).value) & " : ", subsTable)
-                End If
+            desc = simplifyDescription(Trim$(Cells(i, 5).value), subsTable)
+            .Range(1, amountCol).value = toAmount(Trim$(Cells(i, 6).value))
+            If LenB(Trim$(Cells(i, 7).value)) > 0 Then
+                .Range(1, amountCol).value = toAmount(Trim$(Cells(i, 6).value)) + toAmount(Trim$(Cells(i, 6).value))
+                desc = desc & " - incl. fee " & toAmount(Trim$(Cells(i, 7).value))
             End If
-            .Range(1, descCol).value = desc & Trim$(Cells(i, 2).value)
+            .Range(1, descCol).value = desc
         End With
         i = i + 1
         modal.Update
@@ -382,13 +420,24 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
     Dim i As Long
     i = 2
     Do While LenB(Cells(i, 1).value) > 0
-        a = Split(Cells(i, 1).value, ";", -1, vbTextCompare)
         oTable.ListRows.Add
         With oTable.ListRows(oTable.ListRows.Count)
             Dim desc As String, comment As String
             Dim amount As Double
-            dateAndTime = Split(Trim$(a(REVOLUT_CSV_DATE_FIELD)), " ", -1, vbTextCompare)
-            .Range(1, dateCol).value = isoToDate(dateAndTime(0))
+            Dim a As Variant
+            If Cells(i, 2).value = "" Then
+                ' semicolon CSV cell separator did not work
+                a = Split(Cells(i, 1).value, ";", -1, vbTextCompare)
+            Else
+                ' semicolon CSV cell separator did work
+                ' 10 cells is arbitrary but OK for now (rows are 6 cells as per exports in Oct 2022)
+                ReDim a(0 To 9) As Variant
+                For j = 1 To 10
+                    a(j - 1) = Cells(i, j).value
+                Next j
+            End If
+            dateAndTime = Split(a(REVOLUT_CSV_DATE_FIELD), " ", -1, vbTextCompare)
+            .Range(1, dateCol).value = ToDate(dateAndTime(0))
             desc = Trim$(a(REVOLUT_CSV_DESC_FIELD1))
             comment = Trim$(a(REVOLUT_CSV_DESC_FIELD2))
             amount = CDbl(Trim$(a(REVOLUT_CSV_AMOUNT_FIELD)))
