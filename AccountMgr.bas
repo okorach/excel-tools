@@ -353,7 +353,7 @@ Public Function getSelectedAccount() As String
     getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows(selectedNbr).Range(1, 1)
 End Function
 
-Public Function AccountsCount(Optional openOnly As Boolean = True, Optional interestOnly As Boolean = False) As Integer
+Public Function AccountsCount(Optional openOnly As Boolean = True, Optional interestOnly As Boolean = False, Optional noYearlyInterest As Boolean = False) As Integer
 Dim ws As Worksheet
     AccountsCount = 0
     For Each ws In Worksheets
@@ -366,8 +366,9 @@ Dim ws As Worksheet
         Else
             If openOnly And Not oAccount.IsOpen() Then
                 addCount = 0
-            End If
-            If interestOnly And Not oAccount.HasInterests() Then
+            ElseIf interestOnly And Not oAccount.HasInterests() Then
+                addCount = 0
+            ElseIf noYearlyInterest And oAccount.IsYearlyInterest() Then
                 addCount = 0
             End If
         End If
