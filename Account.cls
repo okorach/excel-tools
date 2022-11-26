@@ -249,11 +249,8 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
 End Sub
 
-Public Sub CalcInterests(Optional modal As ProgressBar = Nothing)
-    If Not Me.HasInterests Then
-        If Not (modal Is Nothing) Then
-            modal.Update 7
-        End If
+Public Sub CalcInterests(Optional modal As ProgressBar = Nothing, Optional force As Boolean = False)
+    If Not Me.HasInterests Or (Not force And Me.IsYearlyInterest) Then
         Exit Sub
     End If
     Dim oInterests As Interest
@@ -443,19 +440,28 @@ Public Sub FormatMe()
     Call formatButtons
 End Sub
 
+' Sorts account transactions table
 
 Public Sub Sort()
     Call SortTable(oBalanceTable, GetLabel(DATE_KEY), xlAscending, GetLabel(AMOUNT_KEY), xlDescending)
 End Sub
 
+' Returns whether account has interests
+
 Public Function HasInterests() As Boolean
     HasInterests = Not (aType = GetLabel("k.accountStandard") Or aType = "Autres")
+End Function
+
+' Returns whether account interests are computed yearly
+' Useful to avoid needlessly computing interests during the year (compute only once in the year in Jan)
+
+Public Function IsYearlyInterest() As Boolean
+    IsYearlyInterest = (aType = "CEL" Or aType = "LDD" Or aType = "LDDS" Or aType = "Livret" Or aType = "Livret A" Or aType = "PEL" Or aType = "Livret Jeune" Or aType = "Autres")
 End Function
 
 Public Function InterestPeriod() As Integer
     InterestPeriod = aInterestPeriod
 End Function
-
 
 '-------------------------------------------------
 Public Function Exists() As Boolean
