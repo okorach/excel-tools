@@ -108,6 +108,7 @@ Public Function CalcKeyInterests(Optional modal As ProgressBar = Nothing) As Var
         Set mymodal = modal
     End If
     Call prepareForCalculation
+    mymodal.UpdateMessage ("Interest calculation for " & accountId)
     mymodal.Update
 
     nbrYears = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1
