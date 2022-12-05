@@ -115,7 +115,9 @@ Public Function CalcKeyInterests(Optional modal As ProgressBar = Nothing) As Var
     ' Do calculations
     Dim thisYear As Integer
     thisYear = Year(Now())
-    keyInterests(1) = CalcOnPeriod(DateSerial(thisYear - 1, 12, 31), CDate(balanceArr(UBound(balanceArr, 1), 1)))
+    Dim lastBalanceDate As Date
+    lastBalanceDate = CDate(balanceArr(UBound(balanceArr, 1), 1))
+    keyInterests(1) = CalcOnPeriod(DateSerial(thisYear - 1, 12, 31), lastBalanceDate)
     mymodal.Update
     If nbrYears > 1 Then
         keyInterests(2) = CalcOnPeriod(DateSerial(thisYear - 2, 12, 31), DateSerial(thisYear - 1, 12, 31))
@@ -124,18 +126,18 @@ Public Function CalcKeyInterests(Optional modal As ProgressBar = Nothing) As Var
     End If
     mymodal.Update
     If nbrYears > 3 Then
-        keyInterests(3) = CalcOnPeriod(DateSerial(thisYear - 4, 12, 31), DateSerial(thisYear - 1, 12, 31))
+        keyInterests(3) = CalcOnPeriod(DateSerial(thisYear - 3, 12, 31), lastBalanceDate)
     Else
         keyInterests(3) = vbNull
     End If
     mymodal.Update
     If nbrYears > 5 Then
-        keyInterests(4) = CalcOnPeriod(DateSerial(thisYear - 6, 12, 31), DateSerial(thisYear - 1, 12, 31))
+        keyInterests(4) = CalcOnPeriod(DateSerial(thisYear - 5, 12, 31), lastBalanceDate)
     Else
         keyInterests(4) = vbNull
     End If
     mymodal.Update
-    keyInterests(5) = CalcOnPeriod(CDate(depositArr(1, 1) - 1), CDate(balanceArr(UBound(balanceArr, 1), 1)))
+    keyInterests(5) = CalcOnPeriod(CDate(depositArr(1, 1) - 1), lastBalanceDate)
     mymodal.Update
     If modal Is Nothing Then
         Set mymodal = Nothing
@@ -241,10 +243,10 @@ Private Function calcPerPeriod() As Variant
         periodicInterest(5) = ArrayAverage(calculatedInterests, 2, nbrYears - 1)
     End If
     If nbrYears >= 5 Then
-        periodicInterest(3) = ArrayAverage(calculatedInterests, nbrYears - 3, nbrYears - 1)
+        periodicInterest(3) = ArrayAverage(calculatedInterests, nbrYears - 2, nbrYears)
     End If
     If nbrYears >= 7 Then
-        periodicInterest(4) = ArrayAverage(calculatedInterests, nbrYears - 5, nbrYears - 1)
+        periodicInterest(4) = ArrayAverage(calculatedInterests, nbrYears - 4, nbrYears)
     End If
     calcPerPeriod = periodicInterest
 End Function
