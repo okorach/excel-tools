@@ -59,6 +59,10 @@ Public Sub Update(Optional steps As Integer = 1)
     form.Repaint
 End Sub
 
+Public Sub UpdateMessage(message As String)
+    msg = message
+End Sub
+
 Public Sub CloseForm()
     ProgressForm.Hide
 End Sub
