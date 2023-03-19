@@ -10,6 +10,8 @@ Private Const REVOLUT_CSV_FEE_FIELD = 6
 Private Const BOURSORAMA_CSV_DATE_FIELD = 2
 Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 6
 Private Const BOURSORAMA_CSV_DESC_FIELD = 3
+Private Const BOURSORAMA_CSV_ACCOUNT_FIELD = 8
+Private Const BOURSORAMA_CSV_LABEL_FIELD = 9
 
 Private Const LCL_CSV_DATE_FIELD = 1
 Private Const LCL_CSV_AMOUNT_FIELD = 2
@@ -20,7 +22,7 @@ Private Const LCL_CSV_DESC3_FIELD = 6
 
 Private Function toAmount(str) As Double
     If VarType(str) = vbString Then
-        str = Replace(Replace(str, ",", "."), "'", "")
+        str = Replace(Replace(Replace(str, ",", "."), "'", ""), " ", "")
         toAmount = CDbl(str)
     Else
         toAmount = str
@@ -91,7 +93,7 @@ Sub ImportAny()
     fileToOpen = Application.GetOpenFilename()
     If fileToOpen <> False Then
         Call FreezeDisplay
-        Dim oAccount As Account
+        Dim oAccount As account
         Set oAccount = LoadAccount(getAccountId(ActiveSheet))
         
         Dim defaultCurrency As String
@@ -117,7 +119,7 @@ Sub ImportAny()
         ElseIf (oAccount.Bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (oAccount.Bank = "Boursorama") Then
-            Call ImportBoursorama(oTable, fileToOpen, dateCol, amountCol, descCol)
+            Call ImportBoursorama(oTable, fileToOpen, dateCol, amountCol, descCol, oAccount.Number())
         Else
             Call UnfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
@@ -278,9 +280,15 @@ End Sub
 ' Boursorama
 '------------------------------------------------------------------------------
 
-Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
+Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer, accNbr As String)
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
     Workbooks.Add
+    Dim account As String
+    
+    account = accNbr
+    On Error Resume Next
+        account = CStr(CLng(accNbr))
+    
     With ActiveSheet.QueryTables.Add(Connection:= _
         "TEXT;" & fileToOpen, Destination:=Range("$A$1"))
         .name = "import"
@@ -315,17 +323,27 @@ Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Int
 
     Dim i As Long
     i = 2
+    Dim desc As String
     Do While LenB(Cells(i, 1).value) > 0
         a = Split(Cells(i, 1).value, ";", -1, vbTextCompare)
-        oTable.ListRows.Add
-        With oTable.ListRows(oTable.ListRows.Count)
-            Dim desc As String, comment As String
-            Dim amount As Double
-            .Range(1, dateCol).value = Cells(i, BOURSORAMA_CSV_DATE_FIELD)
-            .Range(1, amountCol).value = toAmount(Cells(i, BOURSORAMA_CSV_AMOUNT_FIELD))
-            desc = Trim$(Cells(i, BOURSORAMA_CSV_DESC_FIELD))
-            .Range(1, descCol).value = simplifyDescription(desc, subsTable)
-        End With
+        If (Cells(i, BOURSORAMA_CSV_ACCOUNT_FIELD) = account) Then
+            oTable.ListRows.Add
+
+            With oTable.ListRows(oTable.ListRows.Count)
+                .Range(1, dateCol).value = Cells(i, BOURSORAMA_CSV_DATE_FIELD)
+                .Range(1, amountCol).value = toAmount(Cells(i, BOURSORAMA_CSV_AMOUNT_FIELD))
+                desc = Trim$(Cells(i, BOURSORAMA_CSV_DESC_FIELD))
+                .Range(1, descCol).value = simplifyDescription(desc, subsTable)
+            End With
+        ElseIf (Cells(i, BOURSORAMA_CSV_ACCOUNT_FIELD) = "Relevé différé Carte " + account) Then
+            oTable.ListRows.Add
+            With oTable.ListRows(oTable.ListRows.Count)
+                .Range(1, dateCol).value = Cells(i, BOURSORAMA_CSV_DATE_FIELD)
+                .Range(1, amountCol).value = -toAmount(Cells(i, BOURSORAMA_CSV_AMOUNT_FIELD))
+                desc = Trim$(Cells(i, BOURSORAMA_CSV_DESC_FIELD))
+                .Range(1, descCol).value = simplifyDescription(desc, subsTable)
+            End With
+        End If
         i = i + 1
         modal.Update
     Loop
@@ -654,7 +672,7 @@ End Sub
 
 
 Public Sub AccountExportHere()
-    Dim oAccount As Account
+    Dim oAccount As account
     Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     If Not (oAccount Is Nothing) Then
         oAccount.Export
@@ -683,7 +701,7 @@ Public Sub AccountExportAll()
     Set curWs = ActiveSheet
     
     For Each ws In Worksheets
-        Dim oAccount As Account
+        Dim oAccount As account
         Set oAccount = LoadAccount(getAccountId(ws))
         If Not (oAccount Is Nothing) Then
             filename = sFolder & "\" & ws.name & ".csv"
