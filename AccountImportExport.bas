@@ -336,6 +336,7 @@ Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Int
                 .Range(1, descCol).value = simplifyDescription(desc, subsTable)
             End With
         ElseIf (Cells(i, BOURSORAMA_CSV_ACCOUNT_FIELD) = "Relevé différé Carte " + account) Then
+            ' Handle credit card statement
             oTable.ListRows.Add
             With oTable.ListRows(oTable.ListRows.Count)
                 .Range(1, dateCol).value = Cells(i, BOURSORAMA_CSV_DATE_FIELD)
