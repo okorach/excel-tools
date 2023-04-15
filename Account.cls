@@ -188,14 +188,14 @@ Public Sub Export(Optional csvFile As String = "", Optional silent As Boolean = 
     End If
     ' Delete useless category row
     If aCurrency = defaultCurrency Then
-        For Each c In Array("F")
-            ActiveSheet.Columns(c).EntireColumn.Delete shift:=xlToLeft
-        Next c
+        For Each C In Array("F")
+            ActiveSheet.Columns(C).EntireColumn.Delete shift:=xlToLeft
+        Next C
     Else
         ' For non default currency account also remove columns with amounts converted to default currency
-        For Each c In Array("H", "C", "B")
-            ActiveSheet.Columns(c).EntireColumn.Delete shift:=xlToLeft
-        Next c
+        For Each C In Array("H", "C", "B")
+            ActiveSheet.Columns(C).EntireColumn.Delete shift:=xlToLeft
+        Next C
     End If
     If Not silent Then
         modal.Update
