@@ -96,12 +96,12 @@ Public Function GetTableAsArray(oTable As ListObject, Optional colList As Varian
     cList = GetColList(oTable, colList)
     ReDim arr(1 To nbrRows, 1 To nbrCols) As Variant
     i = 0
-    For Each c In cList
+    For Each C In cList
         i = i + 1
         For j = 1 To nbrRows
-            arr(j, i) = oTable.ListColumns(c).DataBodyRange.Rows(j).value
+            arr(j, i) = oTable.ListColumns(C).DataBodyRange.Rows(j).value
         Next j
-    Next c
+    Next C
     GetTableAsArray = arr
 End Function
 
@@ -302,9 +302,9 @@ Private Function GetColList(oTable As ListObject, currentColList) As Variant
     If (IsNumeric(currentColList)) Then
         nbrCols = oTable.ListColumns.Count
         ReDim localColList(1 To nbrCols) As Variant
-        For c = 1 To nbrCols
-            localColList(c) = c
-        Next c
+        For C = 1 To nbrCols
+            localColList(C) = C
+        Next C
         GetColList = localColList
     Else
         GetColList = currentColList
@@ -331,11 +331,13 @@ End Function
 
 
 Public Sub TableColumnFormatIcons(oTable As ListObject, colNameOrNumber As Variant)
-    With oTable.ListColumns(colNameOrNumber).DataBodyRange
+    Dim col As Integer
+    col = TableColNbr(oTable, colNameOrNumber)
+    With oTable.ListColumns(col).DataBodyRange
         .FormatConditions.AddIconSetCondition
         .FormatConditions(.FormatConditions.Count).SetFirstPriority
     End With
-    With oTable.ListColumns(colNameOrNumber).DataBodyRange.FormatConditions(1)
+    With oTable.ListColumns(col).DataBodyRange.FormatConditions(1)
         .IconCriteria(2).Type = xlConditionValueNumber
         .IconCriteria(2).value = 0
         .IconCriteria(2).Operator = xlGreater
@@ -343,9 +345,9 @@ Public Sub TableColumnFormatIcons(oTable As ListObject, colNameOrNumber As Varia
         .IconCriteria(3).value = 0
         .IconCriteria(3).Operator = xlGreaterEqual
     End With
-    oTable.ListColumns(colNameOrNumber).DataBodyRange.Rows(1).Select
+    oTable.ListColumns(col).DataBodyRange.Rows(1).Select
     With Selection
-        .FormatConditions.Add Type:=xlExpression, Formula1:="=ET($A10=$A11;$B10=$B11)"
+        .FormatConditions.Add Type:=xlExpression, Formula1:="=AND($A10=$A11" + Application.International(xlListSeparator) + "$B10=$B11)"
     End With
     With Selection.FormatConditions(2).Interior
         .PatternColorIndex = xlAutomatic
@@ -354,7 +356,7 @@ Public Sub TableColumnFormatIcons(oTable As ListObject, colNameOrNumber As Varia
     End With
     Selection.FormatConditions(2).StopIfTrue = False
     Selection.Copy
-    oTable.ListColumns(colNameOrNumber).DataBodyRange.PasteSpecial Paste:=xlPasteFormats
+    oTable.ListColumns(col).DataBodyRange.PasteSpecial Paste:=xlPasteFormats
 End Sub
 '------------------------------------------------------------------------------
 ' Row functions
