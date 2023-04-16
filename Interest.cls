@@ -111,37 +111,33 @@ Public Function CalcKeyInterests(Optional modal As ProgressBar = Nothing) As Var
     mymodal.UpdateMessage ("Interest calculation for " & accountId)
     mymodal.Update
 
-    nbrYears = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1
     ' Do calculations
     Dim today As Date
-    Dim thisYear, thisMonth, thisDay As Integer
     today = Now()
+    Dim nbrYears, thisYear, thisMonth, thisDay As Integer
+    nbrYears = (today - CDate(depositArr(1, 1))) \ 365 + 1
     thisYear = Year(today)
     thisMonth = Month(today)
     thisDay = Day(today)
     If thisMonth = 2 And thisDay = 29 Then
         thisDay = 28
     End If
+
+    Dim intervals(1 To 4) As Integer
+    intervals(1) = 1
+    intervals(2) = 3
+    intervals(3) = 5
+    intervals(4) = 8
     
     ' Dim lastBalanceDate As Date
     ' lastBalanceDate = CDate(balanceArr(UBound(balanceArr, 1), 1))
-    keyInterests(1) = CalcOnPeriod(DateSerial(thisYear - 1, thisMonth, thisDay), today)
-    mymodal.Update
-    For i = 2 To 4
+    For i = 1 To 4
         keyInterests(i) = vbNull
+        If nbrYears >= intervals(i) Then
+            keyInterests(i) = CalcOnPeriod(DateSerial(thisYear - intervals(i), thisMonth, thisDay), today)
+        End If
+        mymodal.Update
     Next i
-    If nbrYears > 1 Then
-        keyInterests(2) = CalcOnPeriod(DateSerial(thisYear - 3, thisMonth, thisDay), today)
-    End If
-    mymodal.Update
-    If nbrYears > 3 Then
-        keyInterests(3) = CalcOnPeriod(DateSerial(thisYear - 5, thisMonth, thisDay), today)
-    End If
-    mymodal.Update
-    If nbrYears > 5 Then
-        keyInterests(4) = CalcOnPeriod(DateSerial(thisYear - 8, thisMonth, thisDay), today)
-    End If
-    mymodal.Update
     keyInterests(5) = CalcOnPeriod(CDate(depositArr(1, 1) - 1), today)
     mymodal.Update
     If modal Is Nothing Then
