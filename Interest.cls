@@ -113,31 +113,36 @@ Public Function CalcKeyInterests(Optional modal As ProgressBar = Nothing) As Var
 
     nbrYears = Sheets(INTEREST_CALC_SHEET).ListObjects(BALANCE_HISTORY_TABLE).ListRows.Count - 1
     ' Do calculations
-    Dim thisYear As Integer
-    thisYear = Year(Now())
-    Dim lastBalanceDate As Date
-    lastBalanceDate = CDate(balanceArr(UBound(balanceArr, 1), 1))
-    keyInterests(1) = CalcOnPeriod(DateSerial(thisYear - 1, 12, 31), lastBalanceDate)
+    Dim today As Date
+    Dim thisYear, thisMonth, thisDay As Integer
+    today = Now()
+    thisYear = Year(today)
+    thisMonth = Month(today)
+    thisDay = Day(today)
+    If thisMonth = 2 And thisDay = 29 Then
+        thisDay = 28
+    End If
+    
+    ' Dim lastBalanceDate As Date
+    ' lastBalanceDate = CDate(balanceArr(UBound(balanceArr, 1), 1))
+    keyInterests(1) = CalcOnPeriod(DateSerial(thisYear - 1, thisMonth, thisDay), today)
     mymodal.Update
+    For i = 2 To 4
+        keyInterests(i) = vbNull
+    Next i
     If nbrYears > 1 Then
-        keyInterests(2) = CalcOnPeriod(DateSerial(thisYear - 2, 12, 31), DateSerial(thisYear - 1, 12, 31))
-    Else
-        keyInterests(2) = vbNull
+        keyInterests(2) = CalcOnPeriod(DateSerial(thisYear - 3, thisMonth, thisDay), today)
     End If
     mymodal.Update
     If nbrYears > 3 Then
-        keyInterests(3) = CalcOnPeriod(DateSerial(thisYear - 3, 12, 31), lastBalanceDate)
-    Else
-        keyInterests(3) = vbNull
+        keyInterests(3) = CalcOnPeriod(DateSerial(thisYear - 5, thisMonth, thisDay), today)
     End If
     mymodal.Update
     If nbrYears > 5 Then
-        keyInterests(4) = CalcOnPeriod(DateSerial(thisYear - 5, 12, 31), lastBalanceDate)
-    Else
-        keyInterests(4) = vbNull
+        keyInterests(4) = CalcOnPeriod(DateSerial(thisYear - 8, thisMonth, thisDay), today)
     End If
     mymodal.Update
-    keyInterests(5) = CalcOnPeriod(CDate(depositArr(1, 1) - 1), lastBalanceDate)
+    keyInterests(5) = CalcOnPeriod(CDate(depositArr(1, 1) - 1), today)
     mymodal.Update
     If modal Is Nothing Then
         Set mymodal = Nothing
