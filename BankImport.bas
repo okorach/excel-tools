@@ -1,5 +1,5 @@
 Attribute VB_Name = "BankImport"
-Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
+Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
 Function toAmount(str) As Double
     If VarType(str) = vbString Then

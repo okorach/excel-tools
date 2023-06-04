@@ -2,8 +2,6 @@ Attribute VB_Name = "BankImportLCL"
 '------------------------------------------------------------------------------
 ' Import LCL
 '------------------------------------------------------------------------------
-Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
-
 Private Const LCL_CSV_DATE_FIELD = 1
 Private Const LCL_CSV_AMOUNT_FIELD = 2
 Private Const LCL_CSV_TYPE_FIELD = 3

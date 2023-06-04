@@ -3,8 +3,6 @@ Attribute VB_Name = "BankImportBoursorama"
 ' Import Boursorama
 '------------------------------------------------------------------------------
 
-Private Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
-
 Private Const BOURSORAMA_CSV_DATE_FIELD = 2
 Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 6
 Private Const BOURSORAMA_CSV_DESC_FIELD = 3
