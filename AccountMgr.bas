@@ -27,7 +27,7 @@ Public Sub MergeAccounts(columnKeys As Variant, Optional aModal As ProgressBar =
         firstAccount = True
         Dim array1d() As Variant
         For Each ws In Worksheets
-            Dim oAccount As account
+            Dim oAccount As Account
             Set oAccount = LoadAccount(getAccountId(ws))
             If Not (oAccount Is Nothing) Then
                 Dim tbl As ListObject
@@ -200,8 +200,8 @@ Public Sub AccountCreate()
 End Sub
 
 
-Public Function LoadAccount(accountId As String) As account
-    Set LoadAccount = New account
+Public Function LoadAccount(accountId As String) As Account
+    Set LoadAccount = New Account
     If Not LoadAccount.Load(accountId) Then
         Set LoadAccount = Nothing
     End If
@@ -210,8 +210,8 @@ End Function
 Public Function NewAccount(aId As String, aNbr As String, aBank As String, Optional aCur As String = vbNullString, _
                            Optional aType As String = vbNullString, Optional aAvail As Integer = 0, _
                            Optional aInB As Boolean = False, Optional aTax As Double = 0, _
-                           Optional aWebsite As String = vbNullString) As account
-    Set NewAccount = New account
+                           Optional aWebsite As String = vbNullString) As Account
+    Set NewAccount = New Account
     If Not NewAccount.Create(aId, aNbr, aBank, aCur, aType, aAvail, aInB, aTax, aWebsite) Then
         Set NewAccount = Nothing
     End If
@@ -220,7 +220,7 @@ End Function
 
 Public Sub AccountSortAndFormatHere()
     Call FreezeDisplay
-    Dim oAccount As account
+    Dim oAccount As Account
     Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     oAccount.Sort
     oAccount.FormatMe
@@ -240,7 +240,7 @@ Public Sub AccountFormatAll()
     
     For Each ws In Worksheets
         If IsAnAccount(ws) Then
-           Dim oAccount As account
+           Dim oAccount As Account
            Set oAccount = LoadAccount(getAccountId(ws))
            oAccount.FormatMe
         End If
@@ -271,7 +271,7 @@ End Sub
 Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
     Dim ws As Worksheet
     For Each ws In Worksheets
-        Dim oAccount As account
+        Dim oAccount As Account
         Set oAccount = LoadAccount(getAccountId(ws))
         If Not (oAccount Is Nothing) Then
             If oAccount.IsClosed() Then
@@ -296,7 +296,7 @@ Public Sub AccountRefreshOpenList()
     With Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE)
         For Each row In Sheets(ACCOUNTS_SHEET).ListObjects(ACCOUNTS_TABLE).ListRows
             'startTime = Now
-            Dim oAccount As account
+            Dim oAccount As Account
             Set oAccount = LoadAccount(row.Range(1, ACCOUNT_KEY_COL).value)
             If oAccount.IsOpen Then
                 .ListRows.Add ' Add 1 row at the end, then extend
@@ -328,7 +328,7 @@ End Sub
 
 
 Public Sub AddSavingsRow()
-    Dim oAccount As account
+    Dim oAccount As Account
     Set oAccount = LoadAccount(getAccountId(ActiveSheet))
     oAccount.AddBalanceRow
 End Sub
@@ -357,7 +357,7 @@ Public Function AccountsCount(Optional openOnly As Boolean = True, Optional inte
 Dim ws As Worksheet
     AccountsCount = 0
     For Each ws In Worksheets
-        Dim oAccount As account
+        Dim oAccount As Account
         Set oAccount = LoadAccount(getAccountId(ws))
         Dim addCount As Integer
         addCount = 1
