@@ -9,7 +9,6 @@ Public Const OPEN_ACCOUNTS_TABLE As String = "tblOpenAccounts"
 Public Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
 Public Const ACCOUNT_MERGE_TABLE As String = "AccountsMerge"
  
- 
 Public Const BALANCE_TABLE_NAME As String = "balance"
 Public Const DEPOSIT_TABLE_NAME As String = "deposit"
 Public Const INTEREST_TABLE_NAME As String = "interest"
