@@ -95,7 +95,7 @@ Sub ImportAny()
             Call ImportUBS(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (oAccount.Bank = "Revolut") Then
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
-        ElseIf (oAccount.Bank = "Boursorama") Then
+        ElseIf (oAccount.Bank = "BoursoBank") Then
             Call ImportBoursorama(oTable, fileToOpen, dateCol, amountCol, descCol, oAccount.Number())
         Else
             Call UnfreezeDisplay
