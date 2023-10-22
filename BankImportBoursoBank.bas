@@ -1,4 +1,4 @@
-Attribute VB_Name = "BankImportBoursorama"
+Attribute VB_Name = "BankImportBoursoBank"
 '------------------------------------------------------------------------------
 ' Import Boursorama
 '------------------------------------------------------------------------------
