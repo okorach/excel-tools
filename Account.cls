@@ -255,7 +255,7 @@ Public Sub CalcInterests(Optional modal As ProgressBar = Nothing, Optional force
     End If
     Dim oInterests As Interest
     Dim interestRates As Variant
-    Set oInterests = NewInterest(aId, balanceHistory, GetTableAsArray(oDepositsTable), aInterestPeriod)
+    Set oInterests = NewInterest(aId, balanceHistory("Monthly"), GetTableAsArray(oDepositsTable), aInterestPeriod)
     interestRates = oInterests.CalcKeyInterests(modal)
     Dim b As Boolean
     b = oInterests.StoreKeyInterests(oInterestTable, aId, aTaxRate)
@@ -525,20 +525,31 @@ Private Function balanceHistory(Optional sampling As String = "Yearly") As Varia
     Dim lastMonth As Long
     Dim lastYear As Long
     Dim lastBalance As Double
+    Dim lastDateWithBalance As Date
     Dim histSize As Long
     histAll = balanceAsArray
     histSize = UBound(histAll, 1)
+    lastDateWithBalance = histAll(histSize, BL_DATE_COL)
+    
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
-    ReDim histSampled(1 To nbYears, 1 To 2)
+    ReDim histSampled(1 To nbYears * 15, 1 To 2)
     lastMonth = 0
     lastYear = Year(histAll(1, 1)) - 1
     lastBalance = 0
     j = 1
     For i = 1 To histSize
-        m = Month(histAll(i, BL_DATE_COL))
-        y = Year(histAll(i, BL_DATE_COL))
+        Dim itemDate As Date
+        itemDate = histAll(i, BL_DATE_COL)
+        m = Month(itemDate)
+        y = Year(itemDate)
+        d = Day(itemDate)
+        anniversary = DateSerial(lastYear, m, d)
+        If Abs(lastDateWithBalance - anniversary) <= 31 Then
+            histSampled(j, 1) = itemDate
+            histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
+            j = j + 1
+        End If
         If sampling = "Monthly" And m <> lastMonth Then
-            d = Day(histAll(i, BL_DATE_COL))
             histSampled(j, 1) = DateSerial(y, m, 1)
             If d <> 1 Then
                 histSampled(j, 2) = lastBalance
