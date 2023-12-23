@@ -17,7 +17,7 @@ Public Sub InterestsCalc(accountId As String, Optional withModal As Boolean = Tr
         Dim deposits As Variant
         Dim balances As Variant
         deposits = AccountDepositHistory(accountId)
-        balances = AccountBalanceHistory(accountId, "Yearly")
+        balances = AccountBalanceHistory(accountId, "Daily")
 
         Dim accountInterests As Interest
         Set accountInterests = NewInterest(accountId, balances, deposits, InterestPeriod)
@@ -25,7 +25,6 @@ Public Sub InterestsCalc(accountId As String, Optional withModal As Boolean = Tr
         accountInterests.Store AccountTaxRate(accountId)
     End If
 End Sub
-
 
 Public Sub InterestsCalcAll()
     Dim modal As ProgressBar

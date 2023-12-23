@@ -255,7 +255,7 @@ Public Sub CalcInterests(Optional modal As ProgressBar = Nothing, Optional force
     End If
     Dim oInterests As Interest
     Dim interestRates As Variant
-    Set oInterests = NewInterest(aId, balanceHistory("Monthly"), GetTableAsArray(oDepositsTable), aInterestPeriod)
+    Set oInterests = NewInterest(aId, balanceHistory("Daily"), GetTableAsArray(oDepositsTable), aInterestPeriod)
     interestRates = oInterests.CalcKeyInterests(modal)
     Dim b As Boolean
     b = oInterests.StoreKeyInterests(oInterestTable, aId, aTaxRate)
@@ -516,7 +516,7 @@ Public Function DepositsHistory() As Variant
 End Function
 
 
-Private Function balanceHistory(Optional sampling As String = "Yearly") As Variant
+Private Function balanceHistory(Optional sampling As String = "Daily") As Variant
     Dim histAll() As Variant
     Dim histSampled() As Variant
     Dim nbYears As Long
@@ -532,7 +532,7 @@ Private Function balanceHistory(Optional sampling As String = "Yearly") As Varia
     lastDateWithBalance = histAll(histSize, BL_DATE_COL)
     
     nbYears = Year(histAll(histSize, 1)) - Year(histAll(1, 1)) + 2
-    ReDim histSampled(1 To nbYears * 15, 1 To 2)
+    ReDim histSampled(UBound(histAll), 1 To 2)
     lastMonth = 0
     lastYear = Year(histAll(1, 1)) - 1
     lastBalance = 0
@@ -543,34 +543,28 @@ Private Function balanceHistory(Optional sampling As String = "Yearly") As Varia
         m = Month(itemDate)
         y = Year(itemDate)
         d = Day(itemDate)
-        anniversary = DateSerial(lastYear, m, d)
-        If Abs(lastDateWithBalance - anniversary) <= 31 Then
+        If sampling = "Monthly" Then
+            If (m <> lastMonth Or y <> lastYear) Then
+                histSampled(j, 1) = itemDate
+                histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
+                j = j + 1
+            End If
+        ElseIf sampling = "Yearly" Then
+            If y <> lastYear Then
+                histSampled(j, 1) = itemDate
+                histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
+                j = j + 1
+            End If
+        Else
             histSampled(j, 1) = itemDate
             histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
             j = j + 1
         End If
-        If sampling = "Monthly" And m <> lastMonth Then
-            histSampled(j, 1) = DateSerial(y, m, 1)
-            If d <> 1 Then
-                histSampled(j, 2) = lastBalance
-            Else
-                histSampled(j, 2) = histAll(i, BL_BALANCE_COL)
-            End If
-            j = j + 1
-        ElseIf sampling = "Yearly" And y <> lastYear Then
-            While y <> lastYear
-                histSampled(j, 1) = DateSerial(lastYear, 12, 31)
-                histSampled(j, 2) = lastBalance
-                j = j + 1
-                lastYear = lastYear + 1
-            Wend
-        End If
-        firstEntry = False
         lastMonth = m
         lastBalance = histAll(i, BL_BALANCE_COL)
         lastYear = y
     Next i
-    If sampling = "Yearly" Then
+    If sampling = "Yearly" Or sampling = "Monthly" Then
         histSampled(j, 1) = histAll(histSize, 1)
         histSampled(j, 2) = lastBalance
     End If
