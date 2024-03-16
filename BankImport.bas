@@ -3,8 +3,13 @@ Public Const SUBSTITUTIONS_TABLE = "TblSubstitutions"
 
 Function toAmount(str) As Double
     If VarType(str) = vbString Then
-        str = Replace(Replace(Replace(str, ",", "."), "'", ""), " ", "")
-        toAmount = CDbl(str)
+        sep = Application.International(xlDecimalSeparator)
+        If sep = "," Then
+            str = Replace(str, ".", sep)
+        Else
+            str = Replace(str, ",", sep)
+        End If
+        toAmount = CDbl(Replace(Replace(str, "'", ""), " ", ""))
     Else
         toAmount = str
     End If
