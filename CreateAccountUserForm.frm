@@ -2,8 +2,8 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} CreateAccountUserForm 
    Caption         =   "Create Account"
    ClientHeight    =   5595
-   ClientLeft      =   48
-   ClientTop       =   396
+   ClientLeft      =   45
+   ClientTop       =   390
    ClientWidth     =   5280
    OleObjectBlob   =   "CreateAccountUserForm.frx":0000
    StartUpPosition =   1  'CenterOwner
