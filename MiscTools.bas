@@ -81,15 +81,17 @@ Public Sub ShowAllSheets()
 End Sub
 
 Public Sub GoToSheet(shift As Long)
-    Dim curr As Long
-    curr = ActiveSheet.index
-    If (curr + shift) > 0 And (curr + shift) <= Sheets.Count Then
-        Sheets(curr + shift).Activate
-    ElseIf shift < 0 Then
-        Sheets(1).Activate
-    ElseIf shift > 0 Then
-        Sheets(Sheets.Count).Activate
+    Dim sheetToGo As Long
+    sheetToGo = ActiveSheet.index + shift
+    While (Sheets(sheetToGo).Visible = xlSheetHidden And sheetToGo <= Sheets.Count And sheetToGo > 0)
+        sheetToGo = sheetToGo + (shift / Abs(shift))
+    Wend
+    If sheetToGo = 0 Then
+        sheetToGo = 1
+    ElseIf sheetToGo > Sheets.Count Then
+        sheetToGo = Sheets.Count
     End If
+    Sheets(sheetToGo).Activate
 End Sub
 
 Public Sub GoToNext()
