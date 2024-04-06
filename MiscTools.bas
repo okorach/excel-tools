@@ -83,13 +83,14 @@ End Sub
 Public Sub GoToSheet(shift As Long)
     Dim sheetToGo As Long
     sheetToGo = ActiveSheet.index + shift
-    While (Sheets(sheetToGo).Visible = xlSheetHidden And sheetToGo <= Sheets.Count And sheetToGo > 0)
+    nbSheets = Sheets.Count
+    While (sheetToGo < Sheets.Count And Sheets(sheetToGo).Visible = xlSheetHidden And sheetToGo > 0)
         sheetToGo = sheetToGo + (shift / Abs(shift))
     Wend
     If sheetToGo = 0 Then
         sheetToGo = 1
     ElseIf sheetToGo > Sheets.Count Then
-        sheetToGo = Sheets.Count
+        sheetToGo = nbSheets
     End If
     Sheets(sheetToGo).Activate
 End Sub
