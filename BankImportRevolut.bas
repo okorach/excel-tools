@@ -9,6 +9,7 @@ Private Const REVOLUT_CSV_DESC_FIELD1 = 0
 Private Const REVOLUT_CSV_DESC_FIELD2 = 4
 Private Const REVOLUT_CSV_AMOUNT_FIELD = 5
 Private Const REVOLUT_CSV_FEE_FIELD = 6
+Private Const REVOLUT_CSV_OUTCOME_FIELD = 8
 
 Sub ImportRevolut(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer)
     If LCase$(Right$(fileToOpen, 4)) = ".csv" Then
@@ -119,10 +120,16 @@ Private Sub importRevolutCsv(oTable As ListObject, fileToOpen As Variant, dateCo
             desc = Trim$(a(REVOLUT_CSV_DESC_FIELD1))
             comment = Trim$(a(REVOLUT_CSV_DESC_FIELD2))
             amount = CDbl(Trim$(a(REVOLUT_CSV_AMOUNT_FIELD)))
-            fee = CDbl(Trim$(a(REVOLUT_CSV_FEE_FIELD)))
-            If fee <> 0 Then
-                amount = amount + fee
-                comment = comment & " (including fee of " & str(fee) & " ¤)"
+            transaction_outcome = Trim$(a(REVOLUT_CSV_OUTCOME_FIELD))
+            If transaction_outcome = "REVERTED" Then
+                comment = comment & " REVERTED: Original amount " & str(amount)
+                amount = 0
+            Else
+                fee = CDbl(Trim$(a(REVOLUT_CSV_FEE_FIELD)))
+                If fee <> 0 Then
+                    amount = amount - fee
+                    comment = comment & " (including fee of " & str(fee) & " CHF)"
+                End If
             End If
             .Range(1, amountCol).value = amount
             If Len(comment) > 0 Then
