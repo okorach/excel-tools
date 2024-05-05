@@ -68,10 +68,9 @@ Public Function Load(accountId As String) As Boolean
     Set accountTypes = NewKeyedTable(Sheets(PARAMS_SHEET).ListObjects(ACCOUNT_TYPES_TABLE))
     aInterestPeriod = CInt(accountTypes.Lookup(aType, 2))
 
-
-    Set oBalanceTable = accountTable(BALANCE_TABLE_NAME)
-    Set oDepositsTable = accountTable(DEPOSIT_TABLE_NAME)
-    Set oInterestTable = accountTable(INTEREST_TABLE_NAME)
+    Set oBalanceTable = accountTable(BALANCE_TABLE_INDEX)
+    Set oDepositsTable = accountTable(DEPOSIT_TABLE_INDEX)
+    Set oInterestTable = accountTable(INTEREST_TABLE_INDEX)
 
     Load = True
 End Function
@@ -285,7 +284,14 @@ Public Sub AddBalanceRow()
     End If
     lastRow.Range(1, BL_BALANCE_COL + offset).Select
 End Sub
-    
+
+Private Function accountTable(index As Integer) As ListObject
+    Set accountTable = Nothing
+    If index <= ws.ListObjects.Count Then
+        Set accountTable = ws.ListObjects(index)
+    End If
+End Function
+
 Private Sub addStandardButtons()
     Call BtnAddByStringArray(ws, Array( _
         BTN_HOME_NAME & "," & BTN_HOME_TEXT & ",GoToSolde,Webdings,18,1,1,40" _
@@ -500,9 +506,15 @@ End Function
 Public Function AccountType() As String
     AccountType = aType
 End Function
+
+'--------------------------------------------------------------------------
+' Properties methods
+'--------------------------------------------------------------------------
+
 Property Get IsInBudget() As Boolean
     IsInBudget = aInBudget
 End Property
+
 Property Get TaxRate() As Double
     TaxRate = aTaxRate
 End Property
@@ -511,10 +523,21 @@ Property Get MyCurrency() As String
     MyCurrency = aCurrency
 End Property
 
-Public Function DepositsHistory() As Variant
-    DepositsHistory = depositsAsArray(aId)
-End Function
+Property Get BalanceTable() As ListObject
+    Set BalanceTable = accountTable(BALANCE_TABLE_INDEX)
+End Property
 
+Property Get DepositTable() As ListObject
+    Set DepositTable = accountTable(DEPOSIT_TABLE_INDEX)
+End Property
+
+Property Get InterestTable() As ListObject
+    Set InterestTable = accountTable(INTEREST_TABLE_INDEX)
+End Property
+
+'--------------------------------------------------------------------------
+' Private methods
+'--------------------------------------------------------------------------
 
 Private Function balanceHistory(Optional sampling As String = "Daily") As Variant
     Dim histAll() As Variant
@@ -527,7 +550,7 @@ Private Function balanceHistory(Optional sampling As String = "Daily") As Varian
     Dim lastBalance As Double
     Dim lastDateWithBalance As Date
     Dim histSize As Long
-    histAll = balanceAsArray
+    histAll = GetTableAsArray(ws.ListObjects(BALANCE_TABLE_INDEX))
     histSize = UBound(histAll, 1)
     lastDateWithBalance = histAll(histSize, BL_DATE_COL)
     
@@ -571,62 +594,6 @@ Private Function balanceHistory(Optional sampling As String = "Daily") As Varian
     balanceHistory = histSampled
 End Function
 
-
-'--------------------------------------------------------------------------
-' Private methods
-'--------------------------------------------------------------------------
-
-'----------------------------------------------------------------------------
-' Table as Tables
-'----------------------------------------------------------------------------
-Private Function accountTable(accountSection As String) As ListObject
-    Dim i As Long
-    For i = 1 To ws.ListObjects.Count
-        If LCase$(ws.ListObjects(i).name) Like "*_" & accountSection Then
-            Set accountTable = ws.ListObjects(i)
-            Exit For
-        End If
-    Next i
-End Function
-
-Property Get DepositTable() As ListObject
-    If oDepositsTable Is Nothing Then
-        Set oDepositsTable = accountTable(DEPOSIT_TABLE_NAME)
-    End If
-    Set DepositTable = oDepositsTable
-End Property
-
-Property Get BalanceTable() As ListObject
-    If oBalanceTable Is Nothing Then
-        Set oBalanceTable = accountTable(BALANCE_TABLE_NAME)
-    End If
-    Set BalanceTable = oBalanceTable
-End Property
-
-Property Get InterestTable() As ListObject
-    If oInterestTable Is Nothing Then
-        Set oInterestTable = accountTable(INTEREST_TABLE_NAME)
-    End If
-    Set InterestTable = oInterestTable
-End Property
-
-'----------------------------------------------------------------------------
-' Table as Indexes
-'----------------------------------------------------------------------------
-
-Public Function BalanceTableIndex() As Long
-    BalanceTableIndex = TableIndex(BALANCE_TABLE_NAME, ws)
-End Function
-
-Public Function DepositTableIndex() As Long
-    DepositTableIndex = TableIndex(DEPOSIT_TABLE_NAME, ws)
-End Function
-
-Public Function InterestTableIndex() As Long
-    InterestTableIndex = TableIndex(INTEREST_TABLE_NAME, ws)
-End Function
-
-
 Private Sub ExportMetadata(targetWs As Worksheet, nbrTransactions As Long, Optional nbrDeposits As Long = 0)
     ' Copy metadata on row 1
     targetWs.Range("A1") = "ExportDate=" & Format$(Now(), "YYYY-mm-dd HH:MM:SS")
@@ -643,27 +610,6 @@ Private Sub ExportMetadata(targetWs As Worksheet, nbrTransactions As Long, Optio
     End If
 End Sub
 
-'----------------------------------------------------------------------------
-' Table as Arrays
-'----------------------------------------------------------------------------
-Private Function asArray(accountSection As String) As Variant
-    Set asArray = Nothing
-    Dim o As ListObject
-    For Each o In ws.ListObjects
-        If LCase$(o.name) Like "*_" & accountSection Then
-            asArray = GetTableAsArray(o)
-            Exit For
-        End If
-    Next o
-End Function
-
-Private Function depositsAsArray() As Variant
-    depositsAsArray = asArray(DEPOSIT_TABLE_NAME)
-End Function
-
-Private Function balanceAsArray() As Variant
-    balanceAsArray = asArray(BALANCE_TABLE_NAME)
-End Function
 
 '----------------------------------------------------------------------------
 ' Private formatting functions

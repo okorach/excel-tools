@@ -9,9 +9,9 @@ Public Const OPEN_ACCOUNTS_TABLE As String = "tblOpenAccounts"
 Public Const ACCOUNT_TYPES_TABLE As String = "TblAccountTypes"
 Public Const ACCOUNT_MERGE_TABLE As String = "AccountsMerge"
  
-Public Const BALANCE_TABLE_NAME As String = "balance"
-Public Const DEPOSIT_TABLE_NAME As String = "deposit"
-Public Const INTEREST_TABLE_NAME As String = "interest"
+Public Const BALANCE_TABLE_INDEX As Integer = 1
+Public Const DEPOSIT_TABLE_INDEX As Integer = 2
+Public Const INTEREST_TABLE_INDEX As Integer = 3
 
 Public Const INTEREST_FORMAT As String = "0.0%"
 Public Const CHF_FORMAT As String = "#,###,##0.00"" CHF "";-#,###,##0.00"" CHF "";0.00"" CHF """
