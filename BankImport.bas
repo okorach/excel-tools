@@ -102,6 +102,8 @@ Sub ImportAny()
             Call ImportRevolut(oTable, fileToOpen, dateCol, amountCol, descCol)
         ElseIf (oAccount.Bank = "BoursoBank") Then
             Call ImportBoursorama(oTable, fileToOpen, dateCol, amountCol, descCol, oAccount.Number())
+        ElseIf (oAccount.Bank = "Yuh") Then
+            Call ImportYuh(oTable, fileToOpen, dateCol, amountCol, descCol, oAccount.accountCurrency)
         Else
             Call UnfreezeDisplay
             Call ErrorMessage("k.errorImportNotRecognized", "k.warningImportCancelled")
@@ -345,7 +347,7 @@ Private Sub AccountExportMetadata(accountId As String, targetWs As Worksheet, nb
     targetWs.Range("D1") = "Bank=" & AccountBank(accountId)
     avail = AccountAvailability(accountId)
     targetWs.Range("E1") = "Availability=" & avail
-    targetWs.Range("F1") = "Currency=" & AccountCurrency(accountId)
+    targetWs.Range("F1") = "Currency=" & accountCurrency(accountId)
     targetWs.Range("G1") = "Type=" & AccountType(accountId)
     targetWs.Range("H1") = "TaxRate=" & AccountTaxRate(accountId)
     targetWs.Range("I1") = "NbrTransactions=" & CStr(nbrTransactions)
