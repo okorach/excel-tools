@@ -229,8 +229,9 @@ End Sub
 
 
 Public Sub AccountFormatAll()
+    ' Goes through all the accounts sheets and reformats them properly
     Dim modal As ProgressBar
-    Set modal = NewProgressBar("Formatting in progress", Worksheets.Count + 2)
+    Set modal = NewProgressBar("Formatting in progress", AccountsCount(openOnly = True) + 2)
     Call FreezeDisplay
     
     Dim ws As Worksheet, activeWs As Worksheet
@@ -242,7 +243,9 @@ Public Sub AccountFormatAll()
         If IsAnAccount(ws) Then
            Dim oAccount As Account
            Set oAccount = LoadAccount(getAccountId(ws))
-           oAccount.FormatMe
+           If oAccount.IsOpen() Then
+               oAccount.FormatMe
+           End If
         End If
         modal.Update
     Next ws
@@ -253,37 +256,26 @@ Public Sub AccountFormatAll()
     Call UnfreezeDisplay
 End Sub
 
+
 Public Sub AccountHideClosed()
-    If GetGlobalParam("hideClosedAccounts") = 1 Then
-        Call accountSetClosedVisibility(xlSheetHidden)
-    End If
+    ' Hides all closed accounts sheets
+    ' If GetGlobalParam("hideClosedAccounts") = 1 Then
+    Call accountSetClosedVisibility(xlSheetHidden)
+    ' End If
 End Sub
 
+
 Public Sub AccountShowClosed()
+    ' Shows all closed accounts sheets
     Call accountSetClosedVisibility(xlSheetVisible)
 End Sub
 
-Public Sub GoToSolde()
-    Sheets(BALANCE_PER_ACCOUNT_SHEET).Activate
-End Sub
-
-'-------------------------------------------------
-Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
-    Dim ws As Worksheet
-    For Each ws In Worksheets
-        Dim oAccount As Account
-        Set oAccount = LoadAccount(getAccountId(ws))
-        If Not (oAccount Is Nothing) Then
-            If oAccount.IsClosed() Then
-                ws.Visible = visibility
-            End If
-        End If
-    Next ws
-End Sub
 
 Public Function getAccountId(ws As Worksheet) As String
+    ' Returns the accountId of a given worksheet
     getAccountId = ws.name
 End Function
+
 
 Public Sub AccountRefreshOpenList()
     Call FreezeDisplay
@@ -334,7 +326,6 @@ Public Sub AddSavingsRow()
 End Sub
 
 
-'-------------------------------------------------
 Public Function IsAnAccount(accountIdOrWs As Variant) As Boolean
     IsAnAccount = True
     If VarType(accountIdOrWs) = vbString Then
@@ -353,8 +344,10 @@ Public Function getSelectedAccount() As String
     getSelectedAccount = Sheets(PARAMS_SHEET).ListObjects(OPEN_ACCOUNTS_TABLE).ListRows(selectedNbr).Range(1, 1)
 End Function
 
+
 Public Function AccountsCount(Optional openOnly As Boolean = True, Optional interestOnly As Boolean = False, Optional noYearlyInterest As Boolean = False) As Integer
-Dim ws As Worksheet
+    ' Counts the number of accounts (optionally that meet certain criterias)
+    Dim ws As Worksheet
     AccountsCount = 0
     For Each ws In Worksheets
         Dim oAccount As Account
@@ -384,3 +377,16 @@ Private Function getAccountSheet(accountId As String) As Worksheet
     Set getAccountSheet = ThisWorkbook.Sheets(accountId)
 End Function
 
+
+Private Sub accountSetClosedVisibility(visibility As XlSheetVisibility)
+    Dim ws As Worksheet
+    For Each ws In Worksheets
+        Dim oAccount As Account
+        Set oAccount = LoadAccount(getAccountId(ws))
+        If Not (oAccount Is Nothing) Then
+            If oAccount.IsClosed() Then
+                ws.Visible = visibility
+            End If
+        End If
+    Next ws
+End Sub
