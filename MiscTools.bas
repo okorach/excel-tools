@@ -30,12 +30,14 @@ Public Sub UnfreezeDisplay()
 End Sub
 
 Public Sub ScrollToBottom()
+    ' Autoscroll to bottom of transactions table
     If ActiveSheet.ListObjects(1).ListRows.Count > 10 Then
         ActiveWindow.ScrollRow = ActiveSheet.ListObjects(1).ListRows.Count - 10
     End If
 End Sub
 
 Public Sub ScrollToTop()
+    ' Autoscroll to top of page
     ActiveWindow.ScrollRow = 10
 End Sub
 
@@ -63,24 +65,32 @@ Public Function GetLastNonEmptyRow(Optional col As Integer = 1)
     GetLastNonEmptyRow = i - 1
 End Function
 
-Public Function SheetExists(sheetToFind As String) As Boolean
+Public Function SheetExists(wsName As String) As Boolean
+    ' Returns whether a sheet with the given name exists
     SheetExists = False
-    For Each Sheet In Worksheets
-        If sheetToFind = Sheet.name Then
+    For Each ws In Worksheets
+        If wsName = ws.name Then
             SheetExists = True
             Exit Function
         End If
-    Next Sheet
+    Next ws
 End Function
 
 Public Sub ShowAllSheets()
+    ' Makes all worksheets visible
     Dim ws As Worksheet
     For Each ws In Worksheets
         ws.Visible = True
     Next ws
 End Sub
 
+Public Sub GoToSolde()
+    ' Navigate to the Solde sheet
+    Sheets(BALANCE_PER_ACCOUNT_SHEET).Activate
+End Sub
+
 Public Sub GoToSheet(shift As Long)
+    ' Change of active worksheet shift positions right (left if shift is negative)
     Dim sheetToGo As Long
     sheetToGo = ActiveSheet.index + shift
     nbSheets = Sheets.Count
@@ -118,6 +128,7 @@ Public Function GetNamedVariableValue(varName As String, Optional wb As Workbook
         GetNamedVariableValue = wb.Names(varName).RefersToRange.value
     End If
 End Function
+
 Public Sub SetNamedVariableValue(varName As String, varValue As Variant, Optional wb As Workbook = Nothing)
     If wb Is Nothing Then
         Names(varName).RefersToRange.value = varValue
@@ -125,7 +136,6 @@ Public Sub SetNamedVariableValue(varName As String, varValue As Variant, Optiona
         wb.Names(varName).RefersToRange.value = varValue
     End If
 End Sub
-
 
 Public Function GetColName(key) As String
     GetColName = GetLabel(key)
@@ -156,16 +166,20 @@ Public Sub FreezeCell(r As String, Optional wsName As String = "")
         End If
 End Sub
 
-'------------------------------------------------------
+Public Sub FreezeCellXY(row As Long, col As Long, Optional wsName As String = "")
+    Call FreezeCell(Cells(row, col).Address(False, False), wsName)
+End Sub
+
 Public Sub SwapCells(cell1 As String, cell2 As String)
+    ' Swaps the value of 2 cells, referenced by cell name (ex: "A1", "K12")
     Dim Temp As Variant
     Temp = Range(cell1).value
     Range(cell1).value = Range(cell2).value
     Range(cell2).value = Temp
 End Sub
 
-'------------------------------------------------------
 Public Sub SwapCellsXY(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Long, ByVal Col2 As Long, Optional wsName As String = "")
+    ' Swaps the value of 2 cells, referenced by row and col number
     Dim ws As Worksheet
     Dim Temp As Variant
     If LenB(wsName) = 0 Then
@@ -178,12 +192,8 @@ Public Sub SwapCellsXY(ByVal Row1 As Long, ByVal Col1 As Long, ByVal Row2 As Lon
     ws.Cells(Row2, Col2).value = Temp
 End Sub
 
-Public Sub FreezeCellXY(row As Long, col As Long, Optional wsName As String = "")
-    Call FreezeCell(Cells(row, col).Address(False, False), wsName)
-End Sub
-
 Public Sub FreezeRegion(r As String, Optional wsName As String = "")
-    ' Replaces a cell that may contain a formula by the result of this formula
+    ' Replaces a cell region that may contain formulas by the result of these formulas
     ' (Used in situation where the cell value should no longer be changed when the parameters of formula can still change)
     Dim ws As Worksheet
     If LenB(wsName) = 0 Then
@@ -201,27 +211,13 @@ Public Sub FreezeRegionXY(x1 As Long, y1 As Long, x2 As Long, y2 As Long, Option
     Call FreezeRegion(r, wsName)
 End Sub
 
-Sub reformatAmount(colObject As ListColumn)
-    With colObject.DataBodyRange
-        .style = "Normal"
-        .NumberFormat = CHF_FORMAT
-    End With
-End Sub
-
-'------------------------------------------------
-Sub setCellFormat(cellName, Format)
-    Range(cellName).NumberFormat = Format
-End Sub
-
 Public Function IsInArray(str As String, arr As Variant) As Boolean
   IsInArray = (UBound(Filter(arr, str)) > -1)
 End Function
 
-'
-' Enforces a data validation rule on zones of an excel sheet
-'
 Sub SetColumnValidationRule(colObject As ListColumn, validationList As String)
-' On a column of an Excel table
+    ' Enforces a data validation rule on zones of an excel sheet
+    ' On a column of an Excel table
     With colObject.DataBodyRange.Validation
         .Delete
         .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
@@ -231,42 +227,8 @@ Sub SetColumnValidationRule(colObject As ListColumn, validationList As String)
     End With
 End Sub
 
-'-------------------------------------------------
-Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Worksheet = Empty)
-    If IsEmpty(ws) Then
-        Columns(colString & ":" & colString).ColumnWidth = width
-    Else
-        ws.Columns(colString & ":" & colString).ColumnWidth = width
-    End If
-End Sub
-'-------------------------------------------------
-Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Worksheet = Empty)
-    If IsEmpty(ws) Then
-        Rows(rowString & ":" & rowString).RowHeight = height
-    Else
-        ws.Rows(rowString & ":" & rowString).RowHeight = height
-    End If
-End Sub
-'-------------------------------------------------
-Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Worksheet = Empty)
-    If IsEmpty(ws) Then
-        Rows(rowString & ":" & rowString).font.size = size
-    Else
-        ws.Rows(rowString & ":" & rowString).font.size = size
-    End If
-End Sub
-
-'-------------------------------------------------
-Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Worksheet = Empty)
-    If IsEmpty(ws) = 0 Then
-        Range(rangeString).style = aStyle
-    Else
-        ws.Range(rangeString).style = aStyle
-    End If
-End Sub
-'-------------------------------------------------
 Sub SetRangeValidationRule(aRange As Range, validationList As String)
-' On an arbitrary range like Range("A4") (one cell) or Range("B7:K20") (a complete region)
+    ' On an arbitrary range like Range("A4") (one cell) or Range("B7:K20") (a complete region)
     With aRange.Validation
         .Delete
         .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
@@ -275,17 +237,65 @@ Sub SetRangeValidationRule(aRange As Range, validationList As String)
         .ShowInput = True
     End With
 End Sub
-'-------------------------------------------------
+
 Private Sub ListAllItemObjects()
     For Each pvt In ActiveSheet.PivotTables
-    For Each fld In pvt.PivotFields
-    For Each itm In fld.PivotItems
-    MsgBox itm
-    Next itm
-    Next fld
+        For Each fld In pvt.PivotFields
+            For Each itm In fld.PivotItems
+                MsgBox itm
+            Next itm
+        Next fld
     Next pvt
 End Sub
 
+'==============================================================================
+'
+'  Cell formatting functions
+'
+'==============================================================================
+
+Sub reformatAmount(colObject As ListColumn)
+    With colObject.DataBodyRange
+        .style = "Normal"
+        .NumberFormat = CHF_FORMAT
+    End With
+End Sub
+
+Sub setCellFormat(cellName, Format)
+    Range(cellName).NumberFormat = Format
+End Sub
+
+Public Sub SetColumnWidth(colString As String, width As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
+        Columns(colString & ":" & colString).ColumnWidth = width
+    Else
+        ws.Columns(colString & ":" & colString).ColumnWidth = width
+    End If
+End Sub
+
+Public Sub SetRowHeight(rowString As String, height As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
+        Rows(rowString & ":" & rowString).RowHeight = height
+    Else
+        ws.Rows(rowString & ":" & rowString).RowHeight = height
+    End If
+End Sub
+
+Public Sub SetRowFontSize(rowString As String, size As Double, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) Then
+        Rows(rowString & ":" & rowString).font.size = size
+    Else
+        ws.Rows(rowString & ":" & rowString).font.size = size
+    End If
+End Sub
+
+Public Sub SetRangeStyle(rangeString As String, aStyle As String, Optional ws As Worksheet = Empty)
+    If IsEmpty(ws) = 0 Then
+        Range(rangeString).style = aStyle
+    Else
+        ws.Range(rangeString).style = aStyle
+    End If
+End Sub
 
 '==============================================================================
 '
@@ -293,23 +303,23 @@ End Sub
 '
 '==============================================================================
 
-'------------------------------------------------------------------------------
-' Places a shape (a button for instance) exactly above a cell
-'------------------------------------------------------------------------------
 Public Sub ShapePlacementOnCell(oShape, oCell)
+    '------------------------------------------------------------------------------
+    ' Places a shape (a button for instance) exactly above a cell
+    '------------------------------------------------------------------------------
     Call ShapePlacementOnCells(oShape, oCell, oCell)
 End Sub
-'------------------------------------------------------------------------------
-' Places a shape (a button for instance) exactly above a range of cells
-' defined by its top left and bottom right cells
-'------------------------------------------------------------------------------
 Public Sub ShapePlacementOnCells(oShape, oCell1, oCell2)
-With oShape
-    .top = oCell1.top
-    .left = oCell1.left
-    .width = oCell2.left - oCell1.left + oCell2.width
-    .height = oCell2.top - oCell1.top + oCell2.height
-End With
+    '------------------------------------------------------------------------------
+    ' Places a shape (a button for instance) exactly above a range of cells
+    ' defined by its top left and bottom right cells
+    '------------------------------------------------------------------------------
+    With oShape
+        .top = oCell1.top
+        .left = oCell1.left
+        .width = oCell2.left - oCell1.left + oCell2.width
+        .height = oCell2.top - oCell1.top + oCell2.height
+    End With
 End Sub
 
 
@@ -319,12 +329,11 @@ End Sub
 '
 '==============================================================================
 
-'------------------------------------------------------------------------------
-' Records a file with enforcement of the file format and filename
-'------------------------------------------------------------------------------
 
 Sub SaveAsNewFile(filename, fileformat)
-
+    '------------------------------------------------------------------------------
+    ' Records a file with enforcement of the file format and filename
+    '------------------------------------------------------------------------------
     Dim fileSaveName As Variant
 
     If (fileformat = "xlsm") Then
@@ -350,10 +359,10 @@ Sub SaveAsNewFile(filename, fileformat)
     End If
 End Sub
 
-'------------------------------------------------------------------------------
-' Records a file with enforcement of the file format and filename
-'------------------------------------------------------------------------------
 Public Sub DeleteAllButSheetOne()
+    '------------------------------------------------------------------------------
+    ' Records a file with enforcement of the file format and filename
+    '------------------------------------------------------------------------------
     Application.DisplayAlerts = False
     While ActiveWorkbook.Sheets.Count > 1
        ActiveWorkbook.Sheets(2).Delete
@@ -361,10 +370,7 @@ Public Sub DeleteAllButSheetOne()
     Application.DisplayAlerts = True
 End Sub
 
-Public Function URLEncode( _
-   StringVal As String, _
-   Optional SpaceAsPlus As Boolean = False _
-) As String
+Public Function URLEncode(StringVal As String, Optional SpaceAsPlus As Boolean = False) As String
 
   Dim StringLen As Long: StringLen = Len(StringVal)
 
@@ -393,32 +399,29 @@ Public Function URLEncode( _
   End If
 End Function
 
-'
-'
-'
-'
+
 Private Sub AdoptPivotSourceFormatting()
-'Mike Alexander
-'www.datapigtechnologies'
-'Be sure you start with your cursor inside a pivot table.
-Dim oPivotTable As PivotTable
-Dim oPivotFields As PivotField
-Dim oSourceRange As Range
-Dim strLabel As String
-Dim strFormat As String
-Dim i As Long
+    'Mike Alexander
+    'www.datapigtechnologies'
+    'Be sure you start with your cursor inside a pivot table.
+    Dim oPivotTable As PivotTable
+    Dim oPivotFields As PivotField
+    Dim oSourceRange As Range
+    Dim strLabel As String
+    Dim strFormat As String
+    Dim i As Long
 
-On Error GoTo MyErr
-
-'Identify PivotTable and capture source Range
+    On Error GoTo MyErr
+    
+    'Identify PivotTable and capture source Range
     'ActiveCell.PivotTable.Name
     Set oPivotTable = ActiveSheet.PivotTables(ActiveCell.PivotTable.name)
     Set oSourceRange = Range(Application.ConvertFormula(oPivotTable.SourceData, xlR1C1, xlA1))
 
-'Refresh PivotTable to synch with latest data
+    'Refresh PivotTable to synch with latest data
     oPivotTable.PivotCache.Refresh
-
-'Start looping through the columns in source range
+    
+    'Start looping through the columns in source range
     For i = 1 To oSourceRange.Columns.Count
 
     'Trap the column name and number format for first row of the column
@@ -438,18 +441,16 @@ On Error GoTo MyErr
 
         Next oPivotFields
     Next i
-
-        For Each oPivotFields In oPivotTable.DataFields
-            oPivotFields.NumberFormat = strFormat
-        Next oPivotFields
-
-Exit Sub
-'Error stuff
+    For Each oPivotFields In oPivotTable.DataFields
+        oPivotFields.NumberFormat = strFormat
+    Next oPivotFields
+    Exit Sub
+    'Error stuff
 MyErr:
-If Err.Number = 1004 Then
-MsgBox "You must place your cursor inside of a pivot table."
-Else
-MsgBox Err.Number & vbCrLf & Err.Description
-End If
+    If Err.Number = 1004 Then
+        MsgBox "You must place your cursor inside of a pivot table."
+    Else
+        MsgBox Err.Number & vbCrLf & Err.Description
+    End If
 End Sub
 
