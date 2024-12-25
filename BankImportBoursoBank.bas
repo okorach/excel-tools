@@ -4,10 +4,9 @@ Attribute VB_Name = "BankImportBoursoBank"
 '------------------------------------------------------------------------------
 
 Private Const BOURSORAMA_CSV_DATE_FIELD = 2
-Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 6
+Private Const BOURSORAMA_CSV_AMOUNT_FIELD = 7
 Private Const BOURSORAMA_CSV_DESC_FIELD = 3
-Private Const BOURSORAMA_CSV_ACCOUNT_FIELD = 8
-Private Const BOURSORAMA_CSV_LABEL_FIELD = 9
+Private Const BOURSORAMA_CSV_ACCOUNT_FIELD = 9
 
 Sub ImportBoursorama(oTable As ListObject, fileToOpen As Variant, dateCol As Integer, amountCol As Integer, descCol As Integer, accNbr As String)
     subsTable = GetTableAsArray(Sheets(PARAMS_SHEET).ListObjects(SUBSTITUTIONS_TABLE))
